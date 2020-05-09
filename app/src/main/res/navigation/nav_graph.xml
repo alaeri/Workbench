@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/loginFragment">
+
+    <fragment
+        android:id="@+id/catsFragment"
+        android:name="com.alaeri.cats.app.ui.cats.CatsFragment"
+        android:label="CatsFragment" />
+    <fragment
+        android:id="@+id/commandsFragment"
+        android:name="com.alaeri.cats.app.command.CommandListFragment"
+        android:label="CommandListFragment" />
+    <fragment
+        android:id="@+id/graphFragment"
+        android:name="com.alaeri.cats.app.command.graph.GraphFragment"
+        android:label="GraphFragment" />
+    <fragment
+        android:id="@+id/loginFragment"
+        android:name="com.alaeri.cats.app.ui.login.LoginFragment"
+        android:label="main_fragment"
+        tools:layout="@layout/login_fragment" >
+        <action
+            android:id="@+id/action_loginFragment_to_catsFragment"
+            app:destination="@id/catsFragment" />
+    </fragment>
+</navigation>
