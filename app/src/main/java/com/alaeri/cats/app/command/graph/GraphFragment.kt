@@ -57,8 +57,6 @@ class GraphFragment: Fragment() {
                 webView.loadUrl("javascript:loadPieChart('$text');");
             }
         }
-
-        //binding.webView.loadUrl("javascript:loadPieChart($text)")
     }
 
 }
