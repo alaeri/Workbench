@@ -72,8 +72,7 @@ d3.selection.prototype.appendSVG =
 //      .text(function(d) { return d.value +
 //         textLabelSuffix; });
 //}
-const loadData = ()=> {
-               var levels = [
+const levelsData = [
                  [{id: 'Chaos'}],
                  [
                    {id: 'Gaea', parents: ['Chaos']},
@@ -155,6 +154,8 @@ const loadData = ()=> {
                  ]
                ]
 
+const loadData = (levels)=> {
+
                // precompute level depth
                levels.forEach((l,i) => l.forEach(n => n.level = i))
 
@@ -174,7 +175,8 @@ const loadData = ()=> {
                    if(n.parents.length == 0) {
                      return
                    }
-
+                    console.log("parents:::")
+                    console.log(n.parents)
                    var id = n.parents.map(d => d.id).sort().join('--')
                    if (id in index) {
                      index[id].parents = index[id].parents.concat(n.parents)
@@ -300,9 +302,13 @@ const loadData = ()=> {
 //});
 //const d3 = require('d3-scale', 'd3-scale-chromatic', 'd3-array')
 
-const data = loadData();
+
 //var newElement = document.createElementNS("http://www.w3.org/2000/svg", 'path');
-const loadPieChart = ()=>{
+const loadPieChart = (commandsDataAsString)=>{
+    console.log(commandsDataAsString)
+    const commandsData = JSON.parse(commandsDataAsString)
+    console.log(commandsData);
+    const data = loadData(commandsData.levels);
     const svg = d3.select("body")
                   .append("svg")
                     .attr("width", 960)

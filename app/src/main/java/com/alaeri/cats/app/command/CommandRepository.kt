@@ -9,10 +9,12 @@ import com.alaeri.command.history.id.IndexAndUUID
  */
 class CommandRepository {
 
-    val list: MutableList<SerializableCommandStateAndContext<IndexAndUUID>> = mutableListOf()
+    val list : List<SerializableCommandStateAndContext<IndexAndUUID>>
+        get() = _list.toList()
+    private val _list: MutableList<SerializableCommandStateAndContext<IndexAndUUID>> = mutableListOf()
 
     fun save(serializableCommandStateAndContext: SerializableCommandStateAndContext<IndexAndUUID>){
-        list.add(serializableCommandStateAndContext)
+        _list.add(serializableCommandStateAndContext)
         Log.d("OPERATION", serializableCommandStateAndContext.toString())
     }
 
