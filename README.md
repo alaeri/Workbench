@@ -12,7 +12,7 @@ I realized half-way there that I was recreating a Command Design Pattern so I tr
 
 Kotlin Command Design Pattern Inline
 
-[Latest visualization](/doc/Screenshot_1591298008.png)
+![Latest visualization](/doc/Screenshot_1591298008.png)
 
 ### Commands and Contexts: the code and the extension functions to use it.
 
@@ -35,6 +35,7 @@ TBC
 ## TODO:
 
 [ ] Viewpager
+[ ] Visualize add returned objects to visualization
 [ ] LifecycleComand
 [ ] ConfigureCodeCoverage
 [ ] Move the components to their own modules
