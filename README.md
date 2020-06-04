@@ -34,13 +34,13 @@ TBC
 
 ## TODO:
 
-[ ] Viewpager
-[ ] Visualize add returned objects to visualization
-[ ] LifecycleComand
-[ ] ConfigureCodeCoverage
-[ ] Move the components to their own modules
-[ ] Improve README
-[ ] Logserver
-[ ] Logclient webpage
-[ ] FuzzingAnnotation : check if it already exists first.
-[ ] Move the recyclerview extras from their current package to a unique package name
+* [ ] Viewpager
+* [ ] Visualize add returned objects to visualization
+* [ ] LifecycleComand
+* [ ] ConfigureCodeCoverage
+* [ ] Move the components to their own modules
+* [ ] Improve README
+* [ ] Logserver
+* [ ] Logclient webpage
+* [ ] FuzzingAnnotation : check if it already exists first.
+* [ ] Move the recyclerview extras from their current package to a unique package name
