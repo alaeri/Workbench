@@ -46,7 +46,7 @@ class CatsViewModel(private val refreshUseCase: RefreshUseCase,
     private val refreshContext = operationContext as IInvokationContext<Unit, Unit>
     fun onRefreshTriggered() : Unit = invokeSyncCommand(refreshContext){
         viewModelScope.launch {
-            mutableLiveDataExecutionContext.value = this@invokeSyncCommand.suspendInvokeAsFlow<Unit, NetworkState, NetworkState>{ refreshUseCase.invoke() }.asLiveData()
+            //mutableLiveDataExecutionContext.value = suspendInvokeAsFlow<Unit, NetworkState, NetworkState>{ refreshUseCase.invoke() }.asLiveData()
         }
         Unit
     }

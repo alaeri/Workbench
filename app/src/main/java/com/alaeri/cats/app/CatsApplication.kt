@@ -5,6 +5,7 @@ import com.alaeri.cats.app.cats.catsModule
 import com.alaeri.cats.app.command.CommandRepository
 import com.alaeri.cats.app.command.commandListFragmentModule
 import com.alaeri.cats.app.ui.cats.catsFragmentModule
+import com.alaeri.cats.app.ui.viewpager.viewPagerFragmentModule
 import com.alaeri.cats.app.user.userModule
 import com.alaeri.command.core.IInvokationContext
 import com.alaeri.command.history.serialize
@@ -44,7 +45,8 @@ class CatsApplication : Application() {
             startKoin {
                 androidContext(this@CatsApplication)
                 modules(commandModule,
-                    invoke{ appModule },
+                    invoke { appModule },
+                    invoke { viewPagerFragmentModule },
                     invoke { userModule },
                     invoke { catsModule },
                     invoke { catsFragmentModule },

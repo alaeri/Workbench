@@ -17,26 +17,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         setContentView(R.layout.main_activity)
-//        if (savedInstanceState == null) {
-//            supportFragmentManager.beginTransaction()
-//                    .replace(R.id.container, LoginFragment.newInstance())
-//                    .commitNow()
-//        }
-        loginViewModel.currentState.observe(this, Observer {
-            when(it){
-                is LoginState.LoggedIn -> {
-                    Log.d("NAV","cats")
-                    //findNavController(R.id.nav_host_fragment).navigate(R.id.catsFragment)
-                    findNavController(R.id.nav_host_fragment).navigate(R.id.graphFragment)
-                }
-                is LoginState.LoggedOut -> {
-                    Log.d("NAV","login")
-                    findNavController(R.id.nav_host_fragment).navigate(R.id.loginFragment)
-                }
-            }
-        })
     }
 
     override fun onResume() {
