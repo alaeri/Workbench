@@ -311,8 +311,10 @@ const loadPieChart = (commandsDataAsString)=>{
     const data = loadData(commandsData.levels);
     const svg = d3.select("body")
                   .append("svg")
-                    .attr("width", 960)
-                    .attr("height", 500)
+                    .attr("width", 3000)
+                    .attr("height", 3000)
+
+
     //const  svg = document.getElementsByTagName('svg')[0]; //Get svg element
     data.bundles.map(b => {
   let d = b.links.map(l => `
@@ -335,7 +337,73 @@ const loadPieChart = (commandsDataAsString)=>{
     `<text x="${ n.x+4}" y="${ n.y-n.height/2-4 }" stroke="white" stroke-width="2">${ n.id }</text>`,
     `<text x="${ n.x+4}" y="${ n.y-n.height/2-4 }">${ n.id }</text>`
     ]).forEach(lineAndTexts => lineAndTexts.forEach(lineAndText => svg.appendSVG(lineAndText)));
+
+      // z holds a copy of the previous transform, so we can track its changes
+      let z = d3.zoomIdentity;
+
+      // set up the ancillary zooms and an accessor for their transforms
+      const zoomX = d3.zoom().scaleExtent([0.1, 10]);
+      const zoomY = d3.zoom().scaleExtent([0.2, 5]);
+      const tx = () => d3.zoomTransform(gx.node());
+      const ty = () => d3.zoomTransform(gy.node());
+      gx.call(zoomX).attr("pointer-events", "none");
+      gy.call(zoomY).attr("pointer-events", "none");
+
+      // active zooming
+      const zoom = d3.zoom().on("zoom", function(e) {
+        const t = e.transform;
+        const k = t.k / z.k;
+        const point = e.sourceEvent ? d3.pointer(e) : [width / 2, height / 2];
+
+        // is it on an axis? is the shift key pressed?
+        const doX = point[0] > x.range()[0];
+        const doY = point[1] < y.range()[0];
+        const shift = e.sourceEvent && e.sourceEvent.shiftKey;
+
+        if (k === 1) {
+          // pure translation?
+          doX && gx.call(zoomX.translateBy, (t.x - z.x) / tx().k, 0);
+          doY && gy.call(zoomY.translateBy, 0, (t.y - z.y) / ty().k);
+        } else {
+          // if not, we're zooming on a fixed point
+          doX && gx.call(zoomX.scaleBy, shift ? 1 / k : k, point);
+          doY && gy.call(zoomY.scaleBy, k, point);
+        }
+
+        z = t;
+
+        redraw();
+      });
+
+      return svg
+        .call(zoom)
+        .call(zoom.transform, d3.zoomIdentity.scale(0.8))
+        .node();
 }
+
+function redraw() {
+    const xr = tx().rescaleX(x);
+    const yr = ty().rescaleY(y);
+
+    gx.call(xAxis, xr);
+    gy.call(yAxis, yr);
+
+    dots
+      .attr("cx", d => xr(d[0]))
+      .attr("cy", d => yr(d[1]))
+      .attr("rx", 6 * Math.sqrt(tx().k))
+      .attr("ry", 6 * Math.sqrt(ty().k));
+
+    vo.attr(
+      "d",
+      d3.Delaunay.from(data.map(d => [xr(d[0]), yr(d[1])]))
+        .voronoi([35, 0, width, height - 25])
+        .render()
+    )
+      .attr("fill", "none")
+      .attr("stroke", "#ccc")
+      .attr("stroke-width", 0.5);
+  }
 
 //console.log("data: ")
 //console.log(data);

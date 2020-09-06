@@ -42,10 +42,21 @@ data class SerializedClass(val className: String, val simpleName: String){
     }
 }
 fun Any?.toSerializedClass() = this?.let { SerializedClass(this.javaClass.name, this.javaClass.simpleName) }
+interface IdOwner<Key>{
+    val id: Key?
+    val clazz: SerializedClass?
+}
 sealed class SerializableCommandState<Key>{
-    data class Value<Key>(val valueId: Key, val clazz: SerializedClass?, val description: String?): SerializableCommandState<Key>()
-    data class Done<Key>(val valueId: Key?, val clazz: SerializedClass?, val description: String?) : SerializableCommandState<Key>()
-    data class Failure<Key>(val throwableId: Key, val throwableClass: SerializedClass?, val message: String?): SerializableCommandState<Key>()
+    data class Value<Key>(val valueId: Key, override val clazz: SerializedClass?, val description: String?): SerializableCommandState<Key>(), IdOwner<Key>{
+        override val id = valueId
+    }
+    data class Done<Key>(val valueId: Key?, override val clazz: SerializedClass?, val description: String?) : SerializableCommandState<Key>(), IdOwner<Key>{
+        override val id: Key? = valueId
+    }
+    data class Failure<Key>(val throwableId: Key, val throwableClass: SerializedClass?, val message: String?): SerializableCommandState<Key>(), IdOwner<Key>{
+        override val id: Key = throwableId
+        override val clazz: SerializedClass? = throwableClass
+    }
     class Waiting<Key>: SerializableCommandState<Key>()
     class Starting<Key>: SerializableCommandState<Key>()
     data class Step<Key>(val name: String? = null): SerializableCommandState<Key>()
@@ -67,7 +78,7 @@ fun <Key> serialize(operationContext: IInvokationContext<*, *>,
                 this.toSerializedClass(),
                 this.toString()
             )
-        } ?: SerializableCommandState.Done<Key>(Unit.keyOf(), null, null)
+        } ?: SerializableCommandState.Done<Key>(Unit.keyOf(), null, null) as SerializableCommandState<Key>
 
         is CommandState.Done<*> -> commandState.value?.run {
             SerializableCommandState.Done<Key>(
