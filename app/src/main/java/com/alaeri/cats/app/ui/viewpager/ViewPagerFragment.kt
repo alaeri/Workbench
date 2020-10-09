@@ -18,7 +18,8 @@ enum class PageId{
     Login,
     Cats,
     CommandsList,
-    CommandsWebview
+    CommandsWebview,
+    CommandsLifecycle
 }
 data class Page(val id: PageId)
 
@@ -55,6 +56,7 @@ class ViewPagerFragment : Fragment(){
                     PageId.Login -> R.string.login_fragment_title
                     PageId.CommandsList -> R.string.commands_list_fragment_title
                     PageId.CommandsWebview -> R.string.graph_fragment_title
+                    PageId.CommandsLifecycle -> R.string.commands_lifecycle_fragment_title
                 }
                 tab.text = getString(resId)
             }

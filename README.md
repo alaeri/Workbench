@@ -36,7 +36,9 @@ TBC
 
 * [X] Viewpager
 * [X] Visualize add returned objects to visualization
-* [ ] LifecycleCommand
+* [X] LifecycleCommand
+* [ ] Add command tags
+* [ ] Find a cleaner command usage pattern for Koin
 * [ ] Configure zoom
 * [ ] ConfigureCodeCoverage
 * [ ] Move the components to their own modules

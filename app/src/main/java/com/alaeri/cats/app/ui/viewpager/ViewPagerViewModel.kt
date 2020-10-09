@@ -10,6 +10,7 @@ class ViewPagerViewModel : ViewModel(){
             Page(id = PageId.Cats),
             Page(id = PageId.Login),
             Page(id = PageId.CommandsList),
+            Page(id = PageId.CommandsLifecycle),
             Page(id = PageId.CommandsWebview)
         ))
     val pages : LiveData<List<Page>> = mutablePages

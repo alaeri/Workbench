@@ -7,6 +7,8 @@ import com.alaeri.cats.app.command.commandListFragmentModule
 import com.alaeri.cats.app.ui.cats.catsFragmentModule
 import com.alaeri.cats.app.ui.viewpager.viewPagerFragmentModule
 import com.alaeri.cats.app.user.userModule
+import com.alaeri.command.CommandState
+import com.alaeri.command.android.CommandLogger
 import com.alaeri.command.core.IInvokationContext
 import com.alaeri.command.history.serialize
 import com.alaeri.command.history.spread
@@ -38,6 +40,13 @@ class CatsApplication : Application() {
                 }
             }
         val commandModule = module {
+            single<CommandLogger<Any>>{
+                object : CommandLogger<Any>{
+                    override fun log(state: CommandState<Any>) {
+                        operationContext.emit(state)
+                    }
+                }
+            }
             single<IInvokationContext<*, *>>{ operationContext }
             single {  commandRepository }
         }

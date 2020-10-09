@@ -4,4 +4,5 @@
     <string name="login_fragment_title">Login</string>
     <string name="commands_list_fragment_title">Commands</string>
     <string name="graph_fragment_title">Graph</string>
+    <string name="commands_lifecycle_fragment_title">Lifecycle</string>
 </resources>
