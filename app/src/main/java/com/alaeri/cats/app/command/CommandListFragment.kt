@@ -12,7 +12,7 @@ import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModel
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.alaeri.cats.app.databinding.CatsFragmentBinding
-import com.alaeri.command.history.SerializableCommandStateAndContext
+import com.alaeri.command.history.serialization.SerializableCommandStateAndContext
 import com.alaeri.command.history.id.IndexAndUUID
 import org.koin.android.scope.lifecycleScope
 import org.koin.android.viewmodel.scope.viewModel

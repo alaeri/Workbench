@@ -1,6 +1,7 @@
 package com.alaeri.command.core.flow
 
 import com.alaeri.command.CommandState
+import com.alaeri.command.android.CommandNomenclature
 import com.alaeri.command.core.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -45,11 +46,13 @@ inline fun <T,R, reified U> ExecutionContext<T>.syncInvokeAsFlow(commandCreator:
     val executionContext = syncCommand.executableContext.chain(syncInvokationContext)
     return syncCommand.syncExecute(executionContext).mapUpdates()
 }
-inline fun <R> Any.flowCommand(noinline op: ExecutionContext<R>.()->Flow<R>): FlowCommand<R> {
+inline fun <R> Any.flowCommand(name:String? = null, nomenclature: CommandNomenclature = CommandNomenclature.Undefined, noinline op: ExecutionContext<R>.()->Flow<R>): FlowCommand<R> {
     val executionContext =
         ExecutableContext<R>(this)
     return FlowCommand<R>(
         this,
+        nomenclature,
+        name,
         executionContext
     ) { this@FlowCommand.op() }
 }

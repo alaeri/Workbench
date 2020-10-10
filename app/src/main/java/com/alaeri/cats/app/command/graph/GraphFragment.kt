@@ -15,6 +15,9 @@ import com.alaeri.cats.app.command.CommandRepository
 import com.alaeri.cats.app.databinding.GraphFragmentBinding
 import com.alaeri.command.history.*
 import com.alaeri.command.history.id.IndexAndUUID
+import com.alaeri.command.history.serialization.SerializableCommandStateAndContext
+import com.alaeri.command.history.serialization.SerializableInvokationContext
+import com.alaeri.command.history.serialization.SerializedClass
 import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.Moshi
 import org.koin.core.KoinComponent

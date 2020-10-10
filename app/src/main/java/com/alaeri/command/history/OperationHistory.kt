@@ -2,6 +2,7 @@ package com.alaeri.command.history
 
 import com.alaeri.command.*
 import com.alaeri.command.core.IInvokationContext
+import com.alaeri.command.history.serialization.*
 import defaultKey
 
 data class CommandContextAndStateAndDepth(val state: CommandState<*>, val operationContext: IInvokationContext<*, *>, val depth: Int)
@@ -13,58 +14,7 @@ fun spread(operationContext: IInvokationContext<*, *>, commandState: CommandStat
         else -> listOf(CommandContextAndStateAndDepth(commandState, operationContext,depth))
     }
 }
-data class SerializableInvokationContext<Key>(
-    val id: Key,
-    val serializedClass: SerializedClass,
-    val parentExecutionId: String?,
-    val coroutineContextId: String?,
-    val invokationThreadId: String?){
-    override fun toString(): String {
-        return "$id-${serializedClass.toString()}"
-    }
-}
-
-data class SerializableCommandContext<Key>(
-    val commandId: Key,
-    val invokationCommandId: Key?,
-    val invokationContext: SerializableInvokationContext<Key>,
-    val executionContext: SerializableInvokationContext<Key>,
-    val depth: Int
-){
-    override fun toString(): String {
-        return "${commandId.toString()} invokation:${invokationContext} execution:${executionContext}"
-    }
-}
-
-data class SerializedClass(val className: String, val simpleName: String){
-    override fun toString(): String {
-        return simpleName
-    }
-}
 fun Any?.toSerializedClass() = this?.let { SerializedClass(this.javaClass.name, this.javaClass.simpleName) }
-interface IdOwner<Key>{
-    val id: Key?
-    val clazz: SerializedClass?
-}
-sealed class SerializableCommandState<Key>{
-    data class Value<Key>(val valueId: Key, override val clazz: SerializedClass?, val description: String?): SerializableCommandState<Key>(), IdOwner<Key>{
-        override val id = valueId
-    }
-    data class Done<Key>(val valueId: Key?, override val clazz: SerializedClass?, val description: String?) : SerializableCommandState<Key>(), IdOwner<Key>{
-        override val id: Key? = valueId
-    }
-    data class Failure<Key>(val throwableId: Key, val throwableClass: SerializedClass?, val message: String?): SerializableCommandState<Key>(), IdOwner<Key>{
-        override val id: Key = throwableId
-        override val clazz: SerializedClass? = throwableClass
-    }
-    class Waiting<Key>: SerializableCommandState<Key>()
-    class Starting<Key>: SerializableCommandState<Key>()
-    data class Step<Key>(val name: String? = null): SerializableCommandState<Key>()
-    data class Progress<Key>(val current: Number, val max: Number): SerializableCommandState<Key>()
-}
-data class SerializableCommandStateAndContext<Key>(
-    val context: SerializableCommandContext<Key>,
-    val state: SerializableCommandState<Key>)
 
 fun <Key> serialize(operationContext: IInvokationContext<*, *>,
                     commandState: CommandState<*>,
@@ -110,10 +60,12 @@ fun <Key> serialize(operationContext: IInvokationContext<*, *>,
     }
     val serializableCommandContext = SerializableCommandContext<Key>(
         depth = depth,
+        commandName = operationContext.command.name,
         commandId = operationContext.command.keyOf(),
         executionContext = serializableExecutionContext,
         invokationCommandId = null,
-        invokationContext = serializableInvokationContext
+        invokationContext = serializableInvokationContext,
+        commandNomenclature = operationContext.command.nomenclature
         )
     return SerializableCommandStateAndContext<Key>(context = serializableCommandContext, state = serializableState)
 }

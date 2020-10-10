@@ -6,8 +6,9 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.extras.viewholder.Bindable
 import com.alaeri.cats.app.command.CommandVH.RandomColors.randomColors
 import com.alaeri.cats.app.databinding.CommandItemBinding
-import com.alaeri.command.history.SerializableCommandState
-import com.alaeri.command.history.SerializableCommandStateAndContext
+import com.alaeri.command.android.CommandNomenclature
+import com.alaeri.command.history.serialization.SerializableCommandState
+import com.alaeri.command.history.serialization.SerializableCommandStateAndContext
 import com.alaeri.command.history.id.IndexAndUUID
 import com.github.lzyzsd.randomcolor.RandomColor
 
@@ -21,11 +22,11 @@ class CommandVH(private val commandItemBinding: CommandItemBinding): RecyclerVie
 
             //commandItemBinding.root.setPadding(item.context.depth * 2, 2, 2,2)
             receiverTextView.setTextColor(randomColors[item.context.executionContext.id.index])
-            receiverTextView.text = item.context.executionContext.toString()
+            receiverTextView.text = item.context.executionContext.toString() + item.context.commandName
             invokerTextView.setTextColor(randomColors[item.context.invokationContext.id.index])
             invokerTextView.text = item.context.invokationContext.toString()
             operationIdTextView.setTextColor(randomColors[item.context.commandId.index])
-            operationIdTextView.text = item.context.commandId.toString()
+            operationIdTextView.text = item.context.commandId.toString() + if(item.context.commandNomenclature!= CommandNomenclature.Undefined) {item.context.commandNomenclature.toString() } else ""
             val indexAndUUID = when(item.state){
                 is SerializableCommandState.Value<IndexAndUUID> -> item.state.valueId
                 is SerializableCommandState.Done<IndexAndUUID> -> item.state.valueId

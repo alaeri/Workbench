@@ -1,16 +1,27 @@
 package com.alaeri.command.core
 
 import com.alaeri.command.CommandState
+import com.alaeri.command.android.CommandNomenclature
 import com.alaeri.command.core.suspend.*
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.runBlocking
 
-inline fun <T, R> ExecutionContext<T>.invokeCommand(noinline body: ExecutionContext<R>.()->R) : R {
+inline fun <T, R> ExecutionContext<T>.invokeCommand(name: String? = null, nomenclature: CommandNomenclature = CommandNomenclature.Undefined,noinline body: ExecutionContext<R>.()->R) : R {
     return invoke {
-        this@invokeCommand.owner.command(body)
+        this@invokeCommand.owner.command(name, nomenclature, body)
     }
 }
-inline fun <R> Any.command(noinline op: ExecutionContext<R>.()->R): Command<R> {
+inline fun <R> Any.command(name: String ?= null, nomenclature: CommandNomenclature = CommandNomenclature.Undefined, noinline op: ExecutionContext<R>.()->R): Command<R> {
+    val executionContext =
+        ExecutableContext<R>(this)
+    return Command(
+        this,
+        executionContext,
+        name,
+        nomenclature
+    ) { this.executeAsFlow { this@Command.op() } }
+}
+inline fun <R> Any.command(name :String? = null, noinline op: ExecutionContext<R>.()->R): Command<R> {
     val executionContext =
         ExecutableContext<R>(this)
     return Command(

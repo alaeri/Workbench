@@ -1,6 +1,7 @@
 package com.alaeri.command.core.suspend
 
 import com.alaeri.command.CommandState
+import com.alaeri.command.android.CommandNomenclature
 import com.alaeri.command.core.*
 import com.alaeri.command.core.flow.FlowCommand
 import com.alaeri.command.core.flow.mapUpdates
@@ -10,9 +11,9 @@ import kotlinx.coroutines.flow.fold
 /**
  * Created by Emmanuel Requier on 09/05/2020.
  */
-suspend inline fun <T,R> SuspendingExecutionContext<T>.suspendInvokeCommand(noinline body: suspend SuspendingExecutionContext<R>.()->R) : R {
+suspend inline fun <T,R> SuspendingExecutionContext<T>.suspendInvokeCommand(nomenclature: CommandNomenclature = CommandNomenclature.Undefined, name: String? = null, noinline body: suspend SuspendingExecutionContext<R>.()->R) : R {
     return suspendInvokeAndFold {
-        this@suspendInvokeCommand.owner.suspendingCommand(body)
+        this@suspendInvokeCommand.owner.suspendingCommand(name, nomenclature,body)
     }
 }
 
@@ -76,11 +77,13 @@ suspend inline fun <T,R, reified U> ExecutionContext<T>.suspendInvokeAsFlow(susp
     val executionContext = suspendingCommand.executableContext.chain(syncInvokationContext2)
     return suspendingCommand.suspendExecute(executionContext).mapUpdates<R,U>()
 }
-suspend inline fun <R> Any.suspendingCommand(noinline op: suspend SuspendingExecutionContext<R>.()->R): SuspendingCommand<R> {
+suspend inline fun <R> Any.suspendingCommand(name: String? = null, nomenclature: CommandNomenclature = CommandNomenclature.Undefined, noinline op: suspend SuspendingExecutionContext<R>.()->R): SuspendingCommand<R> {
     val executionContext =
         ExecutableContext<R>(this)
     return SuspendingCommand(
         this,
+        nomenclature,
+        name,
         executionContext
     ) { this.execute { this@SuspendingCommand.op() } }
 }
