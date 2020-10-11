@@ -10,7 +10,8 @@ import retrofit2.Retrofit
 /**
  * Created by Emmanuel Requier on 19/04/2020.
  */
-val catsModule = Any().commandModule {
+object CatsModelModule
+val catsModule = CatsModelModule.commandModule {
 
     commandSingle<CatApi> { get<Retrofit>().create(CatApi::class.java) }
     commandSingle<CatRemoteDataSource> { CatRemoteDataSource(get()) }

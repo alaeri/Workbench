@@ -11,7 +11,6 @@ import org.koin.core.definition.BeanDefinition
 import org.koin.core.definition.Definition
 import org.koin.core.module.Module
 import org.koin.core.parameter.DefinitionParameters
-import org.koin.core.qualifier.Qualifier
 import org.koin.core.scope.Scope
 import org.koin.dsl.ScopeDSL
 import org.koin.dsl.module
@@ -36,7 +35,7 @@ fun Any.commandModule(body: KoinCommandModule.()->Unit): Command<Module> {
 class KoinInvokationScope(val scopeA: Scope, val executionContext: ExecutionContext<*>){
     fun androidContext() = scopeA.androidContext()
     inline fun <reified T> get(): T = executionContext.invokeCommand(nomenclature = CommandNomenclature.Injection.Retrieval) { scopeA.get<T>() }
-
+    inline fun <reified T: Any> getAll(): List<T> = executionContext.invokeCommand(nomenclature = CommandNomenclature.Injection.Retrieval) { scopeA.getAll<T>() }
 }
 
 class KoinCommandModule(val id:Int, val module: Module, val executionContext: ExecutionContext<Module>) {
