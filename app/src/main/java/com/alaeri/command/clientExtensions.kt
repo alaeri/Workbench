@@ -77,10 +77,10 @@ suspend inline fun <reified R> Any.invokeSuspendingCommand(invokationContext: II
 //inline fun <R> Any.invokeSyncCommand(log: ICommandLogger<R>, name:String?, commandNomenclature: CommandNomenclature = CommandNomenclature.Undefined, noinline body: ExecutionContext<R>.()->R): R{
 //    return invokeSyncCommand(buildCommandContextA(this,  name, commandNomenclature, log), body)
 //}
-inline fun <R> Any.invokeSyncCommand(crossinline log: IInvokationContext<R, R>.(CommandState<R>)->Unit, name:String?, commandNomenclature: CommandNomenclature = CommandNomenclature.Undefined,noinline body: ExecutionContext<R>.()->R): R{
+inline fun <reified R> Any.invokeSyncCommand(crossinline log: IInvokationContext<R, R>.(CommandState<R>)->Unit, name:String?, commandNomenclature: CommandNomenclature = CommandNomenclature.Undefined,noinline body: ExecutionContext<R>.()->R): R{
     return invokeSyncCommand(buildCommandContextA(this, name, commandNomenclature, log), body)
 }
-inline fun <R> Any.invokeSyncCommand(invokationContext: IInvokationContext<R, R>, noinline body: ExecutionContext<R>.()->R): R{
+inline fun <reified R> Any.invokeSyncCommand(invokationContext: IInvokationContext<R, R>, noinline body: ExecutionContext<R>.()->R): R{
     val executableContext =
         ExecutableContext<R>(this)
     val executionContext = executableContext.chain(invokationContext)

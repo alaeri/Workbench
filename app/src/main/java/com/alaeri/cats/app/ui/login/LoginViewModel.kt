@@ -8,7 +8,8 @@ import com.alaeri.command.core.suspendInvokeAndFold
 import com.alaeri.command.invokeSyncCommand
 import kotlinx.coroutines.launch
 
-class LoginViewModel(private val userRepository: UserRepository, private val invokationContext: IInvokationContext<*, *>) : ViewModel() {
+class LoginViewModel(private val userRepository: UserRepository,
+                     private val invokationContext: IInvokationContext<*, *>) : ViewModel() {
 
     private val mediatorLiveData = MediatorLiveData<LoginState>()
 

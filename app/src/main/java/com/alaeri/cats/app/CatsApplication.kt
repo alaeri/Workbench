@@ -1,7 +1,9 @@
 package com.alaeri.cats.app
 
 import android.app.Application
+import android.util.Log
 import com.alaeri.cats.app.cats.catsModule
+import com.alaeri.cats.app.command.CommandModule
 import com.alaeri.cats.app.command.CommandRepository
 import com.alaeri.cats.app.command.commandListFragmentModule
 import com.alaeri.cats.app.ui.cats.catsFragmentModule
@@ -13,6 +15,7 @@ import com.alaeri.command.buildCommandContextA
 import com.alaeri.command.core.*
 import com.alaeri.command.di.AbstractCommandLogger
 import com.alaeri.command.di.DelayedLogger
+import com.alaeri.command.di.invokeModules
 import com.alaeri.command.history.id.DefaultIdStore
 import com.alaeri.command.history.id.IndexAndUUID
 import com.alaeri.command.history.serialization.SerializableCommandStateAndContext
@@ -25,8 +28,11 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.koin.android.ext.koin.androidContext
+import org.koin.core.KoinApplication
 import org.koin.core.context.startKoin
+import org.koin.core.definition.BeanDefinition
 import org.koin.core.module.Module
+import org.koin.core.scope.Scope
 import org.koin.dsl.module
 
 /**
@@ -50,23 +56,23 @@ class CatsApplication : Application() {
                 val flatList = spread(this, state)
                 flatList.map {
                     val serialized = serialize(it.operationContext, it.state, it.depth) { this.defaultKey() }
+                    Log.d("COMMAND","$serialized")
                     delayedSerializedCommandLogger.log(serialized)
                 }
             }
-        val commandModule : Command<Module> =
-            commandModuleInjectionInitialisationCommand(rootCommandContext)
 
         invokeSyncCommand(rootCommandContext){
             val koinApp = startKoin {
                 androidContext(this@CatsApplication)
-                modules(
-                    invoke { commandModule },
-                    invoke { appModule },
-                    invoke { viewPagerFragmentModule },
-                    invoke { userModule },
-                    invoke { catsModule },
-                    invoke { catsFragmentModule },
-                    invoke { commandListFragmentModule })
+                invokeModules(this@invokeSyncCommand,
+                    CommandModule.initWith(rootCommandContext),
+                    appModule,
+                    viewPagerFragmentModule,
+                    userModule,
+                    catsModule,
+                    catsFragmentModule,
+                    commandListFragmentModule
+                    )
             }
             mutableLoggerStateFlow.value = koinApp.koin.get<AbstractCommandLogger<Command<Any>>>()
             mutableStateFlow.value = koinApp.koin.get<CommandRepository>()
@@ -75,34 +81,6 @@ class CatsApplication : Application() {
 
     }
 
-    private fun commandModuleInjectionInitialisationCommand(
-        rootCommandContext: IInvokationContext<Any, Any>
-    ): Command<Module> {
-        return command(nomenclature = CommandNomenclature.Injection.Initialization) {
-            val executionContext = this
-            module {
-                val module = this
-                single<ICommandLogger<Any>> {
-                    invokeCommand(
-                        nomenclature = CommandNomenclature.Injection.Creation) {
-                        object : ICommandLogger<Any> {
-                            override fun log(commandState: CommandState<Any>) {
-                                rootCommandContext.emit(commandState)
-                            }
-                        }
-                    }
-                }
-                single<AbstractCommandLogger<Command<Any>>> {
-                    val ret2 : AbstractCommandLogger<Command<Any>> = executionContext.invokeCommand(nomenclature = CommandNomenclature.Injection.Retrieval) {
-                        get<ICommandLogger<Any>>()  as AbstractCommandLogger<Command<Any>>
-                    }
-                    ret2
-                }
-                single<IInvokationContext<*, *>> { rootCommandContext }
-                single<CommandRepository> { CommandRepository() }
-            }
-        }
-    }
 
 
 }

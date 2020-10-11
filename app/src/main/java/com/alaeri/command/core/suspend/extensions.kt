@@ -98,7 +98,7 @@ suspend inline fun <R> Any.suspendingCommand(name: String? = null, nomenclature:
 //    val executionContext = suspendingCommand.executableContext.chain(suspendingInvokationContext)
 //    return suspendingCommand.suspendExecute(executionContext).suspendFold()
 //}
-inline fun <T,R> SuspendingExecutionContext<T>.invoke(syncOperationInvoker: Any.()-> Command<R>) : R {
+inline fun <T, reified R> SuspendingExecutionContext<T>.invoke(syncOperationInvoker: Any.()-> Command<R>) : R {
     val syncCommand = syncOperationInvoker()
     val suspendingInvokationContext =
         SuspendingInvokationContext2<T, R>(

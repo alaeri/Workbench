@@ -27,12 +27,12 @@ class ViewPagerFragment : Fragment(){
 
     private var binding: ViewpagerFragmentBinding? = null
     private val fragmentsAdapter by lazy { FragmentsAdapter(this) }
-    private val viewPagerModel: ViewPagerViewModel by lifecycleScope.viewModel(this)
+    //private val viewPagerModel: ViewPagerViewModel by lifecycleScope.viewModel(this)
     private lateinit var tabLayoutMediator : TabLayoutMediator
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val viewPagerFragmentInjected : ViewPagerFragment by lifecycleScope.inject { parametersOf(this) }
+        //val viewPagerFragmentInjected : ViewPagerFragment by lifecycleScope.inject { parametersOf(this) }
     }
 
     override fun onCreateView(
@@ -48,6 +48,7 @@ class ViewPagerFragment : Fragment(){
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        val viewPagerModel = ViewPagerViewModel()
         viewPagerModel.pages.observe(viewLifecycleOwner, Observer {
             fragmentsAdapter.updatePages(it)
             tabLayoutMediator = TabLayoutMediator(tabs, pager) { tab, position ->
