@@ -1,24 +1,41 @@
 package com.alaeri.command.android
 
 import androidx.lifecycle.LifecycleOwner
-import com.alaeri.command.CommandState
+import com.alaeri.command.*
 import com.alaeri.command.core.*
 import com.alaeri.command.core.suspend.SuspendingExecutionContext
 import com.alaeri.command.core.suspend.suspendInvokeCommand
-import com.alaeri.command.invokeSuspendingCommand
-import com.alaeri.command.invokeSyncCommand
 
 class LifecycleCommandContext(
     val owner: LifecycleOwner,
-    private val commandLogger: ICommandLogger<Any>
+    val commandLogger: ICommandLogger<Any>
 ): IInvokationContext<Any, Any> {
 
-    fun <R> invokeLifecycleCommand(body: ExecutionContext<Any>.()->R){
-        invokeSyncCommand<Any>(this){
-             this.invokeCommand { body }
-        }
+    //val rootLifecycleContext = buildCommandRoot<Any>(owner, "", CommandNomenclature.Root, commandLogger)
+    val rootCommandContext = buildCommandContextA<Any>(owner, "lifecycle", CommandNomenclature.Root) { c ->
+        commandLogger.log(c)
     }
-    suspend inline fun <R> invokeSuspendingLifecycleCommand(noinline body: suspend SuspendingExecutionContext<Any>.()->R){
+
+    inline fun <reified R: Any> invokeLifecycleCommand(name: String? = null,
+                                                  nomenclature: CommandNomenclature = CommandNomenclature.Undefined,
+                                                  noinline body: ExecutionContext<R>.()->R) : R{
+//        val executionContext : ExecutionContext<R> = object : ExecutionContext<R>{
+//            override val owner: Any
+//                get() = this@LifecycleCommandContext.owner
+//
+//            override fun emit(commandState: CommandState<R>) {
+//                commandLogger.log(commandState as CommandState<Any>)
+//            }
+//        }
+//        return executionContext.execute { executionContext.body() }.syncFold()
+
+        return invokeSyncCommand(rootCommandContext){
+            invokeCommand<Any,R>(name, nomenclature) {
+                this.body()
+            }
+        } as R
+    }
+    suspend inline fun <reified R> invokeSuspendingLifecycleCommand(noinline body: suspend SuspendingExecutionContext<Any>.()->R){
         invokeSuspendingCommand<Any>(this){
             this.suspendInvokeCommand { body }
         }

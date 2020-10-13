@@ -1,5 +1,6 @@
 package com.alaeri.cats.app.ui.cats
 
+import android.util.Log
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider.Factory
@@ -40,7 +41,7 @@ val catsFragmentModule : Command<Module> = CatsFragmentModule.commandModule {
                     binding, _ -> CatItemVH.CatVH(binding, get(), get())
             }
         }
-        factory {
+        factory<ViewHolderProvider<Cat,CatItemVH>> {
 
             val viewHolderFactories = getAll<IViewHolderFactory<Cat, CatItemVH>>()
             ViewHolderProvider<Cat, CatItemVH>(
@@ -54,10 +55,18 @@ val catsFragmentModule : Command<Module> = CatsFragmentModule.commandModule {
         factory {
             RefreshUseCase(get(), get())
         }
-        factory{
+//        factory<PagedListAdapterWithVHProvider<Cat, CatItemVH>>{
+//            val diffCallback = CatDiffCallback()
+//            val asyncDifferConfig: AsyncDifferConfig<Cat> = AsyncDifferConfig.Builder<Cat>(diffCallback).build()
+//            PagedListAdapterWithVHProvider<Cat, CatItemVH>(get(), asyncDifferConfig)
+//        }
+        factory<CatsAdapter> {
             val diffCallback = CatDiffCallback()
             val asyncDifferConfig: AsyncDifferConfig<Cat> = AsyncDifferConfig.Builder<Cat>(diffCallback).build()
-            PagedListAdapterWithVHProvider<Cat, CatItemVH>(get(), asyncDifferConfig)
+            Log.d("COMMAND","CREATING CATS ADAPTER")
+            val viewHolderProvider : ViewHolderProvider<Cat, CatItemVH> = get()
+            Log.d("COMMAND","CREATING CATS ADAPTER VHP")
+            CatsAdapter(viewHolderProvider, diffCallback, asyncDifferConfig )
         }
         viewmodel { CatsViewModel(get(), get(), get()) } }
 

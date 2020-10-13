@@ -12,7 +12,7 @@ import kotlinx.coroutines.flow.fold
  * Created by Emmanuel Requier on 09/05/2020.
  */
 suspend inline fun <T,R> SuspendingExecutionContext<T>.suspendInvokeCommand(nomenclature: CommandNomenclature = CommandNomenclature.Undefined, name: String? = null, noinline body: suspend SuspendingExecutionContext<R>.()->R) : R {
-    return suspendInvokeAndFold {
+    return@suspendInvokeCommand suspendInvokeAndFold {
         this@suspendInvokeCommand.owner.suspendingCommand(name, nomenclature,body)
     }
 }
@@ -80,7 +80,7 @@ suspend inline fun <T,R, reified U> ExecutionContext<T>.suspendInvokeAsFlow(susp
 suspend inline fun <R> Any.suspendingCommand(name: String? = null, nomenclature: CommandNomenclature = CommandNomenclature.Undefined, noinline op: suspend SuspendingExecutionContext<R>.()->R): SuspendingCommand<R> {
     val executionContext =
         ExecutableContext<R>(this)
-    return SuspendingCommand(
+    return@suspendingCommand SuspendingCommand(
         this,
         nomenclature,
         name,
@@ -108,9 +108,9 @@ inline fun <T, reified R> SuspendingExecutionContext<T>.invoke(syncOperationInvo
     val executionContext = syncCommand.executableContext.chain(suspendingInvokationContext)
     return syncCommand.syncExecute(executionContext).syncFold()
 }
-suspend fun <ChildType> Flow<CommandState<ChildType>>.suspendFold(): ChildType{
+suspend inline fun <ChildType> Flow<CommandState<ChildType>>.suspendFold(): ChildType{
     val lastOperationState = this@suspendFold.fold<CommandState<ChildType>, CommandState<ChildType>?>(null, { _, operationState -> operationState})
-    return when(lastOperationState){
+    return@suspendFold when(lastOperationState){
         is CommandState.Done -> lastOperationState.value
         is CommandState.Failure -> throw lastOperationState.t
         else -> throw IllegalStateException("lastOperationState is not final: $lastOperationState")

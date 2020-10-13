@@ -20,9 +20,6 @@ object CommandModule{
                     }
                 }
             }
-            commandSingle<AbstractCommandLogger<Command<Any>>> {
-                get<ICommandLogger<Any>>()  as AbstractCommandLogger<Command<Any>>
-            }
             commandSingle<IInvokationContext<*, *>> { rootCommandContext }
             commandSingle<CommandRepository> { CommandRepository() }
         }

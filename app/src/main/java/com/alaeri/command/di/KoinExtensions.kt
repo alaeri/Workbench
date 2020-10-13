@@ -113,13 +113,14 @@ class KoinCommandModule(val id:Int, val module: Module, val executionContext: Ex
     }
 }
 
-class CommandScopeDSL(val scopeDSL: ScopeDSL, val executionContext: ExecutionContext<Module>) {
+class CommandScopeDSL(val scopeDSL: ScopeDSL, val parentExecutionContext: ExecutionContext<Module>) {
 
     inline fun <reified T> scoped(noinline body: KoinInvokationScope.(parameters: DefinitionParameters) -> T): BeanDefinition<T> {
-        return executionContext.invokeCommand<Module, BeanDefinition<T>>(nomenclature = CommandNomenclature.Injection.Initialization) {
+        return parentExecutionContext.invokeCommand<Module, BeanDefinition<T>>(nomenclature = CommandNomenclature.Injection.Initialization) {
             Log.d("COMMAND2SCOPE-SCOPED", "${T::class.java}")
+            val executionContext = this
             val definition: Definition<T> = { params: DefinitionParameters ->
-                invokeCommand<BeanDefinition<T>, T>(nomenclature = CommandNomenclature.Injection.Creation) {
+                executionContext.invokeCommand<BeanDefinition<T>, T>(nomenclature = CommandNomenclature.Injection.Creation) {
                     Log.d("COMMAND2SCOPE-SCOPED", "${T::class.java}")
                     val executionContextInside: ExecutionContext<T> = this
                     val invokationScope = KoinInvokationScope(scope, executionContextInside)
@@ -132,27 +133,51 @@ class CommandScopeDSL(val scopeDSL: ScopeDSL, val executionContext: ExecutionCon
 
     inline fun <reified T> factory(noinline body: KoinInvokationScope.() -> T): BeanDefinition<T> {
         Log.d("COMMAND2SCOPE-FACTORY", "${T::class.java}")
-        return executionContext.invokeCommand<Module, BeanDefinition<T>>(nomenclature = CommandNomenclature.Injection.Initialization) {
-            scopeDSL.factory<T> {
-                Log.d("COMMAND2SCOPE-FACTORY", "${T::class.java}")
-                val scope = this
-                invokeCommand<BeanDefinition<T>, T>(nomenclature = CommandNomenclature.Injection.Creation) {
-                    KoinInvokationScope(scope, this).body()
+        return parentExecutionContext.invokeCommand<Module, BeanDefinition<T>>(nomenclature = CommandNomenclature.Injection.Initialization) {
+            val executionContext = this
+//            scopeDSL.factory<T> {
+//                Log.d("COMMAND2SCOPE-FACTORY", "${T::class.java}")
+//                val factoryScope = this
+//                executionContext.invokeCommand<BeanDefinition<T>, T>(nomenclature = CommandNomenclature.Injection.Creation) {
+//                    val executionContextInside: ExecutionContext<T> = this
+//                    KoinInvokationScope(factoryScope, executionContextInside).body()
+//                }
+//            }
+            val definition : Definition<T> = {
+                val factoryScope = this
+                val obj : T = executionContext.invokeCommand<BeanDefinition<T>, T>(nomenclature = CommandNomenclature.Injection.Creation) {
+                    val executionContextInside: ExecutionContext<T> = this
+                    KoinInvokationScope(factoryScope, executionContextInside).body()
                 }
+                Log.d("COMMAND2SCOPE-FACTORY", "return $obj")
+                obj
             }
+            scopeDSL.factory<T>(null, false, definition = definition)
         }
     }
 
     inline fun <reified T : ViewModel> viewmodel(noinline body: KoinInvokationScope.() -> T): BeanDefinition<T> {
         Log.d("COMMAND2SCOPE-VIEWMODEL", "${T::class.java}")
-        return executionContext.invokeCommand<Module, BeanDefinition<T>>(nomenclature = CommandNomenclature.Injection.Initialization) {
-            scopeDSL.viewModel<T> {
-                val scope = this
-                invokeCommand<BeanDefinition<T>, T>(nomenclature = CommandNomenclature.Injection.Creation) {
-                    Log.d("COMMAND2SCOPE-VIEWMODEL", "${T::class.java}")
-                    KoinInvokationScope(scope, this).body()
+        return parentExecutionContext.invokeCommand<Module, BeanDefinition<T>>(nomenclature = CommandNomenclature.Injection.Initialization) {
+            val scopeExecutionContext = this
+            val definition : Definition<T> = {
+                val factoryScope = this
+                val viewModel : T = scopeExecutionContext.invokeCommand<BeanDefinition<T>, T>(nomenclature = CommandNomenclature.Injection.Creation) {
+                    val executionContextInside: ExecutionContext<T> = this
+                    KoinInvokationScope(factoryScope, executionContextInside).body()
                 }
+                Log.d("COMMAND2SCOPE-VIEWMODEL", "return $viewModel")
+                viewModel
             }
+//            scopeDSL.viewModel<T> {
+//                val vmScope = this
+//                scopeExecutionContext.invokeCommand<BeanDefinition<T>, T>(nomenclature = CommandNomenclature.Injection.Creation) {
+//                    val childExecutionContext : ExecutionContext<T> = this
+//                    Log.d("COMMAND2SCOPE-VIEWMODEL", "${T::class.java}")
+//                    KoinInvokationScope(vmScope, childExecutionContext).body()
+//                }
+//            }
+            scopeDSL.viewModel<T>(null, false, definition)
         }
     }
 }

@@ -1,5 +1,6 @@
 package com.alaeri.cats.app.command
 
+import android.util.Log
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelStore
@@ -25,7 +26,12 @@ class CommandListFragmentModule {
                 ViewModelStoreOwner { vmStore }
             }
             factory<CommandAdapter> { CommandAdapter() }
-            viewmodel<CommandListViewModel> { CommandListViewModel(get()) }
+            viewmodel<CommandListViewModel> {
+                Log.d("COMMAND2_VM","CLVM")
+                val commandRepository : CommandRepository = get()
+                Log.d("COMMAND2_VM","commandRepository: $commandRepository")
+                CommandListViewModel(commandRepository)
+            }
 
         }
     }

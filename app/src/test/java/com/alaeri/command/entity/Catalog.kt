@@ -12,15 +12,14 @@ class Catalog {
     val images = listOf(Image())
 
     suspend fun downloadAll() : SuspendingCommand<Unit> = suspendingCommand<Unit> {
-        images.forEach { suspendInvokeAndFold { download(it) } }
+        images.map { suspendInvokeAndFold { download(it) } }
     }
 
-    suspend fun download(image: Image) = suspendingCommand<Unit> {
-        val data = suspendInvokeAndFold {
+    suspend fun download(image: Image) = suspendingCommand<ImgData> {
+         suspendInvokeAndFold {
             val suspendingCommand: SuspendingCommand<ImgData> = image.downloadData()
             suspendingCommand
         }
-        Unit
     }
 
     fun refresh() = command<Unit> {

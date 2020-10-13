@@ -1,13 +1,13 @@
 package com.alaeri.command
 
+import com.alaeri.command.android.CommandNomenclature
+import com.alaeri.command.core.*
 import com.alaeri.command.entity.Catalog
-import com.alaeri.command.core.ICommand
-import com.alaeri.command.core.IInvokationContext
-import com.alaeri.command.core.invoke
-import com.alaeri.command.core.suspendInvokeAndFold
 import com.alaeri.command.history.*
 import com.alaeri.command.history.id.DefaultIdStore
 import defaultKey
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.test.TestCoroutineScope
 import kotlinx.coroutines.test.runBlockingTest
@@ -20,10 +20,11 @@ import org.junit.Test
 /**
  * Created by Emmanuel Requier on 03/05/2020.
  */
+@ExperimentalCoroutinesApi
 class OperationHistoryTest {
 
     private val testCoroutineScope = TestCoroutineScope()
-    lateinit var logger: IInvokationContext<*, *>.(CommandState<Int>) -> Unit
+    lateinit var logger: IInvokationContext<Int, Int>.(CommandState<Int>) -> Unit
     val list = mutableListOf<CommandState<Int>>()
 
     @Before
@@ -46,7 +47,7 @@ class OperationHistoryTest {
     fun testFlatten() = testCoroutineScope.runBlockingTest{
         val catalog = Catalog()
         val iOperationContext =
-            buildCommandContext<Int>(this, logger)
+            buildCommandContextA<Int>(this, "flatten", CommandNomenclature.Test, logger)
         val count = invokeSuspendingCommand(iOperationContext){
             invoke{
                 catalog.count()
@@ -67,28 +68,41 @@ class OperationHistoryTest {
         assertEquals(catalog, secondElement.operationContext.command.owner)
         assertEquals(this, secondElement.operationContext.invoker.owner)
     }
+    object shouldBeEmittedLast
+    @ExperimentalCoroutinesApi
     @Test
     fun testSerialize() = testCoroutineScope.runBlockingTest{
         val catalog = Catalog()
         val iOperationContext =
-            buildCommandContext<Int>(this, logger)
+            buildCommandContextA<Int>(this, "name", CommandNomenclature.Test, logger)
         val count = invokeSuspendingCommand(iOperationContext){
-            suspendInvokeAndFold{
-                catalog.downloadAll()
+
+            coroutineScope {
+                suspendInvokeAndFold{
+                    catalog.downloadAll()
+                }
+                println("csA: $coroutineContext")
+                Unit
             }
+
             1
+
         }
-        val flatList = list.flatMap { spread(iOperationContext, it) }
-        flatList.map { serialize(it.operationContext, it.state, it.depth, { this.defaultKey() }) }.forEach { println(it) }
+        println("csG: ${this}")
+        assertEquals(1, count)
+        assertEquals(5, list.size)
         delay(300)
-        testCoroutineScope.runCurrent()
+        val flatList = list.flatMap { spread(iOperationContext, it) }
+        flatList.map { serialize(it.operationContext, it.state, it.depth) { this.defaultKey() } }.forEach { println(it) }
+        delay(300)
+        testCoroutineScope.advanceUntilIdle()
     }
 
     @Test
     fun testFocus() = testCoroutineScope.runBlockingTest{
         val catalog = Catalog()
         val iOperationContext =
-            buildCommandContext<Int>(this, logger)
+            buildCommandContextA<Int>(this, "name", CommandNomenclature.Test, logger)
         var command: ICommand<*>? = null
         val count = invokeSyncCommand(iOperationContext){
             invoke{

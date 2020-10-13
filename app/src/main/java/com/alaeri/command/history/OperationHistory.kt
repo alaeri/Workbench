@@ -22,13 +22,14 @@ fun <Key> serialize(operationContext: IInvokationContext<*, *>,
                     keyOf: Any.()->Key) : SerializableCommandStateAndContext<Key> {
 
     val serializableState : SerializableCommandState<Key> = when(commandState){
+        is Starting<*> ->  SerializableCommandState.Starting<Key>()
         is CommandState.Update<*,*> -> commandState.value?.run {
             SerializableCommandState.Value<Key>(
                 this.keyOf(),
                 this.toSerializedClass(),
                 this.toString()
             )
-        } ?: SerializableCommandState.Done<Key>(Unit.keyOf(), null, null) as SerializableCommandState<Key>
+        } ?: SerializableCommandState.Value<Key>(Unit.keyOf(), null, null) as SerializableCommandState<Key>
 
         is CommandState.Done<*> -> commandState.value?.run {
             SerializableCommandState.Done<Key>(

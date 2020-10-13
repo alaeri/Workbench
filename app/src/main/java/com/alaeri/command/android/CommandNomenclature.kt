@@ -10,10 +10,8 @@ package com.alaeri.command.android
  */
 sealed class CommandNomenclature {
     object Undefined: CommandNomenclature()
-    object Root : CommandNomenclature() {
-
-    }
-
+    object Root : CommandNomenclature()
+    object Test : CommandNomenclature()
     sealed class Injection : CommandNomenclature(){
         object Initialization: Injection()
         object Creation: Injection()

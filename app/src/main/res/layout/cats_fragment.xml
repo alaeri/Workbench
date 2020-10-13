@@ -6,8 +6,8 @@
     android:layout_height="match_parent">
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
         android:id='@+id/swipeRefreshLayout'
-        android:layout_width="0dp"
-        android:layout_height="0dp"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -15,6 +15,8 @@
         <androidx.recyclerview.widget.RecyclerView
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            xmlns:tools="http://schemas.android.com/tools"
+            tools:listitem="@layout/command_item"
             android:id="@+id/recyclerView"/>
     </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
     <TextView

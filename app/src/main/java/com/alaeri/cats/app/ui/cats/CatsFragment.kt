@@ -29,7 +29,9 @@ class CatsFragment : KoinComponent, Fragment(){
     //private val fragmentScope : Scope by lazy { getKoin().getOrCreateScope<CatsFragment>("id") }
     private val catsFragment : Fragment by lifecycleScope.inject { parametersOf(this) }
     private val catsViewModel: CatsViewModel by lifecycleScope.viewModel(this)
-    private val catsAdapter : PagedListAdapterWithVHProvider<Cat, CatItemVH> by lazy { lifecycleScope.get<PagedListAdapterWithVHProvider<Cat, CatItemVH>>() }
+    //private val catsAdapter : PagedListAdapterWithVHProvider<Cat, CatItemVH> by lazy { lifecycleScope.get<PagedListAdapterWithVHProvider<Cat, CatItemVH>>() }
+    private val catsAdapter by lazy { lifecycleScope.get<CatsAdapter>() }
+
 
     private lateinit var binding: CatsFragmentBinding
 

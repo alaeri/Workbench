@@ -1,10 +1,8 @@
 package com.alaeri.command
 
+import com.alaeri.command.android.CommandNomenclature
+import com.alaeri.command.core.*
 import com.alaeri.command.entity.Catalog
-import com.alaeri.command.core.IInvokationContext
-import com.alaeri.command.core.suspendInvokeAndFold
-import com.alaeri.command.core.command
-import com.alaeri.command.core.invoke
 import com.alaeri.command.core.suspend.suspendingCommand
 import junit.framework.Assert.assertEquals
 import junit.framework.Assert.assertTrue
@@ -21,14 +19,26 @@ import org.junit.Test
 class Operation2Test {
 
     private val testCoroutineScope = TestCoroutineScope()
-    lateinit var logger: IInvokationContext<*, *>.(CommandState<Int>) -> Unit
+    lateinit var logger: IInvokationContext<Int, Int>
+
     val list = mutableListOf<CommandState<Int>>()
 
     @Before
     fun prepare(){
-        logger = { t ->
-            list.add(t)
-            println(t)
+        logger = object : IInvokationContext<Int, Int> {
+            override val command = object : ICommand<Int> {
+                override val owner: Any = this
+                override val nomenclature: CommandNomenclature = CommandNomenclature.Test
+                override val name: String? = "test"
+            }
+            override val invoker: Invoker<Int> = object : Invoker<Int> {
+                override val owner: Any = this
+            }
+
+            override fun emit(opState: CommandState<Int>) {
+                list.add(opState)
+                println(opState)
+            }
         }
     }
 
@@ -48,7 +58,7 @@ class Operation2Test {
 
     @Test
     fun testBasicSyncOperationWorks() = runBlocking {
-        val value2 = invokeSyncCommand<Int>({ t-> println(t)}){
+        val value2 = invokeSyncCommand<Int>(logger){
             2
         }
         assertEquals(2, value2)
@@ -73,7 +83,7 @@ class Operation2Test {
             }
             assertEquals(1, value)
         }
-        val value2 = invokeSyncCommand<Int>({ t -> println(t)}){
+        val value2 = invokeSyncCommand<Int>(logger){
             val count = invoke { command<Int>{  2  } }
             testCoroutineScope.launch {
                 suspendInvokeAndFold {

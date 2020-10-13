@@ -3,11 +3,12 @@ package com.alaeri.command.core
 import com.alaeri.command.CommandState
 import com.alaeri.command.android.CommandNomenclature
 import com.alaeri.command.core.suspend.*
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.runBlocking
 
 inline fun <T, reified R> ExecutionContext<T>.invokeCommand(name: String? = null, nomenclature: CommandNomenclature = CommandNomenclature.Undefined, crossinline body: ExecutionContext<R>.()->R) : R {
-    return this.invoke<T, R> {
+    return@invokeCommand this.invoke<T, R> {
         this@invokeCommand.owner.command(name, nomenclature, body)
     }
 }
@@ -49,12 +50,22 @@ inline fun <T, reified R> ExecutionContext<T>.invoke(commandCreator: ()-> Comman
     val executionContext = syncCommand.executableContext.chain(syncInvokationContext)
     return syncCommand.syncExecute(executionContext).syncFold<R>()
 }
+suspend inline fun <T, reified R> ExecutionContext<T>.suspendInvoke(crossinline commandCreator: suspend ()-> SuspendingCommand<R>) : R {
+    val syncCommand = commandCreator.invoke()
+    val syncInvokationContext =
+        InvokationContext<T, R>(
+            syncCommand,
+            this
+        )
+    val executionContext = syncCommand.executableContext.chain(syncInvokationContext)
+    return@suspendInvoke coroutineScope { syncCommand.suspendExecute(executionContext).suspendFold() }
+}
 
 inline fun <reified ChildType> Flow<CommandState<ChildType>>.syncFold(): ChildType{
     val lastOperationState = runBlocking {
         this@syncFold.fold<CommandState<ChildType>, CommandState<ChildType>?>(null, { _, operationState -> operationState})
     }
-    return when(lastOperationState){
+    return@syncFold when(lastOperationState){
         is CommandState.Done -> lastOperationState.value
         is CommandState.Failure -> throw lastOperationState.t
         else -> throw IllegalStateException("lastOperationState is not final: $lastOperationState")
@@ -66,7 +77,7 @@ inline fun <reified ChildType> Flow<CommandState<ChildType>>.syncFold(): ChildTy
  * ADD currentCoroutineContext or callerCoroutineContext for blocking Functions?
  * ADD currentThread?
  */
-suspend inline fun <T,R> ExecutionContext<T>.suspendInvokeAndFold(suspendingCommandCreator: ()-> SuspendingCommand<R>) : R {
+suspend inline fun <T,R> ExecutionContext<T>.suspendInvokeAndFold(crossinline suspendingCommandCreator: suspend ()-> SuspendingCommand<R>) : R {
     val suspendingCommand = suspendingCommandCreator.invoke()
     val syncInvokationContext2 =
         InvokationContext<T, R>(
@@ -74,7 +85,7 @@ suspend inline fun <T,R> ExecutionContext<T>.suspendInvokeAndFold(suspendingComm
             this
         )
     val executionContext = suspendingCommand.executableContext.chain(syncInvokationContext2)
-    return suspendingCommand.suspendExecute(executionContext).suspendFold()
+    return@suspendInvokeAndFold coroutineScope { println("csB: $coroutineContext"); suspendingCommand.suspendExecute(executionContext).suspendFold() }
 }
 
 

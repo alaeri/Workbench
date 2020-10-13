@@ -20,11 +20,11 @@ class FragmentExample: Fragment(), LifecycleCommandOwner, KoinComponent {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        invokeLifecycleCommand {
+        commandContext.invokeLifecycleCommand<Unit> {
             emit(CommandState.Update("coucou"))
         }
         lifecycleScope.launch {
-            invokeSuspendingLifecycleCommand {
+            commandContext.invokeSuspendingLifecycleCommand {
                 emit(CommandState.Update("coucou suspend"))
                 command<String> { "coucou" }
             }
@@ -35,7 +35,7 @@ class FragmentExample: Fragment(), LifecycleCommandOwner, KoinComponent {
 
     override fun onResume() {
         super.onResume()
-        invokeLifecycleCommand {
+        commandContext.invokeLifecycleCommand<Unit> {
             emit(CommandState.Update("coucou"))
             command<String> { "hola" }
         }
