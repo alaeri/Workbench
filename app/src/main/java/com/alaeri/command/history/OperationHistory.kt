@@ -68,7 +68,7 @@ fun <Key> serialize(operationContext: IInvokationContext<*, *>,
         invokationContext = serializableInvokationContext,
         commandNomenclature = operationContext.command.nomenclature
         )
-    return SerializableCommandStateAndContext<Key>(context = serializableCommandContext, state = serializableState)
+    return SerializableCommandStateAndContext<Key>(context = serializableCommandContext, state = serializableState, time= System.currentTimeMillis())
 }
 sealed class FocusedStateAndContext<Key>{
     data class Value<Key>(val commandContext: SerializableCommandContext<Key>) : FocusedStateAndContext<Key>()

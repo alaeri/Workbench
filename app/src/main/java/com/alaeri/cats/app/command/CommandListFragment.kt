@@ -12,6 +12,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModel
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.alaeri.cats.app.command.focus.FocusCommandViewModel
 import com.alaeri.cats.app.databinding.CatsFragmentBinding
 import com.alaeri.command.android.CommandNomenclature
 import com.alaeri.command.android.LifecycleCommandContext
@@ -47,7 +48,7 @@ class CommandListViewModel(private val commandRepository: CommandRepository) : V
 class CommandListFragment : Fragment(), KoinComponent, LifecycleCommandOwner {
 
     //private val catsFragment : Fragment by lifecycleScope.inject { parametersOf(this) }
-    private lateinit var commandListViewModel: CommandListViewModel
+    private lateinit var commandListViewModel: FocusCommandViewModel
     private lateinit var adapter: CommandAdapter
     private val futureLogger =  MutableStateFlow<ICommandLogger<Any>?>(null)
     override val commandContext: LifecycleCommandContext = buildLifecycleCommandContext(futureLogger)
@@ -61,7 +62,7 @@ class CommandListFragment : Fragment(), KoinComponent, LifecycleCommandOwner {
     ): View? {
         return commandContext.invokeLifecycleCommand<CatsFragmentBinding>(nomenclature = CommandNomenclature.Android.Lifecycle.OnCreateView) {
             val executionContext = this
-            commandListViewModel  = executionContext.invokeCommand<CatsFragmentBinding, CommandListViewModel>{ lifecycleScope.get<CommandListViewModel>() }
+            commandListViewModel  = executionContext.invokeCommand<CatsFragmentBinding, FocusCommandViewModel>{ lifecycleScope.get<FocusCommandViewModel>() }
             futureLogger.value = executionContext.invokeCommand<CatsFragmentBinding, ICommandLogger<Any>> { lifecycleScope.get<ICommandLogger<Any>>() }
             executionContext.invokeCommand<CatsFragmentBinding, Unit> {
                 val fragment : Fragment by lifecycleScope.inject { parametersOf(this@CommandListFragment) }
@@ -81,7 +82,7 @@ class CommandListFragment : Fragment(), KoinComponent, LifecycleCommandOwner {
                         adapter = this@CommandListFragment.adapter
                         layoutManager = LinearLayoutManager(context)
                     }
-                    swipeRefreshLayout.setOnRefreshListener { commandListViewModel.onRefresh() }
+                    swipeRefreshLayout.setOnRefreshListener { /*commandListViewModel.onRefresh()*/ }
                 }
             }
             invokeCommand<CatsFragmentBinding, Unit>(name = "subscribe"){
@@ -93,8 +94,8 @@ class CommandListFragment : Fragment(), KoinComponent, LifecycleCommandOwner {
                         catsLoadingTextView.visibility = View.GONE
                         progressCircular.hide()
                         adapter.list.clear()
-                        swipeRefreshLayout.isRefreshing = false
-                        adapter.list.addAll(it)
+                        swipeRefreshLayout.isRefreshing = it.isComputing
+                        adapter.list.addAll(it.list)
                         adapter.notifyDataSetChanged()
                         recyclerView.visibility = View.VISIBLE
                         retryButton.visibility = View.GONE
@@ -111,7 +112,7 @@ class CommandListFragment : Fragment(), KoinComponent, LifecycleCommandOwner {
 
     override fun onResume() {
         super.onResume()
-        commandListViewModel.onRefresh()
+//        commandListViewModel.onRefresh()
     }
 
 

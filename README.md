@@ -37,12 +37,15 @@ TBC
 * [X] Viewpager
 * [X] Visualize add returned objects to visualization
 * [X] LifecycleCommand
-* [ ] Add command tags
-* [ ] Find a cleaner command usage pattern for Koin
-* [ ] Configure zoom
+* [X] Add command tags
+* [X] Find a cleaner command usage pattern for Koin
+* [X] Configure focus
+* [ ] Repair graph
+* [ ] Repair injection/unit test/
 * [ ] ConfigureCodeCoverage
-* [ ] Move the components to their own modules
+* [ ] Move the components to their own modules: command {core, android, koin, debug-ui, persistence}, recyclerview-helpers, catsApp { Koin, ManualDi } 
 * [ ] Improve README
+* [ ] Investigate async dependency injection patterns and create a manual injection version
 * [ ] Logserver
 * [ ] Logclient webpage
 * [ ] FuzzingAnnotation : check if it already exists first.

@@ -1,5 +1,6 @@
 package com.alaeri.cats.app.command
 
+import com.alaeri.cats.app.command.focus.FocusCommandRepository
 import com.alaeri.command.CommandState
 import com.alaeri.command.core.Command
 import com.alaeri.command.core.ICommandLogger
@@ -22,5 +23,6 @@ object CommandModule{
             }
             commandSingle<IInvokationContext<*, *>> { rootCommandContext }
             commandSingle<CommandRepository> { CommandRepository() }
+            commandSingle<FocusCommandRepository> { FocusCommandRepository(get()) }
         }
 }

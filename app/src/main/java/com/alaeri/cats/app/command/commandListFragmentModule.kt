@@ -5,6 +5,8 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelStore
 import androidx.lifecycle.ViewModelStoreOwner
+import com.alaeri.cats.app.command.focus.FocusCommandRepository
+import com.alaeri.cats.app.command.focus.FocusCommandViewModel
 import com.alaeri.command.core.Command
 import com.alaeri.command.core.command
 import com.alaeri.command.di.commandModule
@@ -31,6 +33,12 @@ class CommandListFragmentModule {
                 val commandRepository : CommandRepository = get()
                 Log.d("COMMAND2_VM","commandRepository: $commandRepository")
                 CommandListViewModel(commandRepository)
+            }
+            viewmodel<FocusCommandViewModel> {
+                Log.d("COMMAND2_VM","CLVM")
+                val commandRepository : FocusCommandRepository = get()
+                Log.d("COMMAND2_VM","commandRepository: $commandRepository")
+                FocusCommandViewModel(commandRepository)
             }
 
         }
