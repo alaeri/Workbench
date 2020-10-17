@@ -82,9 +82,9 @@ class GraphFragment: Fragment(), KoinComponent {
         //TODO use proper json serializing
 
         val filteredList = commandRepository.state.map { it.history?.list }.filterNotNull().map {
-            it.mapNotNull {
-                val focused =  it as FocusedCommandOrBreak.Focused
-                it?.serializableCommandStateAndContext
+            it.mapNotNull { focusedCommandOrBreak ->
+                val focused =  focusedCommandOrBreak as? FocusedCommandOrBreak.Focused
+                focused?.serializableCommandStateAndContext
             }
         }.asLiveData(lifecycleScope.coroutineContext).observe(this.viewLifecycleOwner, Observer {
             val levelsToJson = buildLevels(it)

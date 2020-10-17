@@ -108,8 +108,8 @@ class FocusCommandRepository(private val repository: CommandRepository){
         val minTime = timeBounds.start ?: (System.currentTimeMillis() - 60 * 1000)
         val maxTime = timeBounds.end ?: System.currentTimeMillis()
         val start = startOrNull?.coerceAtLeast(minTime) ?: minTime
-        val end = endOrNull?.coerceAtMost(System.currentTimeMillis()) ?: System.currentTimeMillis()
-        assert(minTime < maxTime)
+        val end = endOrNull?.coerceAtMost(maxTime) ?: maxTime
+        check(minTime < maxTime)
         FocusedAndZoomCommandHistory(
             minTime = minTime - initializationTime,
             start = start - initializationTime,

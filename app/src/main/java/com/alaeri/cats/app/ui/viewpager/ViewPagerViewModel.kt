@@ -47,9 +47,10 @@ class ViewPagerViewModel(private val focusCommandRepository: FocusCommandReposit
 
 private fun FocusedAndZoomCommandHistory.toFocusViewState(clearFocus: () -> Unit): FocusViewState {
     Log.d("CATS","history: $this")
-    assert(minTime <= start)
-    assert(start<=end)
-    assert(end<=maxTime)
-    assert(minTime<maxTime)
+    check(minTime <= start)
+    check(start<=end)
+    check(end<=maxTime)
+    check(minTime<maxTime)
+
     return FocusViewState(minTime.toFloat(), start.toFloat(), end.toFloat(), maxTime.toFloat(), focus, clearFocus)
 }
