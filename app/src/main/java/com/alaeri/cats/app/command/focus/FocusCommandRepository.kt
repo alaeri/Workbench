@@ -8,6 +8,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
+import java.lang.Long.min
 
 sealed class FocusedCommandOrBreak{
     data class Focused(val serializableCommandStateAndContext: SerializableCommandStateAndContext<IndexAndUUID>): FocusedCommandOrBreak()
@@ -18,15 +19,17 @@ data class FocusedAndZoomCommandHistory(
     val beforeCount: Int,
     val beforeFocusedCount: Int,
     val start: Long,
-    val list: List<FocusedCommandOrBreak>,
+    val focus: IndexAndUUID?,
     val end: Long,
     val afterCount: Int,
     val afterFocusedCount: Int,
-    val maxTime: Long
+    val maxTime: Long,
+    val list: List<FocusedCommandOrBreak>
 )
 data class State(val isComputing: Boolean, val history: FocusedAndZoomCommandHistory?)
 @ExperimentalCoroutinesApi
 class FocusCommandRepository(private val repository: CommandRepository){
+    val initializationTime = System.currentTimeMillis()
     private val currentFocus = MutableStateFlow<IndexAndUUID?>(null)
     private val currentTimeRange = MutableStateFlow<Pair<Long,Long>?>(null)
 
@@ -39,39 +42,49 @@ class FocusCommandRepository(private val repository: CommandRepository){
 
     private val isComputingMutable = MutableStateFlow<Boolean>(false)
 
+    data class Acc(
+        val beforeCount: Int,
+        val beforeFocusedCount: Int,
+        val list: List<FocusedCommandOrBreak>,
+        val afterCount: Int,
+        val afterFocusedCount: Int
+    )
+
     private val historyFlow: Flow<FocusedAndZoomCommandHistory?> = combine(currentFocus, currentTimeRange){
         focus, timeRange ->
         isComputingMutable.value = true
-        val initialData = FocusedAndZoomCommandHistory(
-            minTime = Long.MAX_VALUE,
+        val initialData = Acc(
             beforeCount = 0,
             beforeFocusedCount = 0,
-            start = timeRange?.first ?: 0,
             list = listOf(),
-            end = timeRange?.second ?: System.currentTimeMillis(),
             afterCount = 0,
-            afterFocusedCount = 0,
-            maxTime = Long.MIN_VALUE)
+            afterFocusedCount = 0)
         var numberOfBreaks = 0
-        val history: FocusedAndZoomCommandHistory = repository.list.fold<SerializableCommandStateAndContext<IndexAndUUID>,FocusedAndZoomCommandHistory>(initialData){
+        val startOrNull = timeRange?.let { Math.min(it.first, it.second) + initializationTime }
+        val endOrNull = timeRange?.let { Math.max(it.first, it.second) + initializationTime }
+        data class TimeAcc(val start: Long?, val end: Long?)
+        val timeBounds = repository.list.fold(TimeAcc(null, null)){ acc, it ->
+            acc.copy(
+                start = acc.start?.coerceAtMost(it.time) ?: System.currentTimeMillis(),
+                end = acc.end?.coerceAtLeast(it.time) ?: 0
+            )
+        }
+        val history: Acc = repository.list.fold<SerializableCommandStateAndContext<IndexAndUUID>,Acc>(initialData){
                 acc, comm ->
                     val time = comm.time
                     val inFocus = focus?.let { comm.isFocused(focus) } ?: true
-                    val before = timeRange?.let { comm.time < timeRange.first } ?: false
+                    val before = startOrNull?.let { comm.time < startOrNull } ?: false
                     val previousList = acc.list
-                    val after = timeRange?.let { comm.time > timeRange.second } ?: false
-
+                    val after = endOrNull?.let { comm.time > endOrNull } ?: false
                     if(before){
                         val beforeFocusedCount = acc.beforeFocusedCount + if(inFocus){1}else{0}
                         acc.copy(
-                            minTime = acc.minTime.coerceAtMost(time),
                             beforeFocusedCount = beforeFocusedCount,
                             beforeCount = acc.beforeCount +1
                         )
                     }else if(after){
                         val afterFocusedCount = acc.afterFocusedCount + if(inFocus){1}else{0}
                         acc.copy(
-                            maxTime = acc.maxTime.coerceAtLeast(time),
                             afterFocusedCount = afterFocusedCount,
                             afterCount = acc.afterCount +1
                         )
@@ -88,13 +101,27 @@ class FocusCommandRepository(private val repository: CommandRepository){
                             val list : List<FocusedCommandOrBreak> = acc.list + FocusedCommandOrBreak.Focused(comm)
                             acc.copy(list = list)
                         }
-
-
                     }
 
         }
         isComputingMutable.value = false
-        history
+        val minTime = timeBounds.start ?: (System.currentTimeMillis() - 60 * 1000)
+        val maxTime = timeBounds.end ?: System.currentTimeMillis()
+        val start = startOrNull?.coerceAtLeast(minTime) ?: minTime
+        val end = endOrNull?.coerceAtMost(System.currentTimeMillis()) ?: System.currentTimeMillis()
+        assert(minTime < maxTime)
+        FocusedAndZoomCommandHistory(
+            minTime = minTime - initializationTime,
+            start = start - initializationTime,
+            end = end - initializationTime,
+            maxTime = maxTime - initializationTime,
+            beforeCount = history.beforeCount,
+            beforeFocusedCount = history.beforeFocusedCount,
+            focus = focus,
+            list = history.list,
+            afterCount = history.afterCount,
+            afterFocusedCount = history.afterFocusedCount
+        )
     }
 
 

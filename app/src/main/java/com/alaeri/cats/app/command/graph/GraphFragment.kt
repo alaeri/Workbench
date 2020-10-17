@@ -11,7 +11,12 @@ import android.webkit.WebChromeClient
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Observer
+import androidx.lifecycle.asLiveData
+import androidx.lifecycle.lifecycleScope
 import com.alaeri.cats.app.command.CommandRepository
+import com.alaeri.cats.app.command.focus.FocusCommandRepository
+import com.alaeri.cats.app.command.focus.FocusedCommandOrBreak
 import com.alaeri.cats.app.databinding.GraphFragmentBinding
 import com.alaeri.command.history.*
 import com.alaeri.command.history.id.IndexAndUUID
@@ -20,6 +25,8 @@ import com.alaeri.command.history.serialization.SerializableInvokationContext
 import com.alaeri.command.history.serialization.SerializedClass
 import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.Moshi
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.map
 import org.koin.core.KoinComponent
 import retrofit2.converter.moshi.MoshiConverterFactory
 
@@ -43,7 +50,7 @@ class GraphFragment: Fragment(), KoinComponent {
 
     private lateinit var binding: GraphFragmentBinding
 
-    val commandRepository : CommandRepository by lazy { getKoin().get<CommandRepository>() }
+    val commandRepository : FocusCommandRepository by lazy { getKoin().get<FocusCommandRepository>() }
 
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreateView(
@@ -74,14 +81,47 @@ class GraphFragment: Fragment(), KoinComponent {
     fun loadPieChart() {
         //TODO use proper json serializing
 
-        val filteredList = commandRepository.list//.filterNot{ it.context.executionContext.id == it.context.invokationContext.id }
+        val filteredList = commandRepository.state.map { it.history?.list }.filterNotNull().map {
+            it.mapNotNull {
+                val focused =  it as FocusedCommandOrBreak.Focused
+                it?.serializableCommandStateAndContext
+            }
+        }.asLiveData(lifecycleScope.coroutineContext).observe(this.viewLifecycleOwner, Observer {
+            val levelsToJson = buildLevels(it)
+            val converterFactory = MoshiConverterFactory.create()
+            val moshi = Moshi.Builder().build();
+            val jsonAdapter: JsonAdapter<Levels> = moshi.adapter(Levels::class.java)
+            //val oldText = createJsonManually(filteredList)
+            val text = jsonAdapter.toJson(levelsToJson)
+            Log.d("CATS","json text: $text")
+//        val levelType = (
+//            MutableList::class.java,
+//            MyData::class.java
+//        )
+//        val adapter: JsonAdapter<List<MyData>> =
+//            moshi.adapter<Any>(listMyData)
+            //val json = jsonAdapter.fromJson(text)
+
+            binding.apply {
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
+                    webView.evaluateJavascript("loadPieChart('$text');", null);
+                } else {
+                    webView.loadUrl("javascript:loadPieChart('$text');");
+                }
+            }
+        })//.filterNot{ it.context.executionContext.id == it.context.invokationContext.id }
         Log.d("CATS","$filteredList")
+
+    }
+
+    private fun buildLevels(filteredList: List<SerializableCommandStateAndContext<IndexAndUUID>>): Levels {
         val connections = filteredList.flatMap {
             val childContextElement = it.context.executionContext.toElement()
             val parentContextElement = it.context.invokationContext.toElement()
             val contextConnection = ElementConnection(
                 child = childContextElement,
-                parent = parentContextElement)
+                parent = parentContextElement
+            )
             val idOwnerState = it.state as? IdOwner<IndexAndUUID>
             val resultElement = idOwnerState?.toElement() as? Element<IndexAndUUID>
             val stateConnections = resultElement?.let {
@@ -91,20 +131,20 @@ class GraphFragment: Fragment(), KoinComponent {
                         parent = childContextElement
                     )
                 )
-//                if (childContextElement == parentContextElement) {
-//
-//                } else {
-//                    listOf(
-//                        ElementConnection<IndexAndUUID>(
-//                            child = it,
-//                            parent = parentContextElement
-//                        ),
-//                        ElementConnection<IndexAndUUID>(
-//                            child = childContextElement,
-//                            parent = it
-//                        )
-//                    )
-//                }
+    //                if (childContextElement == parentContextElement) {
+    //
+    //                } else {
+    //                    listOf(
+    //                        ElementConnection<IndexAndUUID>(
+    //                            child = it,
+    //                            parent = parentContextElement
+    //                        ),
+    //                        ElementConnection<IndexAndUUID>(
+    //                            child = childContextElement,
+    //                            parent = it
+    //                        )
+    //                    )
+    //                }
             } ?: emptyList<ElementConnection<IndexAndUUID>>()
             return@flatMap stateConnections + contextConnection
         }
@@ -114,24 +154,28 @@ class GraphFragment: Fragment(), KoinComponent {
         val levels = mutableListOf<List<ElementAndParents<IndexAndUUID>>>()
         val cleanedConnections = connections.filter { it.child != it.parent }
         val connectionsGroupedByChild = cleanedConnections.groupBy { it.child }
-        val connectionsGroupedByParent =  cleanedConnections.groupBy { it.parent }
+        val connectionsGroupedByParent = cleanedConnections.groupBy { it.parent }
         val previousLevelElements = listOf<Element<IndexAndUUID>>()
         var remainingElements = distinctElements
-        while (remainingElements.size > 0){
+        while (remainingElements.size > 0) {
             val nextElements = remainingElements.filter {
                 val parents = connectionsGroupedByChild.get(it)?.map { it.parent }
-                Log.d("CATS","it: $it parents: ${parents}")
-                parents?.none { it in  remainingElements } ?: true
+                Log.d("CATS", "it: $it parents: ${parents}")
+                parents?.none { it in remainingElements } ?: true
             }.map {
-                ElementAndParents(it, connectionsGroupedByChild[it]?.map { it.parent }?: listOf())
+                ElementAndParents(it, connectionsGroupedByChild[it]?.map { it.parent } ?: listOf())
             }
-            if(nextElements.isEmpty()){
+            if (nextElements.isEmpty()) {
                 Log.d("CATS", "chain is broken...")
                 break
             }
             levels += nextElements
-            remainingElements = remainingElements.filterNot { it in nextElements.map { it.element } }
-            Log.d("CATS","next: ${nextElements.size} remaining: ${remainingElements.size} depth: ${levels.size}")
+            remainingElements =
+                remainingElements.filterNot { it in nextElements.map { it.element } }
+            Log.d(
+                "CATS",
+                "next: ${nextElements.size} remaining: ${remainingElements.size} depth: ${levels.size}"
+            )
         }
         val levelsToJson = Levels(levels.map { level ->
             level.map { elementAndParents ->
@@ -140,32 +184,7 @@ class GraphFragment: Fragment(), KoinComponent {
                     elementAndParents.parents.map { it.toStr() })
             }
         })
-
-
-
-
-
-        val converterFactory = MoshiConverterFactory.create()
-        val moshi = Moshi.Builder().build();
-        val jsonAdapter: JsonAdapter<Levels> = moshi.adapter(Levels::class.java)
-        //val oldText = createJsonManually(filteredList)
-        val text = jsonAdapter.toJson(levelsToJson)
-        Log.d("CATS","json text: $text")
-//        val levelType = (
-//            MutableList::class.java,
-//            MyData::class.java
-//        )
-//        val adapter: JsonAdapter<List<MyData>> =
-//            moshi.adapter<Any>(listMyData)
-        //val json = jsonAdapter.fromJson(text)
-
-        binding.apply {
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
-                webView.evaluateJavascript("loadPieChart('$text');", null);
-            } else {
-                webView.loadUrl("javascript:loadPieChart('$text');");
-            }
-        }
+        return levelsToJson
     }
 
     private fun createJsonManually(

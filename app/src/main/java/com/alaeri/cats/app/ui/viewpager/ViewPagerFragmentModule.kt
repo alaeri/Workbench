@@ -16,9 +16,9 @@ class ViewPagerFragmentModule{
 
     val viewPagerFragmentModule : Command<Module> = commandModule {
         commandScope<ViewPagerFragment> {
-//            scoped<Fragment> { (fragment: Fragment) -> fragment  }
+            scoped<Fragment> { (fragment: Fragment) -> fragment  }
 //            factory<Lifecycle> { get<Fragment>().lifecycle  }
-            viewmodel<ViewPagerViewModel> { ViewPagerViewModel() }
+            viewmodel<ViewPagerViewModel> { ViewPagerViewModel(get()) }
         }
     }
 }
