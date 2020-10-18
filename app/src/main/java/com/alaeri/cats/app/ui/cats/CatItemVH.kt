@@ -2,10 +2,7 @@ package com.alaeri.cats.app.ui.cats
 
 import android.util.Log
 import android.view.View
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.map
+import androidx.lifecycle.*
 import androidx.recyclerview.widget.extras.lifecycle.ViewModelVH
 import androidx.recyclerview.widget.extras.viewholder.Bindable
 import com.alaeri.cats.app.R
@@ -19,12 +16,12 @@ import com.alaeri.ui.glide.ImageLoadingState
  *
  *
  */
-sealed class CatItemVH(view: View, parentLifecycle: Lifecycle): ViewModelVH(view, parentLifecycle), Bindable<Cat>{
+sealed class CatItemVH(view: View, parentLifecycle: Lifecycle, vmStore: ViewModelStore): ViewModelVH(view, parentLifecycle, vmStore), Bindable<Cat>{
 
 
     class CatVH(private val viewBinding: CatItemBinding,
                 private val vmFactory: ViewModelProvider.Factory,
-                parentLifecycle: Lifecycle) : CatItemVH(viewBinding.root, parentLifecycle){
+                parentLifecycle: Lifecycle, vmStore: ViewModelStore) : CatItemVH(viewBinding.root, parentLifecycle, vmStore){
 
         private lateinit var cat: Cat
         private lateinit var catViewModel : CatViewModel
@@ -59,6 +56,7 @@ sealed class CatItemVH(view: View, parentLifecycle: Lifecycle): ViewModelVH(view
             viewBinding.apply {
                 val ratio = cat.height.toFloat() / cat.width.toFloat()
                 imageView.ratio = ratio
+                imageView.requestLayout()
                 imageView.setBackgroundResource(R.drawable.bg_cat_placeholder)
                 imageView.setImageDrawable(null)
                 val width = imageView.width
@@ -75,7 +73,7 @@ sealed class CatItemVH(view: View, parentLifecycle: Lifecycle): ViewModelVH(view
         override fun onCreate() {
             Log.d("CATS","onCreate")
             super.onCreate()
-            catViewModel = viewModelProvider(vmFactory).get(CatViewModel::class.java)
+            catViewModel = viewModelProvider(vmFactory).get(viewBinding.toString(), CatViewModel::class.java)
             catViewModel.catLoadingState.map { it.imageLoadingState }.observe(this@CatVH, Observer {
                 Log.d("CATS","$this $catViewModel $it")
                 viewBinding.apply {

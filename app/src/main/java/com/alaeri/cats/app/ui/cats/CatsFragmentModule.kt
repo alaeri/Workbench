@@ -26,9 +26,8 @@ val catsFragmentModule : Command<Module> = CatsFragmentModule.commandModule {
     commandScope<CatsFragment> {
         scoped { (fragment : CatsFragment) ->  fragment  }
         factory { get<Fragment>().lifecycle }
-        scoped<ViewModelStoreOwner> {
-            val vmStore = ViewModelStore()
-            ViewModelStoreOwner { vmStore }
+        factory <ViewModelStore> {
+            get<Fragment>().viewModelStore
         }
         factory<Factory> {
             object: Factory{
@@ -39,7 +38,7 @@ val catsFragmentModule : Command<Module> = CatsFragmentModule.commandModule {
         }
         factory<IViewHolderFactory<Cat, CatItemVH>> {
             ViewHolderFactory.newInstance<Cat, CatItemVH, CatItemBinding>(CatItemBinding::inflate){
-                    binding, _ -> CatItemVH.CatVH(binding, get(), get())
+                    binding, _ -> CatItemVH.CatVH(binding, get(), get(), get())
             }
         }
         factory<ViewHolderProvider<Cat,CatItemVH>> {

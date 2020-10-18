@@ -23,6 +23,6 @@ abstract class ViewModelVH(itemView: View,
     override fun onDestroy() {
         Log.d("CATS","onDestroy")
         super.onDestroy()
-        viewModelStore.clear()
+//        viewModelStore.clear()
     }
 }
