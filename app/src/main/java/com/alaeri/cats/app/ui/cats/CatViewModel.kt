@@ -1,62 +1,62 @@
 package com.alaeri.cats.app.ui.cats
 
-import android.graphics.drawable.BitmapDrawable
 import android.util.Log
-import android.widget.ImageView
 import androidx.lifecycle.*
+import com.alaeri.cats.app.DefaultIRootCommandLogger
 import com.alaeri.cats.app.cats.Cat
+import com.alaeri.command.CommandState
+import com.alaeri.command.buildCommandContextA
+import com.alaeri.command.buildCommandRoot
+import com.alaeri.command.core.IInvokationContext
+import com.alaeri.command.core.flow.syncInvokeFlow
+import com.alaeri.command.core.invoke
+import com.alaeri.command.invokeSyncCommand
 import com.alaeri.ui.glide.FlowImageLoader
+import com.alaeri.ui.glide.ImageLoadingState
+import com.alaeri.ui.glide.Size
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-import org.koin.ext.getScopeName
 
-class CatViewModel(private val flowImageLoader: FlowImageLoader): ViewModel(){
+class CatViewModel(private val flowImageLoader: FlowImageLoader, private val defaultSerializer: DefaultIRootCommandLogger): ViewModel(){
 
-    data class CatLoadingState(val imageLoadingState: FlowImageLoader.ImageLoadingState)
-    private val initialState = CatLoadingState(imageLoadingState = FlowImageLoader.ImageLoadingState.AwaitingLoad)
-    private val mediatorLiveData =
-        MediatorLiveData<CatLoadingState>()
+    data class CatLoadingState(val imageLoadingState: ImageLoadingState)
 
-    val catLoadingState : LiveData<CatLoadingState> = mediatorLiveData//MutableLiveData(CatLoadingState(FlowImageLoader.ImageLoadingState.Loading(100, 2000)))//
-    private val sources = mutableListOf<LiveData<FlowImageLoader.ImageLoadingState>>()
-    private lateinit var cat: Cat
-
-    fun onItemSet(cat: Cat, width: Int, height: Int){
-        //resetSources()
-        this.cat = cat
-        loadCat(cat, width, height)
-        viewModelScope.launch {  }
+    private val mutableLiveDataCat =  MutableLiveData<Triple<Cat, Int, Int>?>(null)
+    private val rootCommand = buildCommandContextA<Any>(this){ it ->
+        defaultSerializer.log(this, it)
     }
-
-    private fun loadCat(cat: Cat, width: Int, height: Int) {
-        Log.d("CATS","$this loadCat: ${cat.url}")
-        val loadingLiveData = flowImageLoader.loadImage(cat.url, FlowImageLoader.Size(width, height)).asLiveData()
-        mediatorLiveData.apply {
-            addSource(loadingLiveData) {
-                Log.d("CATS","${this@CatViewModel} $loadingLiveData loaded ${cat.url}")
-                value = CatLoadingState(it)
-            }
+    val catLoadingState : LiveData<CatLoadingState> = mutableLiveDataCat.switchMap { it ->
+        invokeSyncCommand<LiveData<CatLoadingState>>(rootCommand as IInvokationContext<LiveData<CatLoadingState>, LiveData<CatLoadingState>>) {
+            it?.let {
+                emit(CommandState.Update(it.first))
+                val cat = it.first
+                val width = it.second
+                val height = it.third
+                val flow: Flow<ImageLoadingState> = syncInvokeFlow {
+                    flowImageLoader.loadImage(cat.url, Size(width, height))
+                }
+                flow.map { CatLoadingState(it) }.asLiveData()
+            } ?: MutableLiveData<CatLoadingState>()
         }
-        sources.add(loadingLiveData)
     }
+
+
+    fun onItemSet(cat: Cat, width: Int, height: Int) {
+        //resetSources()
+        mutableLiveDataCat.value = Triple(cat, width, height)
+    }
+
+
 
     fun onRetryClicked(width: Int, height: Int){
-        loadCat(cat, width, height)
+        mutableLiveDataCat.value = mutableLiveDataCat.value
     }
 
     public override fun onCleared() {
         super.onCleared()
         Log.d("CATS", "$this onCleared()")
-        resetSources()
     }
 
-    private fun resetSources() {
-        mediatorLiveData.value?.imageLoadingState?.run {
-            this as? FlowImageLoader.ImageLoadingState.Completed
-        }?.run { bitmap as? BitmapDrawable }?.run {
-            bitmap.recycle()
-        }
-        sources.forEach { mediatorLiveData.removeSource(it) }
-        sources.clear()
-        mediatorLiveData.value = initialState
-    }
+
 }

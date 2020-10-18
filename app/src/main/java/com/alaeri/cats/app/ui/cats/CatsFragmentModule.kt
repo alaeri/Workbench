@@ -15,6 +15,7 @@ import com.alaeri.cats.app.cats.Cat
 import com.alaeri.cats.app.databinding.CatItemBinding
 import com.alaeri.command.core.Command
 import com.alaeri.command.di.commandModule
+import com.alaeri.ui.glide.FlowImageLoader
 import org.koin.core.module.Module
 
 /**
@@ -32,7 +33,7 @@ val catsFragmentModule : Command<Module> = CatsFragmentModule.commandModule {
         factory<Factory> {
             object: Factory{
                 override fun <T : ViewModel?> create(modelClass: Class<T>): T {
-                    return CatViewModel(get()) as T
+                    return CatViewModel(get<FlowImageLoader>(), get()) as T
                 }
             }
         }

@@ -11,7 +11,7 @@ import androidx.recyclerview.widget.extras.viewholder.Bindable
 import com.alaeri.cats.app.R
 import com.alaeri.cats.app.cats.Cat
 import com.alaeri.cats.app.databinding.CatItemBinding
-import com.alaeri.ui.glide.FlowImageLoader
+import com.alaeri.ui.glide.ImageLoadingState
 
 
 /**
@@ -80,7 +80,7 @@ sealed class CatItemVH(view: View, parentLifecycle: Lifecycle): ViewModelVH(view
                 Log.d("CATS","$this $catViewModel $it")
                 viewBinding.apply {
                     when(it){
-                        is FlowImageLoader.ImageLoadingState.Loading -> {
+                        is ImageLoadingState.Loading -> {
                             retryButton.visibility = View.GONE
                             progressCircular.visibility = View.VISIBLE
                             progressCircular.max = it.totalReadCount.toInt()
@@ -88,7 +88,7 @@ sealed class CatItemVH(view: View, parentLifecycle: Lifecycle): ViewModelVH(view
                             catsLoadingTextView.visibility = View.VISIBLE
                             catsLoadingTextView.text = "loading"
                         }
-                        is FlowImageLoader.ImageLoadingState.AwaitingLoad -> {
+                        is ImageLoadingState.AwaitingLoad -> {
                             retryButton.visibility = View.GONE
                             progressCircular.visibility = View.VISIBLE
                             progressCircular.max = 1
@@ -96,14 +96,14 @@ sealed class CatItemVH(view: View, parentLifecycle: Lifecycle): ViewModelVH(view
                             catsLoadingTextView.text = "queued"
                             catsLoadingTextView.visibility = View.VISIBLE
                         }
-                        is FlowImageLoader.ImageLoadingState.Failed -> {
+                        is ImageLoadingState.Failed -> {
                             retryButton.visibility = View.VISIBLE
                             progressCircular.visibility = View.GONE
                             catsLoadingTextView.visibility = View.VISIBLE
                             catsLoadingTextView.text = it.exception.message ?: "Error while loading"
                             catsLoadingTextView.visibility = View.VISIBLE
                         }
-                        is FlowImageLoader.ImageLoadingState.Completed -> {
+                        is ImageLoadingState.Completed -> {
                             progressCircular.visibility = View.GONE
                             retryButton.visibility = View.GONE
                             catsLoadingTextView.visibility = View.GONE

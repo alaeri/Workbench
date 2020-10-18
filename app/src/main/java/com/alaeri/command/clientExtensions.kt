@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.Flow
 /**
  * Created by Emmanuel Requier on 09/05/2020.
  */
-inline fun <R>  buildCommandContextA(any: Any,  name: String? = null, nomenclature: CommandNomenclature= CommandNomenclature.Undefined, crossinline log: IInvokationContext<R, R>.(CommandState<R>)->Unit): IInvokationContext<R, R> {
+inline fun <R> buildCommandContextA(any: Any,  name: String? = null, nomenclature: CommandNomenclature= CommandNomenclature.Undefined, crossinline log: IInvokationContext<R, R>.(CommandState<R>)->Unit): IInvokationContext<R, R> {
     val op = object : ICommand<R> {
         override val owner: Any = any
         override val nomenclature: CommandNomenclature = nomenclature

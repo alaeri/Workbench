@@ -40,7 +40,7 @@ TBC
 * [X] Add command tags
 * [X] Find a cleaner command usage pattern for Koin
 * [X] Configure focus
-* [ ] Repair graph
+* [X] Repair graph
 * [ ] Repair injection/unit test/
 * [ ] ConfigureCodeCoverage
 * [ ] Move the components to their own modules: command {core, android, koin, debug-ui, persistence}, recyclerview-helpers, catsApp { Koin, ManualDi } 

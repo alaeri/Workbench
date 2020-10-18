@@ -26,20 +26,21 @@ abstract class FocusVH<T: FocusCommandItemVM>(view: View): RecyclerView.ViewHold
 }
 class CommandVH(private val commandItemBinding: CommandItemBinding): FocusVH<FocusCommandItemVM.Content>(commandItemBinding.root), Bindable<FocusCommandItemVM.Content> {
 
+
     override fun setItem(itemContainer: FocusCommandItemVM.Content) {
         val item = itemContainer.commandStateAndContext
         Log.d("CATS","show item: ${item.context.commandId.index}")
         commandItemBinding.apply {
 
             //commandItemBinding.root.setPadding(item.context.depth * 2, 2, 2,2)
-            receiverTextView.setBackgroundColor(randomColors[item.context.executionContext.id.index])
+            receiverTextView.setBackgroundColor(item.context.executionContext.id.color())
             receiverTextView.text =
                 "${item.context.executionContext}"
-            invokerTextView.setBackgroundColor(randomColors[item.context.invokationContext.id.index])
+            invokerTextView.setBackgroundColor(item.context.invokationContext.id.color())
             invokerTextView.text = item.context.invokationContext.toString()
-            parentOperationIdTextView.setBackgroundColor(randomColors[item.context.invokationCommandId.index])
+            parentOperationIdTextView.setBackgroundColor(item.context.invokationCommandId.color())
             parentOperationIdTextView.text = "${item.context.invokationCommandId}"
-            operationIdTextView.setBackgroundColor(randomColors[item.context.commandId.index])
+            operationIdTextView.setBackgroundColor(item.context.commandId.color())
             operationIdTextView.text = "${item.context.commandId} ${
                 if (item.context.commandNomenclature != CommandNomenclature.Undefined) {
                     item.context.commandNomenclature::class.simpleName
@@ -53,7 +54,7 @@ class CommandVH(private val commandItemBinding: CommandItemBinding): FocusVH<Foc
             }
             if(stateIndexAndUUID != null){
                 operationStateTextView.visibility = View.VISIBLE
-                operationStateTextView.setBackgroundColor(randomColors[stateIndexAndUUID.index])
+                operationStateTextView.setBackgroundColor(stateIndexAndUUID.color())
             }else{
                 operationStateTextView.visibility = View.GONE
             }
@@ -85,6 +86,8 @@ class CommandVH(private val commandItemBinding: CommandItemBinding): FocusVH<Foc
         val randomColors: IntArray = IntRange(0, 200).map {
             Color.argb(255, rnd.nextInt(100), rnd.nextInt(100), rnd.nextInt(100)) }.toIntArray()
     }
+
+    fun IndexAndUUID.color()= randomColors[this.index % randomColors.size]
 }
 class EmptyVH(private val commandEmptyBinding: CommandEmptyBinding): FocusVH<FocusCommandItemVM.Empty>(commandEmptyBinding.root), Bindable<FocusCommandItemVM.Empty> {
     override fun setItem(item: FocusCommandItemVM.Empty) {

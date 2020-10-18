@@ -4,8 +4,10 @@ import androidx.lifecycle.*
 import com.alaeri.cats.app.DefaultIRootCommandLogger
 import com.alaeri.command.buildCommandContextA
 import com.alaeri.command.core.IInvokationContext
+import com.alaeri.command.core.suspend.suspendInvokeAsFlow
 import com.alaeri.command.core.suspendInvokeAndFold
 import com.alaeri.command.invokeSyncCommand
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 
 /**
@@ -25,7 +27,7 @@ class CatsViewModel(private val refreshUseCase: RefreshUseCase,
         it
     }
 
-    val rootContext = buildCommandContextA<Any>(this){
+    private val rootContext = buildCommandContextA<Any>(this){
         defaultSerializer.log(this, it)
     }
 
@@ -47,10 +49,12 @@ class CatsViewModel(private val refreshUseCase: RefreshUseCase,
 
     val currentState: LiveData<CatFragmentState> = mediatorLiveData
 
-//    private val refreshContext = operationContext as IInvokationContext<Unit, Unit>
+
     fun onRefreshTriggered() : Any = invokeSyncCommand(rootContext){
         viewModelScope.launch {
-            //mutableLiveDataExecutionContext.value = suspendInvokeAsFlow<Unit, NetworkState, NetworkState>{ refreshUseCase.invoke() }.asLiveData()
+            val flow: Flow<NetworkState> = suspendInvokeAsFlow<Any, NetworkState, NetworkState>{ refreshUseCase() }
+            val liveData = flow.asLiveData()
+            mutableLiveDataExecutionContext.value = liveData
         }
         this
     }
