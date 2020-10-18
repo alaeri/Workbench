@@ -22,7 +22,7 @@ class DelayedLogger<T>(coroutineScope: CoroutineScope, loggerFlow : Flow<Abstrac
         }
     }
 
-    override  fun log(value :T) {
+    override fun log(value :T) {
         if(::commandLogger.isInitialized){
             commandLogger.log(value)
         }else{

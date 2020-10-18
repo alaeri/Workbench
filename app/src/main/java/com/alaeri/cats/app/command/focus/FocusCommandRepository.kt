@@ -105,7 +105,7 @@ class FocusCommandRepository(private val repository: CommandRepository){
 
         }
         isComputingMutable.value = false
-        val minTime = timeBounds.start ?: (System.currentTimeMillis() - 60 * 1000)
+        val minTime = timeBounds.start ?: (initializationTime - 60 * 1000)
         val maxTime = timeBounds.end ?: System.currentTimeMillis()
         val start = startOrNull?.coerceAtLeast(minTime) ?: minTime
         val end = endOrNull?.coerceAtMost(maxTime) ?: maxTime
@@ -139,5 +139,6 @@ private fun <Key> SerializableCommandStateAndContext<Key>.isFocused(focus: Key):
     this.context.executionContext.id == focus ||
     (this.state is SerializableCommandState.Value && state.valueId == focus) ||
     (this.state is SerializableCommandState.Done && state.valueId == focus) ||
+    ( this.context.invokationContext.id == focus ) ||
     ( this.context.invokationCommandId == focus ?: false )
 }

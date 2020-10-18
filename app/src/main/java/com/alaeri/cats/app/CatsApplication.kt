@@ -17,23 +17,19 @@ import com.alaeri.command.di.AbstractCommandLogger
 import com.alaeri.command.di.DelayedLogger
 import com.alaeri.command.di.invokeModules
 import com.alaeri.command.history.id.DefaultIdStore
+import com.alaeri.command.history.id.IdBank
 import com.alaeri.command.history.id.IndexAndUUID
 import com.alaeri.command.history.serialization.SerializableCommandStateAndContext
 import com.alaeri.command.history.serialize
 import com.alaeri.command.history.spread
 import com.alaeri.command.invokeSyncCommand
-import defaultKey
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.koin.android.ext.koin.androidContext
-import org.koin.core.KoinApplication
 import org.koin.core.context.startKoin
-import org.koin.core.definition.BeanDefinition
-import org.koin.core.module.Module
-import org.koin.core.scope.Scope
-import org.koin.dsl.module
+import java.util.*
 
 /**
  * Created by Emmanuel Requier on 18/04/2020.
@@ -46,26 +42,24 @@ class CatsApplication : Application() {
         DefaultIdStore.create()
 
         val coroutineScope = CoroutineScope(Dispatchers.Main)
-        val mutableLoggerStateFlow = MutableStateFlow<AbstractCommandLogger<Command<Any>>?>(null)
+        val mutableLoggerStateFlow = MutableStateFlow<DefaultIRootCommandLogger?>(null)
         val mutableStateFlow = MutableStateFlow<AbstractCommandLogger<SerializableCommandStateAndContext<IndexAndUUID>>?>(null)
         val delayedSerializedCommandLogger = DelayedLogger(coroutineScope, mutableStateFlow)
-
+        val idBank = IdBank<IndexAndUUID>(null) { previous ->
+            IndexAndUUID(index = (previous?.index?:0) +1, uuid = UUID.randomUUID())
+        }
+        val serializer = Serializer<IndexAndUUID>(idBank, delayedSerializedCommandLogger)
         val rootCommandContext = buildCommandContextA<Any>(this,
         nomenclature = CommandNomenclature.Root,
         name = "root") { state ->
-                val flatList = spread(this, state)
-                flatList.map {
-                    val serialized = serialize(it.operationContext, it.state, it.depth) { this.defaultKey() }
-                    Log.d("COMMAND","$serialized")
-                    delayedSerializedCommandLogger.log(serialized)
-                }
-            }
+            serializer.log(this, state)
+        }
 
         invokeSyncCommand(rootCommandContext){
             val koinApp = startKoin {
                 androidContext(this@CatsApplication)
                 invokeModules(this@invokeSyncCommand,
-                    CommandModule.initWith(rootCommandContext),
+                    CommandModule.initWith(rootCommandContext, serializer),
                     appModule,
                     viewPagerFragmentModule,
                     userModule,
@@ -74,7 +68,7 @@ class CatsApplication : Application() {
                     commandListFragmentModule
                     )
             }
-            mutableLoggerStateFlow.value = koinApp.koin.get<AbstractCommandLogger<Command<Any>>>()
+            mutableLoggerStateFlow.value = koinApp.koin.get<DefaultIRootCommandLogger>()
             mutableStateFlow.value = koinApp.koin.get<CommandRepository>()
             Unit
         }
@@ -83,4 +77,21 @@ class CatsApplication : Application() {
 
 
 
+}
+interface IRootCommandLogger<Key>{
+    fun log(context: IInvokationContext<*, *>, state: CommandState<*>)
+}
+typealias DefaultIRootCommandLogger = IRootCommandLogger<IndexAndUUID>
+
+class Serializer<Key>(private val idBank: IdBank<Key>,
+                      private val delayedLogger: DelayedLogger<SerializableCommandStateAndContext<Key>>) : DefaultIRootCommandLogger{
+
+    override fun log(context: IInvokationContext<*, *>, state: CommandState<*>){
+        val flatList = spread(context, state, 0, context)
+        flatList.map {
+            val serialized = serialize(it.parentContext, it.operationContext, it.state, it.depth) { idBank.keyOf(this) }
+            Log.d("COMMAND","$serialized")
+            delayedLogger.log(serialized)
+        }
+    }
 }

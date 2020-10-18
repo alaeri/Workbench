@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.flow
  * Created by Emmanuel Requier on 28/04/2020.
  */
 //https://stackoverflow.com/questions/909843/how-to-get-the-unique-id-of-an-object-which-overrides-hashcode
-abstract class IdBank<Key>(
+open class IdBank<Key>(
     private val startingIndex : Key?,
     private val nextKey: (lastKey: Key?)->Key) {
 

@@ -37,23 +37,30 @@ class CommandVH(private val commandItemBinding: CommandItemBinding): FocusVH<Foc
                 "${item.context.executionContext}"
             invokerTextView.setBackgroundColor(randomColors[item.context.invokationContext.id.index])
             invokerTextView.text = item.context.invokationContext.toString()
+            parentOperationIdTextView.setBackgroundColor(randomColors[item.context.invokationCommandId.index])
+            parentOperationIdTextView.text = "${item.context.invokationCommandId}"
             operationIdTextView.setBackgroundColor(randomColors[item.context.commandId.index])
             operationIdTextView.text = "${item.context.commandId} ${
                 if (item.context.commandNomenclature != CommandNomenclature.Undefined) {
                     item.context.commandNomenclature::class.simpleName
                 } else ""
             } ${item.context.commandName?:""}"
-            val indexAndUUID = when(item.state){
+            val stateIndexAndUUID = when(item.state){
                 is SerializableCommandState.Value<IndexAndUUID> -> item.state.valueId
                 is SerializableCommandState.Done<IndexAndUUID> -> item.state.valueId
                 else -> null
+                //else -> item.context.commandId //if this state is not an idOwner we set this part of the cell to the same color than the commandId
             }
-            indexAndUUID?.let {
-                operationStateTextView.setBackgroundColor(randomColors[indexAndUUID.index])
+            if(stateIndexAndUUID != null){
+                operationStateTextView.visibility = View.VISIBLE
+                operationStateTextView.setBackgroundColor(randomColors[stateIndexAndUUID.index])
+            }else{
+                operationStateTextView.visibility = View.GONE
             }
+
             operationStateTextView.text = item.state.shortString()
             operationStateTextView.setOnClickListener {
-                indexAndUUID?.let { itemContainer.onItemWithIdClicked(indexAndUUID) }
+                stateIndexAndUUID?.let { itemContainer.onItemWithIdClicked(stateIndexAndUUID) }
             }
             receiverTextView.setOnClickListener {
                 itemContainer.onItemWithIdClicked(item.context.executionContext.id)
@@ -61,11 +68,15 @@ class CommandVH(private val commandItemBinding: CommandItemBinding): FocusVH<Foc
             invokerTextView.setOnClickListener {
                 itemContainer.onItemWithIdClicked(item.context.invokationContext.id)
             }
+            parentOperationIdTextView.setOnClickListener {
+                itemContainer.onItemWithIdClicked(item.context.invokationCommandId)
+            }
             operationIdTextView.setOnClickListener {
                 itemContainer.onItemWithIdClicked(item.context.commandId)
             }
             operationIdTextView
         }
+        commandItemBinding.cardView.x = (item.context.depth * 40).toFloat()
     }
 
     object RandomColors{

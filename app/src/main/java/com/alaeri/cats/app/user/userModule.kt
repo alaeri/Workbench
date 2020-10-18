@@ -1,11 +1,11 @@
 package com.alaeri.cats.app.user
 
 import android.util.Log
+import com.alaeri.cats.app.DefaultIRootCommandLogger
 import com.alaeri.cats.app.db.AppDatabase
 import com.alaeri.cats.app.ui.login.LoginViewModel
 import com.alaeri.cats.app.user.net.UserApi
 import com.alaeri.command.core.Command
-import com.alaeri.command.core.IInvokationContext
 import com.alaeri.command.di.commandModule
 import kotlinx.coroutines.Dispatchers
 import org.koin.core.module.Module
@@ -30,9 +30,9 @@ class UserModule{
         commandViewModel<LoginViewModel> {
             val userRepository : UserRepository = get()
             Log.d("COMMAND3", "$userRepository")
-            val invokationContext : IInvokationContext<*,*> = get()
+            val invokationContext : DefaultIRootCommandLogger = get()
             Log.d("COMMAND3", "$invokationContext")
-            LoginViewModel(userRepository, invokationContext)
+            LoginViewModel(userRepository, get())
         }
     }
 }

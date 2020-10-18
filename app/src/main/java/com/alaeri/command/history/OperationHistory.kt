@@ -1,28 +1,39 @@
 package com.alaeri.command.history
 
 import com.alaeri.command.*
+import com.alaeri.command.core.ICommand
 import com.alaeri.command.core.IInvokationContext
 import com.alaeri.command.history.serialization.*
-import defaultKey
 
-data class CommandContextAndStateAndDepth(val state: CommandState<*>, val operationContext: IInvokationContext<*, *>, val depth: Int)
-fun spread(operationContext: IInvokationContext<*, *>, commandState: CommandState<*>, depth: Int = 0) : List<CommandContextAndStateAndDepth>{
+data class CommandContextAndStateAndDepth(val state: CommandState<*>, val operationContext: IInvokationContext<*, *>, val depth: Int, val parentContext: IInvokationContext<*, *>)
+fun spread(operationContext: IInvokationContext<*, *>, commandState: CommandState<*>, depth: Int = 0, parentContext: IInvokationContext<*, *>) : List<CommandContextAndStateAndDepth>{
     return when(commandState){
         is CommandState.SubCommand<*,*> -> {
-            spread(commandState.subCommandAndState.first, commandState.subCommandAndState.second, depth+1)
+            spread(commandState.subCommandAndState.first, commandState.subCommandAndState.second, depth+1, operationContext)
         }
-        else -> listOf(CommandContextAndStateAndDepth(commandState, operationContext,depth))
+        else -> listOf(CommandContextAndStateAndDepth(commandState, operationContext,depth, parentContext))
     }
 }
 fun Any?.toSerializedClass() = this?.let { SerializedClass(this.javaClass.name, this.javaClass.simpleName) }
 
-fun <Key> serialize(operationContext: IInvokationContext<*, *>,
+fun <Key> serialize(parentContext: IInvokationContext<*, *>,
+                    operationContext: IInvokationContext<*, *>,
                     commandState: CommandState<*>,
                     depth: Int,
                     keyOf: Any.()->Key) : SerializableCommandStateAndContext<Key> {
 
+    val parentCommandId = parentContext.command.keyOf()
+    val commandId = operationContext.command.keyOf()
+
+    val serializableInvokationContext = operationContext.invoker.run {
+        SerializableInvokationContext<Key>(owner.keyOf(), owner.toSerializedClass()!!, null,null, null)
+    }
+    val serializableExecutionContext = operationContext.command.run {
+        SerializableInvokationContext<Key>(owner.keyOf(), owner.toSerializedClass()!!, null, null, null)
+    }
+
     val serializableState : SerializableCommandState<Key> = when(commandState){
-        is Starting<*> ->  SerializableCommandState.Starting<Key>()
+        is Starting<*> ->  SerializableCommandState.Starting<Key>(commandId)
         is CommandState.Update<*,*> -> commandState.value?.run {
             SerializableCommandState.Value<Key>(
                 this.keyOf(),
@@ -53,56 +64,51 @@ fun <Key> serialize(operationContext: IInvokationContext<*, *>,
         is CommandState.SubCommand<*, *>-> throw IllegalArgumentException("received: $commandState for $operationContext")
     } as SerializableCommandState
 
-    val serializableInvokationContext = operationContext.invoker.run {
-        SerializableInvokationContext<Key>(owner.keyOf(), owner.toSerializedClass()!!, null,null, null)
-    }
-    val serializableExecutionContext = operationContext.command.run {
-        SerializableInvokationContext<Key>(owner.keyOf(), owner.toSerializedClass()!!, null, null, null)
-    }
+
     val serializableCommandContext = SerializableCommandContext<Key>(
         depth = depth,
         commandName = operationContext.command.name,
-        commandId = operationContext.command.keyOf(),
+        commandId = commandId,
         executionContext = serializableExecutionContext,
-        invokationCommandId = null,
+        invokationCommandId = parentCommandId,
         invokationContext = serializableInvokationContext,
         commandNomenclature = operationContext.command.nomenclature
         )
     return SerializableCommandStateAndContext<Key>(context = serializableCommandContext, state = serializableState, time= System.currentTimeMillis())
 }
-sealed class FocusedStateAndContext<Key>{
-    data class Value<Key>(val commandContext: SerializableCommandContext<Key>) : FocusedStateAndContext<Key>()
-    data class Done<Key>(val commandContext: SerializableCommandContext<Key>) : FocusedStateAndContext<Key>()
-    data class Failure<Key>(val commandContext: SerializableCommandContext<Key>) : FocusedStateAndContext<Key>()
-    data class Receiver<Key>(val commandContext: SerializableCommandContext<Key>, val state: SerializableCommandState<Key>) : FocusedStateAndContext<Key>()
-    data class Invoker<Key>(val commandContext: SerializableCommandContext<Key>, val state: SerializableCommandState<Key>) : FocusedStateAndContext<Key>()
-    data class Command<Key>(val commandContext: SerializableCommandContext<Key>, val state: SerializableCommandState<Key>) : FocusedStateAndContext<Key>()
-
-}
-fun <Key> SerializableCommandStateAndContext<Key>.withFocus(any: Any): List<FocusedStateAndContext<Key>> {
-    val id = any.defaultKey()
-    val roles = mutableListOf<FocusedStateAndContext<Key>>()
-    if(this.state is SerializableCommandState.Done<*> && this.state.valueId  == id){
-        roles.add(FocusedStateAndContext.Done(this.context))
-    }
-    if(this.state is SerializableCommandState.Value<*> && this.state.valueId  == id){
-        roles.add(FocusedStateAndContext.Value(this.context))
-    }
-    if(this.state is SerializableCommandState.Failure<*> && this.state.throwableId == id){
-        roles.add(FocusedStateAndContext.Failure(this.context))
-    }
-    if(this.context.executionContext.id == id){
-        roles.add(FocusedStateAndContext.Receiver(this.context, this.state))
-    }
-    if(this.context.invokationContext.id == id){
-        roles.add(FocusedStateAndContext.Invoker(this.context, this.state))
-    }
-    if(this.context.commandId == id){
-        roles.add(FocusedStateAndContext.Command(this.context, this.state))
-    }
-    return roles
-
-}
+//sealed class FocusedStateAndContext<Key>{
+//    data class Value<Key>(val commandContext: SerializableCommandContext<Key>) : FocusedStateAndContext<Key>()
+//    data class Done<Key>(val commandContext: SerializableCommandContext<Key>) : FocusedStateAndContext<Key>()
+//    data class Failure<Key>(val commandContext: SerializableCommandContext<Key>) : FocusedStateAndContext<Key>()
+//    data class Receiver<Key>(val commandContext: SerializableCommandContext<Key>, val state: SerializableCommandState<Key>) : FocusedStateAndContext<Key>()
+//    data class Invoker<Key>(val commandContext: SerializableCommandContext<Key>, val state: SerializableCommandState<Key>) : FocusedStateAndContext<Key>()
+//    data class Command<Key>(val commandContext: SerializableCommandContext<Key>, val state: SerializableCommandState<Key>) : FocusedStateAndContext<Key>()
+//
+//}
+//fun <Key> SerializableCommandStateAndContext<Key>.withFocus(any: Any): List<FocusedStateAndContext<Key>> {
+//    val id = any.defaultKey()
+//    val roles = mutableListOf<FocusedStateAndContext<Key>>()
+//    if(this.state is SerializableCommandState.Done<*> && this.state.valueId  == id){
+//        roles.add(FocusedStateAndContext.Done(this.context))
+//    }
+//    if(this.state is SerializableCommandState.Value<*> && this.state.valueId  == id){
+//        roles.add(FocusedStateAndContext.Value(this.context))
+//    }
+//    if(this.state is SerializableCommandState.Failure<*> && this.state.throwableId == id){
+//        roles.add(FocusedStateAndContext.Failure(this.context))
+//    }
+//    if(this.context.executionContext.id == id){
+//        roles.add(FocusedStateAndContext.Receiver(this.context, this.state))
+//    }
+//    if(this.context.invokationContext.id == id){
+//        roles.add(FocusedStateAndContext.Invoker(this.context, this.state))
+//    }
+//    if(this.context.commandId == id){
+//        roles.add(FocusedStateAndContext.Command(this.context, this.state))
+//    }
+//    return roles
+//
+//}
 
 
 

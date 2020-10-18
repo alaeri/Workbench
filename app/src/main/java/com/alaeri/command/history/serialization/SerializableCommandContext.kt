@@ -4,7 +4,7 @@ import com.alaeri.command.android.CommandNomenclature
 
 data class SerializableCommandContext<Key>(
     val commandId: Key,
-    val invokationCommandId: Key?,
+    val invokationCommandId: Key,
     val invokationContext: SerializableInvokationContext<Key>,
     val executionContext: SerializableInvokationContext<Key>,
     val depth: Int,

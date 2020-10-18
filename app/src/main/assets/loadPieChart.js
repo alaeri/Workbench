@@ -305,14 +305,27 @@ const loadData = (levels)=> {
 
 //var newElement = document.createElementNS("http://www.w3.org/2000/svg", 'path');
 const loadPieChart = (commandsDataAsString)=>{
+    const width = 3000
+    const height = 3000
+
     console.log(commandsDataAsString)
     const commandsData = JSON.parse(commandsDataAsString)
     console.log(commandsData);
     const data = loadData(commandsData.levels);
+    const x = d3.scaleLinear()
+            //.domain(d3.extent(data, d => d[0]))
+            .range([30, width - 10])
+            .nice()
+    const y = d3.scaleLinear()
+          //.domain(d3.extent(data, d => d[1]))
+          .range([height - 20, 10])
+          .nice()
     const svg = d3.select("body")
                   .append("svg")
-                    .attr("width", 3000)
-                    .attr("height", 3000)
+                    .attr("width", width)
+                    .attr("height", height)
+   const gx = svg.append("g");
+   const gy = svg.append("g");
 
 
     //const  svg = document.getElementsByTagName('svg')[0]; //Get svg element
@@ -337,48 +350,48 @@ const loadPieChart = (commandsDataAsString)=>{
     `<text x="${ n.x+4}" y="${ n.y-n.height/2-4 }" stroke="white" stroke-width="2">${ n.id }</text>`,
     `<text x="${ n.x+4}" y="${ n.y-n.height/2-4 }">${ n.id }</text>`
     ]).forEach(lineAndTexts => lineAndTexts.forEach(lineAndText => svg.appendSVG(lineAndText)));
+//
+//      // z holds a copy of the previous transform, so we can track its changes
+//      let z = d3.zoomIdentity;
+//
+//      // set up the ancillary zooms and an accessor for their transforms
+//      const zoomX = d3.zoom().scaleExtent([0.1, 10]);
+//      const zoomY = d3.zoom().scaleExtent([0.2, 5]);
+//      const tx = () => d3.zoomTransform(gx.node());
+//      const ty = () => d3.zoomTransform(gy.node());
+//      gx.call(zoomX).attr("pointer-events", "none");
+//      gy.call(zoomY).attr("pointer-events", "none");
+//
+//      // active zooming
+//      const zoom = d3.zoom().on("zoom", function(e) {
+//        const t = e.transform;
+//        const k = t.k / z.k;
+//        const point = e.sourceEvent ? d3.pointer(e) : [width / 2, height / 2];
+//
+//        // is it on an axis? is the shift key pressed?
+//        const doX = point[0] > x.range()[0];
+//        const doY = point[1] < y.range()[0];
+//        const shift = e.sourceEvent && e.sourceEvent.shiftKey;
+//
+//        if (k === 1) {
+//          // pure translation?
+//          doX && gx.call(zoomX.translateBy, (t.x - z.x) / tx().k, 0);
+//          doY && gy.call(zoomY.translateBy, 0, (t.y - z.y) / ty().k);
+//        } else {
+//          // if not, we're zooming on a fixed point
+//          doX && gx.call(zoomX.scaleBy, shift ? 1 / k : k, point);
+//          doY && gy.call(zoomY.scaleBy, k, point);
+//        }
+//
+//        z = t;
+//
+//        //redraw();
+//      });
 
-      // z holds a copy of the previous transform, so we can track its changes
-      let z = d3.zoomIdentity;
-
-      // set up the ancillary zooms and an accessor for their transforms
-      const zoomX = d3.zoom().scaleExtent([0.1, 10]);
-      const zoomY = d3.zoom().scaleExtent([0.2, 5]);
-      const tx = () => d3.zoomTransform(gx.node());
-      const ty = () => d3.zoomTransform(gy.node());
-      gx.call(zoomX).attr("pointer-events", "none");
-      gy.call(zoomY).attr("pointer-events", "none");
-
-      // active zooming
-      const zoom = d3.zoom().on("zoom", function(e) {
-        const t = e.transform;
-        const k = t.k / z.k;
-        const point = e.sourceEvent ? d3.pointer(e) : [width / 2, height / 2];
-
-        // is it on an axis? is the shift key pressed?
-        const doX = point[0] > x.range()[0];
-        const doY = point[1] < y.range()[0];
-        const shift = e.sourceEvent && e.sourceEvent.shiftKey;
-
-        if (k === 1) {
-          // pure translation?
-          doX && gx.call(zoomX.translateBy, (t.x - z.x) / tx().k, 0);
-          doY && gy.call(zoomY.translateBy, 0, (t.y - z.y) / ty().k);
-        } else {
-          // if not, we're zooming on a fixed point
-          doX && gx.call(zoomX.scaleBy, shift ? 1 / k : k, point);
-          doY && gy.call(zoomY.scaleBy, k, point);
-        }
-
-        z = t;
-
-        redraw();
-      });
-
-      return svg
-        .call(zoom)
-        .call(zoom.transform, d3.zoomIdentity.scale(0.8))
-        .node();
+//      return svg
+//        .call(zoom)
+//        .call(zoom.transform, d3.zoomIdentity.scale(0.8))
+//        .node();
 }
 
 function redraw() {

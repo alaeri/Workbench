@@ -1,23 +1,27 @@
 package com.alaeri.cats.app.ui.login
 
 import androidx.lifecycle.*
+import com.alaeri.cats.app.DefaultIRootCommandLogger
 import com.alaeri.cats.app.user.UserRepository
-import com.alaeri.command.core.IInvokationContext
+import com.alaeri.command.buildCommandContextA
 import com.alaeri.command.core.flow.syncInvokeFlow
 import com.alaeri.command.core.suspendInvokeAndFold
 import com.alaeri.command.invokeSyncCommand
 import kotlinx.coroutines.launch
 
-class LoginViewModel(private val userRepository: UserRepository,
-                     private val invokationContext: IInvokationContext<*, *>) : ViewModel() {
+class LoginViewModel(private val userRepository: UserRepository, private val defaultSerializer: DefaultIRootCommandLogger) : ViewModel() {
 
     private val mediatorLiveData = MediatorLiveData<LoginState>()
 
     val currentState : LiveData<LoginState> = mediatorLiveData
 
+    val rootContext = buildCommandContextA<Any>(this){
+        defaultSerializer.log(this, it)
+    }
+
     init {
-        val opContext = invokationContext as IInvokationContext<Unit, Unit>
-        invokeSyncCommand(opContext){
+
+        invokeSyncCommand(rootContext){
             val source = syncInvokeFlow { userRepository.currentUser }.asLiveData()
             mediatorLiveData.addSource(source){
                 if(it == null){
@@ -33,8 +37,7 @@ class LoginViewModel(private val userRepository: UserRepository,
     }
 
     fun onSubmitClicked(firstName: String) {
-        val opContext = invokationContext as IInvokationContext<Unit, Unit>
-        invokeSyncCommand(opContext){
+        invokeSyncCommand(rootContext){
             viewModelScope.launch {
                 mediatorLiveData.value = LoginState.Loading(firstName)
                 try{

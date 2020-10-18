@@ -1,8 +1,9 @@
 package com.alaeri.cats.app.ui.cats
 
 import androidx.lifecycle.*
+import com.alaeri.cats.app.DefaultIRootCommandLogger
+import com.alaeri.command.buildCommandContextA
 import com.alaeri.command.core.IInvokationContext
-import com.alaeri.command.core.suspend.suspendInvokeAsFlow
 import com.alaeri.command.core.suspendInvokeAndFold
 import com.alaeri.command.invokeSyncCommand
 import kotlinx.coroutines.launch
@@ -15,17 +16,20 @@ data class CatFragmentState(val refreshState: NetworkState, val pagedListState: 
 
 class CatsViewModel(private val refreshUseCase: RefreshUseCase,
                     private val fetchMoreUserCase: PagedListUseCase,
-                    private val operationContext: IInvokationContext<*, *>
+                    private val defaultSerializer: DefaultIRootCommandLogger
 ) : ViewModel(){
 
     private val initialState = CatFragmentState(refreshState = NetworkState.Idle(), pagedListState = PagedListState.Empty.AwaitingUser)
-    private val mediatorContext = operationContext as IInvokationContext<MediatorLiveData<CatFragmentState>, MediatorLiveData<CatFragmentState>>
     private val mutableLiveDataExecutionContext = MutableLiveData<LiveData<NetworkState>>()
     private val switchMap = mutableLiveDataExecutionContext.switchMap{
         it
     }
 
-    private val mediatorLiveData = invokeSyncCommand<MediatorLiveData<CatFragmentState>>(mediatorContext) {
+    val rootContext = buildCommandContextA<Any>(this){
+        defaultSerializer.log(this, it)
+    }
+
+    private val mediatorLiveData = invokeSyncCommand<MediatorLiveData<CatFragmentState>>(rootContext as IInvokationContext<MediatorLiveData<CatFragmentState>, MediatorLiveData<CatFragmentState>>) {
         return@invokeSyncCommand MediatorLiveData<CatFragmentState>().apply {
             this.value = initialState
             viewModelScope.launch {
@@ -43,12 +47,12 @@ class CatsViewModel(private val refreshUseCase: RefreshUseCase,
 
     val currentState: LiveData<CatFragmentState> = mediatorLiveData
 
-    private val refreshContext = operationContext as IInvokationContext<Unit, Unit>
-    fun onRefreshTriggered() : Unit = invokeSyncCommand(refreshContext){
+//    private val refreshContext = operationContext as IInvokationContext<Unit, Unit>
+    fun onRefreshTriggered() : Any = invokeSyncCommand(rootContext){
         viewModelScope.launch {
             //mutableLiveDataExecutionContext.value = suspendInvokeAsFlow<Unit, NetworkState, NetworkState>{ refreshUseCase.invoke() }.asLiveData()
         }
-        Unit
+        this
     }
 }
 

@@ -1,8 +1,6 @@
 package com.alaeri.command.history.serialization
 
 import com.alaeri.command.history.IdOwner
-import com.alaeri.command.history.toSerializedClass
-import org.koin.core.definition.BeanDefinition
 
 sealed class SerializableCommandState<Key>{
     data class Value<Key>(val valueId: Key,
@@ -21,7 +19,9 @@ sealed class SerializableCommandState<Key>{
         override val clazz: SerializedClass? = throwableClass
     }
     class Waiting<Key>: SerializableCommandState<Key>()
-    class Starting<Key>: SerializableCommandState<Key>()
+    data class Starting<Key>(override val id: Key) : SerializableCommandState<Key>(), IdOwner<Key>{
+        override val clazz: SerializedClass? = null
+    }
     data class Step<Key>(val name: String? = null): SerializableCommandState<Key>()
     data class Progress<Key>(val current: Number, val max: Number): SerializableCommandState<Key>()
 

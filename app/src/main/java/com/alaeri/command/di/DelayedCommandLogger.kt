@@ -1,7 +1,8 @@
 package com.alaeri.command.di
 
+import com.alaeri.cats.app.DefaultIRootCommandLogger
 import com.alaeri.command.CommandState
-import com.alaeri.command.core.ICommandLogger
+import com.alaeri.command.core.IInvokationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filterNotNull
@@ -19,27 +20,28 @@ import kotlinx.coroutines.launch
  *
  */
 
-class DelayedCommandLogger<R>(scope: CoroutineScope,
-                              private val loggerFlow: Flow<ICommandLogger<R>?>
-): ICommandLogger<R> {
+class DelayedCommandLogger(scope: CoroutineScope,
+                              private val loggerFlow: Flow<DefaultIRootCommandLogger?>
+): DefaultIRootCommandLogger {
 
-    private val delayedLogs = mutableListOf<CommandState<R>>()
-    private lateinit var commandLogger: ICommandLogger<R>
+    data class RootCommandLog(val context: IInvokationContext<*, *>, val state: CommandState<*>)
+    private val delayedLogs = mutableListOf<RootCommandLog>()
+    private lateinit var commandLogger: DefaultIRootCommandLogger
 
     init {
         scope.launch {
             val logger = loggerFlow.filterNotNull().first()
-            delayedLogs.forEach { logger.log(it) }
+            delayedLogs.forEach { logger.log(it.context, it.state) }
             delayedLogs.clear()
             commandLogger = logger
         }
     }
 
-    override  fun log(commandState: CommandState<R>) {
+    override  fun log(context: IInvokationContext<*,*>, commandState: CommandState<*>) {
         if(::commandLogger.isInitialized){
-            commandLogger.log(commandState)
+            commandLogger.log(context, commandState)
         }else{
-            delayedLogs.add(commandState)
+            delayedLogs.add(RootCommandLog(context, commandState))
         }
     }
 }
