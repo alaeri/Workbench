@@ -11,10 +11,7 @@ import android.webkit.WebChromeClient
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.Observer
-import androidx.lifecycle.asLiveData
-import androidx.lifecycle.lifecycleScope
-import com.alaeri.cats.app.command.CommandRepository
+import androidx.lifecycle.*
 import com.alaeri.cats.app.command.focus.FocusCommandRepository
 import com.alaeri.cats.app.command.focus.FocusedCommandOrBreak
 import com.alaeri.cats.app.databinding.GraphFragmentBinding
@@ -52,6 +49,8 @@ class GraphFragment: Fragment(), KoinComponent {
 
     val commandRepository : FocusCommandRepository by lazy { getKoin().get<FocusCommandRepository>() }
 
+    val mutableLiveDataIsPageReady = MutableLiveData<Boolean>(false)
+
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -64,12 +63,22 @@ class GraphFragment: Fragment(), KoinComponent {
                 WebView.setWebContentsDebuggingEnabled(true)
             }
             webView.apply {
+                //This the the enabling of the zoom controls
+//                webView.settings.builtInZoomControls = true;
+
+//                //This will zoom out the WebView
+//                webView.settings.useWideViewPort = true;
+//                webView.settings.loadWithOverviewMode = true;
+//                webView.setInitialScale(1);
+
+
                 settings.javaScriptEnabled = true
                 webChromeClient = WebChromeClient()
                 webViewClient =  object: WebViewClient() {
                     override fun onPageFinished(view: WebView?, url: String?) {
                         super.onPageFinished(view, url)
-                        loadPieChart()
+                        Log.d("CATS","readying webview to commands after loading: $url")
+                        mutableLiveDataIsPageReady.value = true
                     }
                 }
                 loadUrl("file:///android_asset/" + "d3graph.html")
@@ -78,17 +87,19 @@ class GraphFragment: Fragment(), KoinComponent {
         return binding.root
     }
 
-    fun loadPieChart() {
-        //TODO use proper json serializing
-
-        val filteredList = commandRepository.state.map { it.history?.list }.filterNotNull().map {
-            it.mapNotNull { focusedCommandOrBreak ->
-                val focused =  focusedCommandOrBreak as? FocusedCommandOrBreak.Focused
-                focused?.serializableCommandStateAndContext
-            }
-        }.asLiveData(lifecycleScope.coroutineContext).observe(this.viewLifecycleOwner, Observer {
-            val levelsToJson = buildLevels(it)
-            val converterFactory = MoshiConverterFactory.create()
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        mutableLiveDataIsPageReady.switchMap {
+            Log.d("CATS","switching to commands")
+            commandRepository.state.map { it.history?.list }.filterNotNull().map {
+                it.mapNotNull { focusedCommandOrBreak ->
+                    val focused =  focusedCommandOrBreak as? FocusedCommandOrBreak.Focused
+                    focused?.serializableCommandStateAndContext
+                }
+            }.asLiveData(lifecycleScope.coroutineContext)
+        }.observe(this.viewLifecycleOwner, Observer {
+            val levelsToJson = CommandsToGraphRepresentationMapper.buildLevels(it)
+            //val converterFactory = MoshiConverterFactory.create()
             val moshi = Moshi.Builder().build();
             val jsonAdapter: JsonAdapter<Levels> = moshi.adapter(Levels::class.java)
             //val oldText = createJsonManually(filteredList)
@@ -109,183 +120,111 @@ class GraphFragment: Fragment(), KoinComponent {
                     webView.loadUrl("javascript:loadPieChart('$text');");
                 }
             }
-        })//.filterNot{ it.context.executionContext.id == it.context.invokationContext.id }
-        Log.d("CATS","$filteredList")
-
-    }
-
-    private fun buildLevels(filteredList: List<SerializableCommandStateAndContext<IndexAndUUID>>): Levels {
-        val connections = filteredList.flatMap {
-            val childContextElement = it.context.executionContext.toElement()
-            val parentContextElement = it.context.invokationContext.toElement()
-            val contextConnection = ElementConnection(
-                child = childContextElement,
-                parent = parentContextElement
-            )
-            val idOwnerState = it.state as? IdOwner<IndexAndUUID>
-            val resultElement = idOwnerState?.toElement() as? Element<IndexAndUUID>
-            val stateConnections = resultElement?.let {
-                listOf(
-                    ElementConnection<IndexAndUUID>(
-                        child = it,
-                        parent = childContextElement
-                    )
-                )
-    //                if (childContextElement == parentContextElement) {
-    //
-    //                } else {
-    //                    listOf(
-    //                        ElementConnection<IndexAndUUID>(
-    //                            child = it,
-    //                            parent = parentContextElement
-    //                        ),
-    //                        ElementConnection<IndexAndUUID>(
-    //                            child = childContextElement,
-    //                            parent = it
-    //                        )
-    //                    )
-    //                }
-            } ?: emptyList<ElementConnection<IndexAndUUID>>()
-            return@flatMap stateConnections + contextConnection
-        }
-        val distinctElements = connections.flatMap {
-            listOf(it.child, it.parent)
-        }.distinct()
-        val levels = mutableListOf<List<ElementAndParents<IndexAndUUID>>>()
-        val cleanedConnections = connections.filter { it.child != it.parent }
-        val connectionsGroupedByChild = cleanedConnections.groupBy { it.child }
-        val connectionsGroupedByParent = cleanedConnections.groupBy { it.parent }
-        val previousLevelElements = listOf<Element<IndexAndUUID>>()
-        var remainingElements = distinctElements
-        while (remainingElements.size > 0) {
-            val nextElements = remainingElements.filter {
-                val parents = connectionsGroupedByChild.get(it)?.map { it.parent }
-                Log.d("CATS", "it: $it parents: ${parents}")
-                parents?.none { it in remainingElements } ?: true
-            }.map {
-                ElementAndParents(it, connectionsGroupedByChild[it]?.map { it.parent } ?: listOf())
-            }
-            if (nextElements.isEmpty()) {
-                Log.d("CATS", "chain is broken...")
-                break
-            }
-            levels += nextElements
-            remainingElements =
-                remainingElements.filterNot { it in nextElements.map { it.element } }
-            Log.d(
-                "CATS",
-                "next: ${nextElements.size} remaining: ${remainingElements.size} depth: ${levels.size}"
-            )
-        }
-        val levelsToJson = Levels(levels.map { level ->
-            level.map { elementAndParents ->
-                IdAndParents(
-                    elementAndParents.element.toStr(),
-                    elementAndParents.parents.map { it.toStr() })
-            }
+            Log.d("CATS","size of commands to build graph: ${it.size}")
         })
-        return levelsToJson
     }
 
-    private fun createJsonManually(
-        filteredList: List<SerializableCommandStateAndContext<IndexAndUUID>>
-    ): String {
-        val allContexts = filteredList.flatMap {
-            listOf(
-                it.context.invokationContext,
-                it.context.executionContext
-            )
-        }
-        val dedupedContexts = allContexts.distinctBy { it.id }
-        Log.d("CATS", "deduped ids: ${dedupedContexts.size}")
-        val level0Contexts = dedupedContexts.filter { dedupedContext ->
-            val id = dedupedContext.id
-            filteredList.none { it.context.executionContext.id == id && it.context.invokationContext.id != it.context.executionContext.id }
-            filteredList.none { it.state is IdOwner<*> && it.state.id == id }
-        }
-        val level0data = level0Contexts.map { context ->
-            "{\"id\": \"${context.id}-${context.serializedClass}\", \"parents\":[]}"
-        }.onEach {
-            Log.d("CATS", it)
-        }
-
-        val level0ids = level0Contexts.map { it.id }
-        Log.d("CATS", "level0 ids: ${level0ids.size}")
-        val nextLevelContexts = dedupedContexts
-            .filterNot { it.id in level0ids }
-            .filter { context ->
-                filteredList.any { it.context.executionContext.id == context.id && it.context.invokationContext.id in level0ids }
-            }
-        Log.d("CATS", "nextLevelContexts: ${nextLevelContexts.size}")
-        val returnedObjectsList = filteredList.mapNotNull {
-            if (it.state is IdOwner<*>) {
-                it.context to it.state as IdOwner<IndexAndUUID>
-            } else {
-                null
-            }
-        }.groupBy { it.second }.entries.map {
-            val parents = it.value.mapNotNull {
-                if (it.first.executionContext.id in level0ids) {
-                    "\"${it.first.executionContext.id}-${it.first.executionContext.serializedClass}\""
-                } else {
-                    null
-                }
-            }
-            "{\"id\": \"${it.key.id}-${it.key.clazz}\", \"parents\":[${parents.distinct()
-                .joinToString(", ")}]}"
-        }
-        Log.d("CATS", "returnedObjectsList: ${returnedObjectsList}")
-        val nextLevelList = nextLevelContexts.map { context ->
-            val parents = filteredList.mapNotNull {
-                if (it.context.executionContext.id == context.id && it.context.invokationContext.id in level0ids) {
-                    val invokationContext = it.context.invokationContext
-                    "\"${invokationContext.id}-${invokationContext.serializedClass}\""
-                } else {
-                    null
-                }
-            }
-            "{\"id\": \"${context.id}-${context.serializedClass}\", \"parents\":[${parents.distinct()
-                .joinToString(", ")}]}"
-        }.onEach {
-            Log.d("CATS", it)
-        }
-
-        val nextLevel = (returnedObjectsList + nextLevelList).joinToString(",")
-
-        val level1Ids = nextLevelContexts.map { it.id }
-        val secondLevelContexts = dedupedContexts
-            .filterNot { it.id in level1Ids }
-            .filterNot { it.id in level0ids }
-            .filter { context ->
-                filteredList.any { it.context.executionContext.id == context.id && it.context.invokationContext.id in level1Ids }
-            }
-        Log.d("CATS", "nextLevelContexts: ${nextLevelContexts.size}")
-        val secondLevel = secondLevelContexts.map { context ->
-            val parents = filteredList.mapNotNull {
-                if (it.context.executionContext.id == context.id && it.context.invokationContext.id in level1Ids) {
-                    val invokationContext = it.context.invokationContext
-                    "\"${invokationContext.id}-${invokationContext.serializedClass}\""
-                } else {
-                    null
-                }
-            }
-            "{\"id\": \"${context.id}-${context.serializedClass}\", \"parents\":[${parents.distinct()
-                .joinToString(", ")}]}"
-        }.onEach {
-            Log.d("CATS", it)
-        }.joinToString(",")
-
-        //        val  dataset = intArrayOf(5,10,15,20,35)
-        // use java.util.Arrays to format
-        // the array as text
-        Log.d("CATS", nextLevel)
-        val text =
-            "{\"levels\":[[${level0data.joinToString(",")}],[$nextLevel],[$secondLevel]]}"//dataset.toString()
-        Log.d("CATS", text)
 
 
-
-        return text
-    }
+//    private fun createJsonManually(
+//        filteredList: List<SerializableCommandStateAndContext<IndexAndUUID>>
+//    ): String {
+//        val allContexts = filteredList.flatMap {
+//            listOf(
+//                it.context.invokationContext,
+//                it.context.executionContext
+//            )
+//        }
+//        val dedupedContexts = allContexts.distinctBy { it.id }
+//        Log.d("CATS", "deduped ids: ${dedupedContexts.size}")
+//        val level0Contexts = dedupedContexts.filter { dedupedContext ->
+//            val id = dedupedContext.id
+//            filteredList.none { it.context.executionContext.id == id && it.context.invokationContext.id != it.context.executionContext.id }
+//            filteredList.none { it.state is IdOwner<*> && it.state.id == id }
+//        }
+//        val level0data = level0Contexts.map { context ->
+//            "{\"id\": \"${context.id}-${context.serializedClass}\", \"parents\":[]}"
+//        }.onEach {
+//            Log.d("CATS", it)
+//        }
+//
+//        val level0ids = level0Contexts.map { it.id }
+//        Log.d("CATS", "level0 ids: ${level0ids.size}")
+//        val nextLevelContexts = dedupedContexts
+//            .filterNot { it.id in level0ids }
+//            .filter { context ->
+//                filteredList.any { it.context.executionContext.id == context.id && it.context.invokationContext.id in level0ids }
+//            }
+//        Log.d("CATS", "nextLevelContexts: ${nextLevelContexts.size}")
+//        val returnedObjectsList = filteredList.mapNotNull {
+//            if (it.state is IdOwner<*>) {
+//                it.context to it.state as IdOwner<IndexAndUUID>
+//            } else {
+//                null
+//            }
+//        }.groupBy { it.second }.entries.map {
+//            val parents = it.value.mapNotNull {
+//                if (it.first.executionContext.id in level0ids) {
+//                    "\"${it.first.executionContext.id}-${it.first.executionContext.serializedClass}\""
+//                } else {
+//                    null
+//                }
+//            }
+//            "{\"id\": \"${it.key.id}-${it.key.clazz}\", \"parents\":[${parents.distinct()
+//                .joinToString(", ")}]}"
+//        }
+//        Log.d("CATS", "returnedObjectsList: ${returnedObjectsList}")
+//        val nextLevelList = nextLevelContexts.map { context ->
+//            val parents = filteredList.mapNotNull {
+//                if (it.context.executionContext.id == context.id && it.context.invokationContext.id in level0ids) {
+//                    val invokationContext = it.context.invokationContext
+//                    "\"${invokationContext.id}-${invokationContext.serializedClass}\""
+//                } else {
+//                    null
+//                }
+//            }
+//            "{\"id\": \"${context.id}-${context.serializedClass}\", \"parents\":[${parents.distinct()
+//                .joinToString(", ")}]}"
+//        }.onEach {
+//            Log.d("CATS", it)
+//        }
+//
+//        val nextLevel = (returnedObjectsList + nextLevelList).joinToString(",")
+//
+//        val level1Ids = nextLevelContexts.map { it.id }
+//        val secondLevelContexts = dedupedContexts
+//            .filterNot { it.id in level1Ids }
+//            .filterNot { it.id in level0ids }
+//            .filter { context ->
+//                filteredList.any { it.context.executionContext.id == context.id && it.context.invokationContext.id in level1Ids }
+//            }
+//        Log.d("CATS", "nextLevelContexts: ${nextLevelContexts.size}")
+//        val secondLevel = secondLevelContexts.map { context ->
+//            val parents = filteredList.mapNotNull {
+//                if (it.context.executionContext.id == context.id && it.context.invokationContext.id in level1Ids) {
+//                    val invokationContext = it.context.invokationContext
+//                    "\"${invokationContext.id}-${invokationContext.serializedClass}\""
+//                } else {
+//                    null
+//                }
+//            }
+//            "{\"id\": \"${context.id}-${context.serializedClass}\", \"parents\":[${parents.distinct()
+//                .joinToString(", ")}]}"
+//        }.onEach {
+//            Log.d("CATS", it)
+//        }.joinToString(",")
+//
+//        //        val  dataset = intArrayOf(5,10,15,20,35)
+//        // use java.util.Arrays to format
+//        // the array as text
+//        Log.d("CATS", nextLevel)
+//        val text =
+//            "{\"levels\":[[${level0data.joinToString(",")}],[$nextLevel],[$secondLevel]]}"//dataset.toString()
+//        Log.d("CATS", text)
+//
+//
+//
+//        return text
+//    }
 
 }

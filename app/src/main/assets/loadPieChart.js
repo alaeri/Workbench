@@ -305,27 +305,31 @@ const loadData = (levels)=> {
 
 //var newElement = document.createElementNS("http://www.w3.org/2000/svg", 'path');
 const loadPieChart = (commandsDataAsString)=>{
-    const width = 3000
-    const height = 3000
+    const width = 1000
+    const height = 1000
 
     console.log(commandsDataAsString)
     const commandsData = JSON.parse(commandsDataAsString)
     console.log(commandsData);
     const data = loadData(commandsData.levels);
-    const x = d3.scaleLinear()
-            //.domain(d3.extent(data, d => d[0]))
-            .range([30, width - 10])
-            .nice()
-    const y = d3.scaleLinear()
-          //.domain(d3.extent(data, d => d[1]))
-          .range([height - 20, 10])
-          .nice()
+//    const data = loadData(levelsData)
+//    const x = d3.scaleLinear()
+//            //.domain(d3.extent(data, d => d[0]))
+//            .range([30, width - 10])
+//            .nice()
+//    const y = d3.scaleLinear()
+//          //.domain(d3.extent(data, d => d[1]))
+//          .range([height - 20, 10])
+//          .nice()
     const svg = d3.select("body")
-                  .append("svg")
-                    .attr("width", width)
-                    .attr("height", height)
-   const gx = svg.append("g");
-   const gy = svg.append("g");
+                  .select("svg")
+    svg.selectAll("text").remove();
+    svg.selectAll("path").remove();
+    svg.selectAll("line").remove();
+//                    .attr("width", "100vh")
+//                    .attr("height", "100vh")
+//   const gx = svg.append("g");
+//   const gy = svg.append("g");
 
 
     //const  svg = document.getElementsByTagName('svg')[0]; //Get svg element
@@ -363,60 +367,60 @@ const loadPieChart = (commandsDataAsString)=>{
 //      gy.call(zoomY).attr("pointer-events", "none");
 //
 //      // active zooming
-//      const zoom = d3.zoom().on("zoom", function(e) {
+      const zoom = d3.zoom().on("zoom", function(e) {
 //        const t = e.transform;
-//        const k = t.k / z.k;
-//        const point = e.sourceEvent ? d3.pointer(e) : [width / 2, height / 2];
-//
-//        // is it on an axis? is the shift key pressed?
-//        const doX = point[0] > x.range()[0];
-//        const doY = point[1] < y.range()[0];
-//        const shift = e.sourceEvent && e.sourceEvent.shiftKey;
-//
-//        if (k === 1) {
-//          // pure translation?
-//          doX && gx.call(zoomX.translateBy, (t.x - z.x) / tx().k, 0);
-//          doY && gy.call(zoomY.translateBy, 0, (t.y - z.y) / ty().k);
-//        } else {
-//          // if not, we're zooming on a fixed point
-//          doX && gx.call(zoomX.scaleBy, shift ? 1 / k : k, point);
-//          doY && gy.call(zoomY.scaleBy, k, point);
-//        }
-//
-//        z = t;
-//
-//        //redraw();
-//      });
+                //        const k = t.k / z.k;
+                //        const point = e.sourceEvent ? d3.pointer(e) : [width / 2, height / 2];
+                //
+                //        // is it on an axis? is the shift key pressed?
+                //        const doX = point[0] > x.range()[0];
+                //        const doY = point[1] < y.range()[0];
+                //        const shift = e.sourceEvent && e.sourceEvent.shiftKey;
+                //
+                //        if (k === 1) {
+                //          // pure translation?
+                //          doX && gx.call(zoomX.translateBy, (t.x - z.x) / tx().k, 0);
+                //          doY && gy.call(zoomY.translateBy, 0, (t.y - z.y) / ty().k);
+                //        } else {
+                //          // if not, we're zooming on a fixed point
+                //          doX && gx.call(zoomX.scaleBy, shift ? 1 / k : k, point);
+                //          doY && gy.call(zoomY.scaleBy, k, point);
+                //        }
+                //
+                //        z = t;
 
-//      return svg
-//        .call(zoom)
-//        .call(zoom.transform, d3.zoomIdentity.scale(0.8))
-//        .node();
+        //redraw();
+      });
+
+      return svg
+        .call(zoom)
+        .call(zoom.transform, d3.zoomIdentity.scale(0.8))
+        .node();
 }
 
-function redraw() {
-    const xr = tx().rescaleX(x);
-    const yr = ty().rescaleY(y);
-
-    gx.call(xAxis, xr);
-    gy.call(yAxis, yr);
-
-    dots
-      .attr("cx", d => xr(d[0]))
-      .attr("cy", d => yr(d[1]))
-      .attr("rx", 6 * Math.sqrt(tx().k))
-      .attr("ry", 6 * Math.sqrt(ty().k));
-
-    vo.attr(
-      "d",
-      d3.Delaunay.from(data.map(d => [xr(d[0]), yr(d[1])]))
-        .voronoi([35, 0, width, height - 25])
-        .render()
-    )
-      .attr("fill", "none")
-      .attr("stroke", "#ccc")
-      .attr("stroke-width", 0.5);
-  }
+//function redraw() {
+//    const xr = tx().rescaleX(x);
+//    const yr = ty().rescaleY(y);
+//
+//    gx.call(xAxis, xr);
+//    gy.call(yAxis, yr);
+//
+//    dots
+//      .attr("cx", d => xr(d[0]))
+//      .attr("cy", d => yr(d[1]))
+//      .attr("rx", 6 * Math.sqrt(tx().k))
+//      .attr("ry", 6 * Math.sqrt(ty().k));
+//
+//    vo.attr(
+//      "d",
+//      d3.Delaunay.from(data.map(d => [xr(d[0]), yr(d[1])]))
+//        .voronoi([35, 0, width, height - 25])
+//        .render()
+//    )
+//      .attr("fill", "none")
+//      .attr("stroke", "#ccc")
+//      .attr("stroke-width", 0.5);
+//  }
 
 //console.log("data: ")
 //console.log(data);

@@ -6,7 +6,6 @@ import androidx.lifecycle.lifecycleScope
 import com.alaeri.cats.app.DefaultIRootCommandLogger
 import com.alaeri.command.CommandState
 import com.alaeri.command.android.LifecycleCommandOwner
-import com.alaeri.command.core.ICommandLogger
 import com.alaeri.command.core.command
 import com.alaeri.command.core.invoke
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -28,7 +27,7 @@ class FragmentExample: Fragment(), LifecycleCommandOwner, KoinComponent {
         lifecycleScope.launch {
             commandContext.invokeSuspendingLifecycleCommand<String> {
                 emit(CommandState.Update("coucou suspend"))
-                invoke { command<String> { "coucou" } }
+                invoke { this@FragmentExample.command<String> { "coucou" } }
             }
         }
         val commandRootContext = getKoin().get<DefaultIRootCommandLogger>()
@@ -39,7 +38,7 @@ class FragmentExample: Fragment(), LifecycleCommandOwner, KoinComponent {
         super.onResume()
         commandContext.invokeLifecycleCommand<Unit> {
             emit(CommandState.Update("coucou"))
-            command<String> { "hola" }
+            invoke { this@FragmentExample.command<String> { "hola" } }
         }
     }
 }
