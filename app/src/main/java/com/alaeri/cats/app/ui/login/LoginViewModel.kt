@@ -3,7 +3,7 @@ package com.alaeri.cats.app.ui.login
 import androidx.lifecycle.*
 import com.alaeri.cats.app.DefaultIRootCommandLogger
 import com.alaeri.cats.app.user.UserRepository
-import com.alaeri.command.buildCommandContextA
+import com.alaeri.command.buildCommandRoot
 import com.alaeri.command.core.flow.syncInvokeFlow
 import com.alaeri.command.core.suspendInvokeAndFold
 import com.alaeri.command.invokeSyncCommand
@@ -15,7 +15,7 @@ class LoginViewModel(private val userRepository: UserRepository, private val def
 
     val currentState : LiveData<LoginState> = mediatorLiveData
 
-    val rootContext = buildCommandContextA<Any>(this){
+    val rootContext = buildCommandRoot(this){
         defaultSerializer.log(this, it)
     }
 

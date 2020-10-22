@@ -11,7 +11,7 @@ import com.alaeri.cats.app.ui.viewpager.viewPagerFragmentModule
 import com.alaeri.cats.app.user.userModule
 import com.alaeri.command.CommandState
 import com.alaeri.command.android.CommandNomenclature
-import com.alaeri.command.buildCommandContextA
+import com.alaeri.command.buildCommandRoot
 import com.alaeri.command.core.*
 import com.alaeri.command.di.AbstractCommandLogger
 import com.alaeri.command.di.DelayedLogger
@@ -49,7 +49,7 @@ class CatsApplication : Application() {
             IndexAndUUID(index = (previous?.index?:0) +1, uuid = UUID.randomUUID())
         }
         val serializer = Serializer<IndexAndUUID>(idBank, delayedSerializedCommandLogger)
-        val rootCommandContext = buildCommandContextA<Any>(this,
+        val rootCommandContext = buildCommandRoot(this,
         nomenclature = CommandNomenclature.Root,
         name = "root") { state ->
             serializer.log(this, state)

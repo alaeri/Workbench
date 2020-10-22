@@ -13,7 +13,7 @@ import org.koin.core.module.Module
 
 object CommandModule{
     fun initWith(
-        rootCommandContext: IInvokationContext<Any, Any>,
+        rootCommandContext: IInvokationContext<Any?, Any?>,
         serializer: Serializer<IndexAndUUID>
     ): Command<Module> =
         commandModule {

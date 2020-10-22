@@ -2,7 +2,7 @@ package com.alaeri.command.android
 
 import androidx.lifecycle.LifecycleOwner
 import com.alaeri.cats.app.DefaultIRootCommandLogger
-import com.alaeri.command.buildCommandContextA
+import com.alaeri.command.buildCommandRoot
 import com.alaeri.command.core.ExecutionContext
 import com.alaeri.command.core.invokeCommand
 import com.alaeri.command.core.suspend.SuspendingExecutionContext
@@ -14,7 +14,7 @@ class LifecycleCommandContext(
     val owner: LifecycleOwner,
     val commandLogger: DefaultIRootCommandLogger
 ){
-    val rootCommandContext = buildCommandContextA<Any?>(owner, "lifecycle", CommandNomenclature.Root) { c ->
+    val rootCommandContext = buildCommandRoot(owner, "lifecycle", CommandNomenclature.Root) { c ->
         commandLogger.log(this, c)
     }
 

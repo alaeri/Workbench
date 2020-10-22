@@ -47,7 +47,7 @@ class OperationHistoryTest {
     fun testFlatten() = testCoroutineScope.runBlockingTest{
         val catalog = Catalog()
         val iOperationContext =
-            buildCommandContextA<Int>(this, "flatten", CommandNomenclature.Test, logger)
+            buildCommandRoot<Int>(this, "flatten", CommandNomenclature.Test, logger)
         val count = invokeSuspendingCommand(iOperationContext){
             invoke{
                 catalog.count()
@@ -74,7 +74,7 @@ class OperationHistoryTest {
     fun testSerialize() = testCoroutineScope.runBlockingTest{
         val catalog = Catalog()
         val iOperationContext =
-            buildCommandContextA<Int>(this, "name", CommandNomenclature.Test, logger)
+            buildCommandRoot<Int>(this, "name", CommandNomenclature.Test, logger)
         val count = invokeSuspendingCommand(iOperationContext){
 
             coroutineScope {
@@ -102,7 +102,7 @@ class OperationHistoryTest {
     fun testFocus() = testCoroutineScope.runBlockingTest{
         val catalog = Catalog()
         val iOperationContext =
-            buildCommandContextA<Int>(this, "name", CommandNomenclature.Test, logger)
+            buildCommandRoot<Int>(this, "name", CommandNomenclature.Test, logger)
         var command: ICommand<*>? = null
         val count = invokeSyncCommand(iOperationContext){
             invoke{

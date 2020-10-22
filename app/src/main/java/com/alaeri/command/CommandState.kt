@@ -11,7 +11,7 @@ sealed class CommandState<R>(val time: Long = System.currentTimeMillis()){
 //            return subCommandAndState.first.name + " " + subCommandAndState.second.toString()
 //        }
 //    }
-    data class SubCommand<R, RST>(val subCommandAndState: Pair<IInvokationContext<R, RST>, CommandState<RST>>): CommandState<R>(){
+    data class SubCommand<R, RST>(val subCommandAndState: Pair<IInvokationContext<R, RST>, CommandState<out RST>>): CommandState<R>(){
         override fun toString(): String {
             return "SUBOP:" + subCommandAndState.first.toString() + " " + subCommandAndState.second.toString()
         }
