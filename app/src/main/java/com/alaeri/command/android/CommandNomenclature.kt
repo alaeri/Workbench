@@ -31,19 +31,30 @@ sealed class CommandNomenclature {
     }
     sealed class Android: CommandNomenclature(){
         sealed class Lifecycle: Android(){
-            object OnAttach: Android()
-            object OnCreate: Android()
-            object OnCreateView: Android()
-            object OnViewCreated: Android()
-            object OnStart: Android()
-            object OnResume: Android()
-            object OnPause: Android()
-            object OnStop: Android()
-            object OnDestroy: Android()
+            object Root: Lifecycle()
+            object OnAttach: Lifecycle()
+            object OnCreate: Lifecycle()
+            object OnCreateView: Lifecycle()
+            object OnViewCreated: Lifecycle()
+            object OnStart: Lifecycle()
+            object OnResume: Lifecycle()
+            object OnPause: Lifecycle()
+            object OnStop: Lifecycle()
+            object OnDestroy: Lifecycle()
         }
         sealed class UserInteraction: Android(){
             object Click: Android()
 
+        }
+    }
+
+    sealed class Application : CommandNomenclature() {
+        sealed class Cats: Application(){
+            object LoadImage: Cats()
+            object BuildCatListMediatorLiveData : Cats()
+            object RefreshList : Cats()
+            object FirstNameSubmitted : Cats()
+            object InitLoginMediator : Cats()
         }
     }
 }

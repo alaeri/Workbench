@@ -5,10 +5,8 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider.Factory
 import androidx.lifecycle.ViewModelStore
-import androidx.lifecycle.ViewModelStoreOwner
 import androidx.recyclerview.widget.AsyncDifferConfig
 import androidx.recyclerview.widget.extras.viewholder.ViewHolderProvider
-import androidx.recyclerview.widget.extras.viewholder.adapter.PagedListAdapterWithVHProvider
 import androidx.recyclerview.widget.extras.viewholder.factory.IViewHolderFactory
 import androidx.recyclerview.widget.extras.viewholder.factory.ViewHolderFactory
 import com.alaeri.cats.app.cats.Cat
@@ -32,7 +30,7 @@ val catsFragmentModule : Command<Module> = CatsFragmentModule.commandModule {
         factory<Factory> {
             object: Factory{
                 override fun <T : ViewModel?> create(modelClass: Class<T>): T {
-                    return CatViewModel(get<FlowImageLoader>(), get()) as T
+                    return CatItemViewModel(get<FlowImageLoader>(), get()) as T
                 }
             }
         }

@@ -14,9 +14,11 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.alaeri.cats.app.DefaultIRootCommandLogger
 import com.alaeri.cats.app.command.focus.FocusCommandViewModel
 import com.alaeri.cats.app.databinding.CatsFragmentBinding
+import com.alaeri.command.AnyCommandRoot
 import com.alaeri.command.android.CommandNomenclature
 import com.alaeri.command.android.LifecycleCommandContext
 import com.alaeri.command.android.LifecycleCommandOwner
+import com.alaeri.command.android.invokeCommandWithLifecycle
 import com.alaeri.command.core.invokeCommand
 import com.alaeri.command.history.id.IndexAndUUID
 import com.alaeri.command.history.serialization.SerializableCommandStateAndContext
@@ -47,16 +49,16 @@ class CommandListFragment : Fragment(), KoinComponent, LifecycleCommandOwner {
     private lateinit var commandListViewModel: FocusCommandViewModel
     private lateinit var adapter: CommandAdapter
     private val futureLogger =  MutableStateFlow<DefaultIRootCommandLogger?>(null)
-    override val commandContext: LifecycleCommandContext = buildLifecycleCommandContext(futureLogger)
 
-
+    override val commandRoot: AnyCommandRoot = buildLifecycleCommandRoot(futureLogger)
+    override val lifecycleCommandContext: LifecycleCommandContext = LifecycleCommandContext(this)
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        return commandContext.invokeLifecycleCommand<CatsFragmentBinding>(nomenclature = CommandNomenclature.Android.Lifecycle.OnCreateView) {
+        return invokeCommandWithLifecycle<CatsFragmentBinding> {
             val executionContext = this
             commandListViewModel  = executionContext.invokeCommand<CatsFragmentBinding, FocusCommandViewModel>{ lifecycleScope.get<FocusCommandViewModel>() }
             futureLogger.value = executionContext.invokeCommand<CatsFragmentBinding, DefaultIRootCommandLogger> { lifecycleScope.get<DefaultIRootCommandLogger>() }
@@ -66,9 +68,6 @@ class CommandListFragment : Fragment(), KoinComponent, LifecycleCommandOwner {
                 adapter = invokeCommand {
                         this@CommandListFragment.lifecycleScope.get<CommandAdapter>()
                     }
-
-
-
                 Unit
             }
             val binding = invokeCommand<CatsFragmentBinding, CatsFragmentBinding>(name = "createView") {

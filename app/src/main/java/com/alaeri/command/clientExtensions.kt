@@ -1,5 +1,6 @@
 package com.alaeri.command
 
+import com.alaeri.cats.app.DefaultIRootCommandLogger
 import com.alaeri.command.android.CommandNomenclature
 import com.alaeri.command.core.*
 import com.alaeri.command.core.suspend.SuspendingCommand
@@ -10,21 +11,27 @@ import kotlinx.coroutines.flow.Flow
 /**
  * Created by Emmanuel Requier on 09/05/2020.
  */
-inline fun buildCommandRoot(any: Any, name: String? = null, nomenclature: CommandNomenclature= CommandNomenclature.Undefined, crossinline log: IInvokationContext<Any?, Any?>.(CommandState<out Any?>)->Unit): IInvokationContext<Any?, Any?> {
+typealias ICommandRoot<R> = IInvokationContext<Nothing, R>
+typealias AnyCommandRoot = ICommandRoot<Any?>
+
+fun buildCommandRoot(any: Any,
+                            name: String? = null,
+                            nomenclature: CommandNomenclature= CommandNomenclature.Undefined,
+                            iRootCommandLogger: DefaultIRootCommandLogger): AnyCommandRoot {
+
     val op = object : ICommand<Any?> {
         override val owner: Any = any
         override val nomenclature: CommandNomenclature = nomenclature
         override val name: String? = name
     }
-    return object :
-        IInvokationContext<Any?, Any?> {
+    return object : AnyCommandRoot {
         override val command: ICommand<Any?> = op
-        override val invoker: Invoker<Any?> = object :
-            Invoker<Any?> {
+        override val invoker: Invoker<Nothing> = object :
+            Invoker<Nothing> {
             override val owner: Any = any
         }
         override fun emit(opState: CommandState<out Any?>) {
-            this.log(opState)
+            iRootCommandLogger.log(this, opState)
         }
     }
 }
@@ -62,58 +69,10 @@ inline fun buildCommandRoot(any: Any, name: String? = null, nomenclature: Comman
 //        }
 //    }
 //}
-suspend inline fun <reified R> Any.invokeSuspendingCommand(
-    crossinline log: IInvokationContext<Any?, Any?>.(CommandState<out Any?>)->Unit,
-    name: String? = null,
-    nomenclature: CommandNomenclature = CommandNomenclature.Undefined,
-    crossinline body: suspend SuspendingExecutionContext<R>.()->R): R{
-    return invokeSuspendingCommand(
-        buildCommandRoot(
-            this,
-            name,
-            nomenclature,
-            log
-        ),name, nomenclature, body)
-}
-suspend inline fun <reified R> Any.invokeSuspendingCommand(invokationContext: IInvokationContext<Any?, R>, name: String? = null,
-                                                           nomenclature: CommandNomenclature = CommandNomenclature.Undefined,
-                                                           crossinline body: suspend SuspendingExecutionContext<R>.()->R): R{
-    val executableContext =
-        ExecutableContext<R>(this)
-    val executionContext = executableContext.chain(invokationContext)
-    val suspendingCommand =
-        SuspendingCommand<R>(
-            this,
-            nomenclature,
-                    name,
-            executableContext = executableContext,
-            executable ={ coroutineScope { println("csE: $this");
-                executionContext.execute { body.invoke(executionContext) } } }
-        )
-    return@invokeSuspendingCommand coroutineScope {
-        println("csF: $this");
-        val flow: Flow<CommandState<R>> = suspendingCommand.suspendExecute(executionContext)
-        val retvalue = flow.syncFold<R>()
-        retvalue
-    }
-}
 //inline fun <R> Any.invokeSyncCommand(log: ICommandLogger<R>, name:String?, commandNomenclature: CommandNomenclature = CommandNomenclature.Undefined, noinline body: ExecutionContext<R>.()->R): R{
 //    return invokeSyncCommand(buildCommandContextA(this,  name, commandNomenclature, log), body)
 //}
-inline fun <reified R> Any.invokeSyncCommand(crossinline log: IInvokationContext<Any?, Any?>.(CommandState<out Any?>)->Unit, name:String?, commandNomenclature: CommandNomenclature = CommandNomenclature.Undefined,noinline body: ExecutionContext<R>.()->R): R{
-    return invokeSyncCommand(buildCommandRoot(this, name, commandNomenclature, log), body)
-}
-inline fun <reified R> Any.invokeSyncCommand(invokationContext: IInvokationContext<Any?, R>, noinline body: ExecutionContext<R>.()->R): R{
-    val executableContext =
-        ExecutableContext<R>(this)
-    val executionContext = executableContext.chain(invokationContext)
-    val syncFlowBuilder = { aSyncOrSuspendExecutionContext : SuspendingExecutionContext<R> -> aSyncOrSuspendExecutionContext.executeAsFlow { body.invoke(aSyncOrSuspendExecutionContext) } }
-    return Command(
-        this,
-        executableContext = executableContext,
-        executable = syncFlowBuilder
-    ).syncExecute(executionContext).syncFold()
-}
+
 /*
  * Let's try a cleaner implementation for the root commands
  * Maybe this could be a CommandScope

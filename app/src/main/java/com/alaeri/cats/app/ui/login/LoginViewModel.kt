@@ -3,41 +3,42 @@ package com.alaeri.cats.app.ui.login
 import androidx.lifecycle.*
 import com.alaeri.cats.app.DefaultIRootCommandLogger
 import com.alaeri.cats.app.user.UserRepository
+import com.alaeri.command.ICommandRootOwner
+import com.alaeri.command.android.CommandNomenclature
 import com.alaeri.command.buildCommandRoot
 import com.alaeri.command.core.flow.syncInvokeFlow
 import com.alaeri.command.core.suspendInvokeAndFold
-import com.alaeri.command.invokeSyncCommand
+import com.alaeri.command.invokeRootCommand
 import kotlinx.coroutines.launch
 
-class LoginViewModel(private val userRepository: UserRepository, private val defaultSerializer: DefaultIRootCommandLogger) : ViewModel() {
+/**
+ * TODO this would be more legible with a switchMap maybe?
+ *
+ */
+class LoginViewModel(private val userRepository: UserRepository,
+                     private val defaultSerializer: DefaultIRootCommandLogger) : ICommandRootOwner, ViewModel() {
 
-    private val mediatorLiveData = MediatorLiveData<LoginState>()
+    override val commandRoot = buildCommandRoot(this, null, CommandNomenclature.Root, defaultSerializer)
 
-    val currentState : LiveData<LoginState> = mediatorLiveData
-
-    val rootContext = buildCommandRoot(this){
-        defaultSerializer.log(this, it)
-    }
-
-    init {
-
-        invokeSyncCommand(rootContext){
+    private val mediatorLiveData = MediatorLiveData<LoginState>().apply {
+        invokeRootCommand("init login live data", CommandNomenclature.Application.Cats.InitLoginMediator){
             val source = syncInvokeFlow { userRepository.currentUser }.asLiveData()
-            mediatorLiveData.addSource(source){
-                if(it == null){
-                    if(mediatorLiveData.value !is LoginState.Loading){
-                        mediatorLiveData.value = LoginState.LoggedOut()
+            addSource(source) {
+                if (it == null) {
+                    if (value !is LoginState.Loading) {
+                        value = LoginState.LoggedOut()
                     }
-                }else{
-                    mediatorLiveData.value = LoginState.LoggedIn(it)
+                } else {
+                    value = LoginState.LoggedIn(it)
                 }
             }
         }
-
     }
+    val currentState : LiveData<LoginState> = mediatorLiveData
 
     fun onSubmitClicked(firstName: String) {
-        invokeSyncCommand(rootContext){
+        invokeRootCommand<Unit>(name = "onSubmitClicked",
+            commandNomenclature = CommandNomenclature.Application.Cats.FirstNameSubmitted){
             viewModelScope.launch {
                 mediatorLiveData.value = LoginState.Loading(firstName)
                 try{
@@ -47,7 +48,6 @@ class LoginViewModel(private val userRepository: UserRepository, private val def
                 }
             }
         }
-
     }
 
     fun onLogoutClicked() {

@@ -50,7 +50,7 @@ class Operation2Test {
 
     @Test
     fun testBasicSuspendOperationWorks() = runBlocking {
-        val value = invokeSuspendingCommand<Int>({ t -> println(t)}){
+        val value = invokeSuspendingRootCommand<Int>({ t -> println(t)}){
             1
         }
         assertEquals(1, value)
@@ -58,7 +58,7 @@ class Operation2Test {
 
     @Test
     fun testBasicSyncOperationWorks() = runBlocking {
-        val value2 = invokeSyncCommand<Int>(logger){
+        val value2 = invokeRootCommand<Int>(logger){
             2
         }
         assertEquals(2, value2)
@@ -69,7 +69,7 @@ class Operation2Test {
     @Test
     fun testMoreComplexSuspendOperation(){
         runBlocking {
-            val value = invokeSuspendingCommand(logger){
+            val value = invokeSuspendingRootCommand(logger){
                 val count = suspendInvokeAndFold {
                     suspendingCommand<Int> {
                         val a: Int =  1
@@ -83,7 +83,7 @@ class Operation2Test {
             }
             assertEquals(1, value)
         }
-        val value2 = invokeSyncCommand<Int>(logger){
+        val value2 = invokeRootCommand<Int>(logger){
             val count = invoke { command<Int>{  2  } }
             testCoroutineScope.launch {
                 suspendInvokeAndFold {
@@ -103,7 +103,7 @@ class Operation2Test {
     @Test
     fun testWorksWithClass() = testCoroutineScope.runBlockingTest {
         val catalog = Catalog()
-        val count = invokeSuspendingCommand(logger){
+        val count = invokeSuspendingRootCommand(logger){
             invoke {
                 catalog.count()
             }
@@ -114,7 +114,7 @@ class Operation2Test {
     @Test
     fun testContainsAllEvents() = testCoroutineScope.runBlockingTest {
         val catalog = Catalog()
-        val count = invokeSuspendingCommand(logger){
+        val count = invokeSuspendingRootCommand(logger){
             invoke {
                 catalog.count()
             }

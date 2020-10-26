@@ -17,7 +17,7 @@ import org.koin.dsl.module
 import org.koin.ext.scope
 import kotlin.random.Random
 
-fun KoinApplication.invokeModules(executionContext: ExecutionContext<Any?>, vararg moduleCommands : Command<Module>){
+fun KoinApplication.invokeModules(executionContext: ExecutionContext<*>, vararg moduleCommands : Command<Module>){
     val modules = moduleCommands.map {
         executionContext.invoke { it }
     }

@@ -8,7 +8,8 @@ import com.alaeri.command.history.id.IndexAndUUID
 /**
  * Created by Emmanuel Requier on 04/05/2020.
  */
-class CommandRepository : AbstractCommandLogger<SerializableCommandStateAndContext<IndexAndUUID>> {
+typealias IDefaultSerializedCommandLogger = AbstractCommandLogger<SerializableCommandStateAndContext<IndexAndUUID>>
+class CommandRepository : IDefaultSerializedCommandLogger {
 
     val list : List<SerializableCommandStateAndContext<IndexAndUUID>>
         get() = _list.toList()

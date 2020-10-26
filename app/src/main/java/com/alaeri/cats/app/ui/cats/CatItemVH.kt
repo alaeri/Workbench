@@ -24,7 +24,7 @@ sealed class CatItemVH(view: View, parentLifecycle: Lifecycle, vmStore: ViewMode
                 parentLifecycle: Lifecycle, vmStore: ViewModelStore) : CatItemVH(viewBinding.root, parentLifecycle, vmStore){
 
         private lateinit var cat: Cat
-        private lateinit var catViewModel : CatViewModel
+        private lateinit var catItemViewModel : CatItemViewModel
 
         private val lcl =  object: View.OnLayoutChangeListener {
             override fun onLayoutChange(
@@ -42,7 +42,7 @@ sealed class CatItemVH(view: View, parentLifecycle: Lifecycle, vmStore: ViewMode
                 val width = view.width
                 if (width > 0 &&  height> 0) {
                     view.removeOnLayoutChangeListener(this)
-                    catViewModel.onItemSet(cat, width, height)
+                    catItemViewModel.onItemSet(cat, width, height)
                 }
             }
         }
@@ -52,7 +52,7 @@ sealed class CatItemVH(view: View, parentLifecycle: Lifecycle, vmStore: ViewMode
         override fun setItem(item: Cat) {
             Log.d("CATS","setItem")
             cat = item
-            Log.d("CATS","$this $catViewModel ${cat.url}")
+            Log.d("CATS","$this $catItemViewModel ${cat.url}")
             viewBinding.apply {
                 val ratio = cat.height.toFloat() / cat.width.toFloat()
                 imageView.ratio = ratio
@@ -64,8 +64,8 @@ sealed class CatItemVH(view: View, parentLifecycle: Lifecycle, vmStore: ViewMode
                 if(width == 0){
                     imageView.addOnLayoutChangeListener(lcl)
                 }else{
-                    catViewModel.onItemSet(cat, width, height)
-                    retryButton.setOnClickListener { catViewModel.onRetryClicked(width, height) }
+                    catItemViewModel.onItemSet(cat, width, height)
+                    retryButton.setOnClickListener { catItemViewModel.onRetryClicked(width, height) }
                 }
             }
         }
@@ -73,9 +73,9 @@ sealed class CatItemVH(view: View, parentLifecycle: Lifecycle, vmStore: ViewMode
         override fun onCreate() {
             Log.d("CATS","onCreate")
             super.onCreate()
-            catViewModel = viewModelProvider(vmFactory).get(viewBinding.toString(), CatViewModel::class.java)
-            catViewModel.catLoadingState.map { it.imageLoadingState }.observe(this@CatVH, Observer {
-                Log.d("CATS","$this $catViewModel $it")
+            catItemViewModel = viewModelProvider(vmFactory).get(viewBinding.toString(), CatItemViewModel::class.java)
+            catItemViewModel.catLoadingState.map { it.imageLoadingState }.observe(this@CatVH, Observer {
+                Log.d("CATS","$this $catItemViewModel $it")
                 viewBinding.apply {
                     when(it){
                         is ImageLoadingState.Loading -> {
@@ -118,7 +118,7 @@ sealed class CatItemVH(view: View, parentLifecycle: Lifecycle, vmStore: ViewMode
                 imageView.setImageDrawable(null)
                 imageView.removeOnLayoutChangeListener(lcl)
             }
-            Log.d("CATS","$catViewModel clearViewModel")
+            Log.d("CATS","$catItemViewModel clearViewModel")
         }
     }
 

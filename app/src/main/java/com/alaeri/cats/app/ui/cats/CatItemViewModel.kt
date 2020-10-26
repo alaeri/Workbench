@@ -4,26 +4,25 @@ import android.util.Log
 import androidx.lifecycle.*
 import com.alaeri.cats.app.DefaultIRootCommandLogger
 import com.alaeri.cats.app.cats.Cat
-import com.alaeri.command.CommandState
-import com.alaeri.command.buildCommandRoot
+import com.alaeri.command.*
+import com.alaeri.command.android.CommandNomenclature
 import com.alaeri.command.core.flow.syncInvokeFlow
-import com.alaeri.command.invokeSyncCommand
 import com.alaeri.ui.glide.FlowImageLoader
 import com.alaeri.ui.glide.ImageLoadingState
 import com.alaeri.ui.glide.Size
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
-class CatViewModel(private val flowImageLoader: FlowImageLoader, private val defaultSerializer: DefaultIRootCommandLogger): ViewModel(){
+class CatItemViewModel(private val flowImageLoader: FlowImageLoader, private val defaultSerializer: DefaultIRootCommandLogger): ICommandRootOwner, ViewModel(){
 
     data class CatLoadingState(val imageLoadingState: ImageLoadingState)
+    override val commandRoot: AnyCommandRoot = buildCommandRoot(this, null, CommandNomenclature.Root, defaultSerializer)
 
     private val mutableLiveDataCat =  MutableLiveData<Triple<Cat, Int, Int>?>(null)
-    private val rootCommand = buildCommandRoot(this){ it ->
-        defaultSerializer.log(this, it)
-    }
     val catLoadingState : LiveData<CatLoadingState> = mutableLiveDataCat.switchMap { it ->
-        invokeSyncCommand<LiveData<CatLoadingState>>(rootCommand) {
+        invokeRootCommand<LiveData<CatLoadingState>>(
+            name = "init CatLoadingState",
+            commandNomenclature = CommandNomenclature.Application.Cats.LoadImage) {
             it?.let {
                 emit(CommandState.Update(it.first))
                 val cat = it.first
@@ -43,8 +42,6 @@ class CatViewModel(private val flowImageLoader: FlowImageLoader, private val def
         mutableLiveDataCat.value = Triple(cat, width, height)
     }
 
-
-
     fun onRetryClicked(width: Int, height: Int){
         mutableLiveDataCat.value = mutableLiveDataCat.value
     }
@@ -53,6 +50,8 @@ class CatViewModel(private val flowImageLoader: FlowImageLoader, private val def
         super.onCleared()
         Log.d("CATS", "$this onCleared()")
     }
+
+
 
 
 }

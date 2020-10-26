@@ -48,7 +48,7 @@ class OperationHistoryTest {
         val catalog = Catalog()
         val iOperationContext =
             buildCommandRoot<Int>(this, "flatten", CommandNomenclature.Test, logger)
-        val count = invokeSuspendingCommand(iOperationContext){
+        val count = invokeSuspendingRootCommand(iOperationContext){
             invoke{
                 catalog.count()
             }
@@ -75,7 +75,7 @@ class OperationHistoryTest {
         val catalog = Catalog()
         val iOperationContext =
             buildCommandRoot<Int>(this, "name", CommandNomenclature.Test, logger)
-        val count = invokeSuspendingCommand(iOperationContext){
+        val count = invokeSuspendingRootCommand(iOperationContext){
 
             coroutineScope {
                 suspendInvokeAndFold{
@@ -104,7 +104,7 @@ class OperationHistoryTest {
         val iOperationContext =
             buildCommandRoot<Int>(this, "name", CommandNomenclature.Test, logger)
         var command: ICommand<*>? = null
-        val count = invokeSyncCommand(iOperationContext){
+        val count = invokeRootCommand(iOperationContext){
             invoke{
                 catalog.count().apply { command = this }
             }
