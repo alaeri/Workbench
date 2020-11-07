@@ -49,9 +49,7 @@ class UserRepository(private val remoteUserDataSource: RemoteUserDataSource,
     }
 
     val currentUser: FlowCommand<User?> = flowCommand {
-        syncInvokeFlow{
-            localUserDataSource.currentUser
-        }
+       syncInvokeFlow { localUserDataSource.currentUser }
     }
 
 }

@@ -1,5 +1,6 @@
 package com.alaeri.cats.app.command.focus
 
+import android.util.Log
 import com.alaeri.cats.app.command.CommandRepository
 import com.alaeri.command.history.id.IndexAndUUID
 import com.alaeri.command.history.serialization.SerializableCommandState
@@ -8,6 +9,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.conflate
 import java.lang.Long.min
 
 sealed class FocusedCommandOrBreak{
@@ -60,15 +62,21 @@ class FocusCommandRepository(private val repository: CommandRepository){
             afterCount = 0,
             afterFocusedCount = 0)
         var numberOfBreaks = 0
-        val startOrNull = timeRange?.let { Math.min(it.first, it.second) + initializationTime }
-        val endOrNull = timeRange?.let { Math.max(it.first, it.second) + initializationTime }
-        data class TimeAcc(val start: Long?, val end: Long?)
-        val timeBounds = repository.list.fold(TimeAcc(null, null)){ acc, it ->
-            acc.copy(
-                start = acc.start?.coerceAtMost(it.time) ?: System.currentTimeMillis(),
-                end = acc.end?.coerceAtLeast(it.time) ?: 0
-            )
+
+        data class TimeAcc(val start: Long, val end: Long)
+        val timeBounds = if(repository.list.isNotEmpty()){
+            repository.list.fold(TimeAcc(start = Long.MAX_VALUE, end = Long.MIN_VALUE)){ acc, it ->
+                acc.copy(
+                    start = acc.start.coerceAtMost(it.time),
+                    end = acc.end.coerceAtLeast(it.time)
+                )
+            }
+        }else{
+            TimeAcc(start = initializationTime, end = System.currentTimeMillis())
         }
+        val startOrNull = timeRange?.let { it.first.coerceAtMost(it.second) + initializationTime }?.let { it.coerceAtLeast(timeBounds.start) }
+        val endOrNull = timeRange?.let { it.first.coerceAtLeast(it.second) + initializationTime }?.let { it.coerceAtLeast(timeBounds.start) }//?.let{ it.coerceAtMost(timeBounds.end) }
+
         val history: Acc = repository.list.fold<SerializableCommandStateAndContext<IndexAndUUID>,Acc>(initialData){
                 acc, comm ->
                     val time = comm.time
@@ -105,11 +113,17 @@ class FocusCommandRepository(private val repository: CommandRepository){
 
         }
         isComputingMutable.value = false
-        val minTime = timeBounds.start ?: (initializationTime - 60 * 1000)
-        val maxTime = timeBounds.end ?: System.currentTimeMillis()
+        Log.d("CATS","timeBounds : ${timeBounds.start}")
+        Log.d("CATS","timeBounds : ${timeBounds.end}")
+        Log.d("CATS","startOrNull: $startOrNull")
+        Log.d("CATS","endOrNull  : $endOrNull")
+        val minTime = timeBounds.start
+        val maxTime = System.currentTimeMillis() //timeBounds.end
         val start = startOrNull?.coerceAtLeast(minTime) ?: minTime
         val end = endOrNull?.coerceAtMost(maxTime) ?: maxTime
+        check(start <= end)
         check(minTime < maxTime)
+
         FocusedAndZoomCommandHistory(
             minTime = minTime - initializationTime,
             start = start - initializationTime,
@@ -121,13 +135,15 @@ class FocusCommandRepository(private val repository: CommandRepository){
             list = history.list,
             afterCount = history.afterCount,
             afterFocusedCount = history.afterFocusedCount
-        )
+        ).also {
+            Log.d("CATS","history: $it")
+        }
     }
 
 
 
     val state : Flow<State> by lazy {
-        combine(historyFlow, isComputingMutable){ his, isComputing ->
+        combine(historyFlow.conflate(), isComputingMutable){ his, isComputing ->
             State(isComputing = isComputing, history = his)
         }
     }

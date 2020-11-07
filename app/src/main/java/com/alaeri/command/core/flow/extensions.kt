@@ -46,7 +46,7 @@ inline fun <T,R, reified U> ExecutionContext<T>.syncInvokeAsFlow(commandCreator:
     val executionContext = syncCommand.executableContext.chain(syncInvokationContext)
     return syncCommand.syncExecute(executionContext).mapUpdates()
 }
-inline fun <R> Any.flowCommand(name:String? = null, nomenclature: CommandNomenclature = CommandNomenclature.Undefined, noinline op: ExecutionContext<R>.()->Flow<R>): FlowCommand<R> {
+inline fun <R> Any.flowCommand(name:String? = null, nomenclature: CommandNomenclature = CommandNomenclature.Undefined, crossinline op: ExecutionContext<R>.()->Flow<R>): FlowCommand<R> {
     val executionContext =
         ExecutableContext<R>(this)
     return FlowCommand<R>(

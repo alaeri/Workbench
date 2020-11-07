@@ -1,33 +1,36 @@
 package com.alaeri.command.android
 
-import androidx.lifecycle.*
-import com.alaeri.cats.app.DefaultIRootCommandLogger
-import com.alaeri.command.buildCommandRoot
-import com.alaeri.command.core.ExecutionContext
-import com.alaeri.command.core.IInvokationContext
-import com.alaeri.command.core.invokeCommand
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleObserver
+import androidx.lifecycle.OnLifecycleEvent
+import androidx.lifecycle.lifecycleScope
 import com.alaeri.command.core.suspend.SuspendingExecutionContext
-import com.alaeri.command.core.suspend.suspendInvokeCommand
 import com.alaeri.command.invokeSuspendingRootCommand
-import com.alaeri.command.invokeRootCommand
 import kotlinx.coroutines.launch
-import org.koin.android.scope.scope
 
 class LifecycleCommandContext(
     private val lifecycleCommandOwner: LifecycleCommandOwner
 ): LifecycleObserver {
 
-   init{
+    private lateinit var _currentExecutionContext : SuspendingExecutionContext<Unit>
+    val currentExecutionContext: SuspendingExecutionContext<Unit>
+            get() = _currentExecutionContext
+
+    init{
        this.lifecycleCommandOwner.lifecycle.addObserver(this)
+       lifecycleCommandOwner.lifecycleScope.launch {
+           lifecycleCommandOwner.invokeSuspendingRootCommand<Unit> {
+               _currentExecutionContext = this
+           }
+       }
    }
 
-    var currentExecutionContext : SuspendingExecutionContext<Unit>? = null
 
     @OnLifecycleEvent(Lifecycle.Event.ON_CREATE)
     fun onLifecycleCreated(){
         lifecycleCommandOwner.lifecycleScope.launch {
             lifecycleCommandOwner.invokeSuspendingRootCommand<Unit>("onCreate", commandNomenclature = CommandNomenclature.Android.Lifecycle.OnCreate){
-                currentExecutionContext = this
+                _currentExecutionContext = this
             }
         }
     }
@@ -38,7 +41,7 @@ class LifecycleCommandContext(
                 "onStart",
                 commandNomenclature = CommandNomenclature.Android.Lifecycle.OnStart
             ) {
-                currentExecutionContext = this
+                _currentExecutionContext = this
             }
         }
 
@@ -50,7 +53,7 @@ class LifecycleCommandContext(
                 "onResume",
                 commandNomenclature = CommandNomenclature.Android.Lifecycle.OnResume
             ) {
-                currentExecutionContext = this
+                _currentExecutionContext = this
             }
         }
 
@@ -62,7 +65,7 @@ class LifecycleCommandContext(
                 "onPause",
                 commandNomenclature = CommandNomenclature.Android.Lifecycle.OnPause
             ) {
-                currentExecutionContext = this
+                _currentExecutionContext = this
             }
         }
     }
@@ -74,7 +77,7 @@ class LifecycleCommandContext(
                 "onStop",
                 commandNomenclature = CommandNomenclature.Android.Lifecycle.OnStop
             ) {
-                currentExecutionContext = this
+                _currentExecutionContext = this
             }
         }
     }
@@ -86,7 +89,7 @@ class LifecycleCommandContext(
                 "onDestroy",
                 commandNomenclature = CommandNomenclature.Android.Lifecycle.OnDestroy
             ) {
-                currentExecutionContext = this
+                _currentExecutionContext = this
             }
         }
     }
