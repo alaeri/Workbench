@@ -1,5 +1,7 @@
 # Workbench - Kotentin?
 
+[![Build Status](https://travis-ci.com/alaeri/Workbench.svg?branch=master)](https://travis-ci.com/alaeri/Workbench)
+
 This project contains an implementation of *ViewHolderFactory*, a *LifecycleAdapter* and a *LifecycleViewHolder*, it also contains an implementation of a Command Design Pattern.
 
 I began this project as a toyproject to experiment around the CleanArch and hierarchical usecases. 
