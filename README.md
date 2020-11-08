@@ -46,8 +46,8 @@ TBC
 * [X] Find a cleaner command usage pattern for Koin
 * [X] Configure focus
 * [X] Repair graph
+* [X] ConfigureCodeCoverage
 * [ ] Repair injection/unit test/
-* [ ] ConfigureCodeCoverage
 * [ ] Move the components to their own modules: command {core, android, koin, debug-ui, persistence}, recyclerview-helpers, catsApp { Koin, ManualDi } 
 * [ ] Improve README
 * [ ] Investigate async dependency injection patterns and create a manual injection version
