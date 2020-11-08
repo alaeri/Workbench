@@ -139,7 +139,7 @@ class Operation2Test {
         val operationStateSubOp = thirdEvent as CommandState.SubCommand<*, *>
         val (subOpC, _) = operationStateSubOp.subCommandAndState
         assertEquals(catalog, subOpC.command.owner)
-        assertEquals(this, subOpC.invoker.owner)
+        assertEquals(owner, subOpC.invoker.owner)
     }
 
 
