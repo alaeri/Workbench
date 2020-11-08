@@ -1,5 +1,6 @@
 package com.alaeri.command
 
+import com.alaeri.cats.app.DefaultIRootCommandLogger
 import com.alaeri.command.android.CommandNomenclature
 import com.alaeri.command.core.*
 import com.alaeri.command.entity.Catalog
@@ -18,28 +19,39 @@ import org.junit.Test
  */
 class Operation2Test {
 
+    private lateinit var owner: ICommandRootOwner
     private val testCoroutineScope = TestCoroutineScope()
-    lateinit var logger: IInvokationContext<Int, Int>
+    lateinit var logger: AnyCommandRoot
 
-    val list = mutableListOf<CommandState<Int>>()
+    val list = mutableListOf<CommandState<*>>()
 
     @Before
     fun prepare(){
-        logger = object : IInvokationContext<Int, Int> {
-            override val command = object : ICommand<Int> {
-                override val owner: Any = this
-                override val nomenclature: CommandNomenclature = CommandNomenclature.Test
-                override val name: String? = "test"
+        logger = buildCommandRoot(this, null, CommandNomenclature.Test, object: DefaultIRootCommandLogger{
+            override fun log(context: IInvokationContext<*, *>, state: CommandState<*>) {
+                list.add(state)
+                println(state)
             }
-            override val invoker: Invoker<Int> = object : Invoker<Int> {
-                override val owner: Any = this
-            }
+        })
+        owner = object : ICommandRootOwner{
+            override val commandRoot: AnyCommandRoot
+                get() = logger
 
-            override fun emit(opState: CommandState<Int>) {
-                list.add(opState)
-                println(opState)
-            }
         }
+//        logger = object : IInvokationContext<Int, Int> {
+//            override val command = object : ICommand<Int> {
+//                override val owner: Any = this
+//                override val nomenclature: CommandNomenclature = CommandNomenclature.Test
+//                override val name: String? = "test"
+//            }
+//            override val invoker: Invoker<Int> = object : Invoker<Int> {
+//                override val owner: Any = this
+//            }
+//
+//            override fun emit(opState: CommandState<Int>) {
+//
+//            }
+//        }
     }
 
     @After
@@ -50,7 +62,7 @@ class Operation2Test {
 
     @Test
     fun testBasicSuspendOperationWorks() = runBlocking {
-        val value = invokeSuspendingRootCommand<Int>({ t -> println(t)}){
+        val value = owner.invokeSuspendingRootCommand<Int>("test", CommandNomenclature.Test){
             1
         }
         assertEquals(1, value)
@@ -58,7 +70,7 @@ class Operation2Test {
 
     @Test
     fun testBasicSyncOperationWorks() = runBlocking {
-        val value2 = invokeRootCommand<Int>(logger){
+        val value2 = owner.invokeRootCommand<Int>("test", CommandNomenclature.Test){
             2
         }
         assertEquals(2, value2)
@@ -69,7 +81,7 @@ class Operation2Test {
     @Test
     fun testMoreComplexSuspendOperation(){
         runBlocking {
-            val value = invokeSuspendingRootCommand(logger){
+            val value = owner.invokeSuspendingRootCommand<Int>("test", CommandNomenclature.Test){
                 val count = suspendInvokeAndFold {
                     suspendingCommand<Int> {
                         val a: Int =  1
@@ -83,7 +95,7 @@ class Operation2Test {
             }
             assertEquals(1, value)
         }
-        val value2 = invokeRootCommand<Int>(logger){
+        val value2 = owner.invokeRootCommand<Int>("test", CommandNomenclature.Test){
             val count = invoke { command<Int>{  2  } }
             testCoroutineScope.launch {
                 suspendInvokeAndFold {
@@ -103,7 +115,7 @@ class Operation2Test {
     @Test
     fun testWorksWithClass() = testCoroutineScope.runBlockingTest {
         val catalog = Catalog()
-        val count = invokeSuspendingRootCommand(logger){
+        val count = owner.invokeSuspendingRootCommand<Int>("test", CommandNomenclature.Test){
             invoke {
                 catalog.count()
             }
@@ -114,7 +126,7 @@ class Operation2Test {
     @Test
     fun testContainsAllEvents() = testCoroutineScope.runBlockingTest {
         val catalog = Catalog()
-        val count = invokeSuspendingRootCommand(logger){
+        val count = owner.invokeSuspendingRootCommand<Int>("test", CommandNomenclature.Test){
             invoke {
                 catalog.count()
             }
