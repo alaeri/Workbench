@@ -56,8 +56,7 @@ script:
   - ./gradlew jacocoTestReportDebug
   - bash <(curl -s https://codecov.io/bash)
   - ./gradlew detekt
-  - fossa init
-  - fossa analyze
+  - fossa --option online:true
   #where can we upload detekt results to have a badge?
 
 #FOSSA license check
