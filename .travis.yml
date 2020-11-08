@@ -4,7 +4,6 @@ env:
     - ANDROID_TARGET=android-26  ANDROID_ABI=default/x86
 before_script:
   - android list targets
-
   - echo no | android create avd --force -n test -t android-25 --abi google_apis/armeabi-v7a
   - emulator -avd test -no-skin -no-audio -no-window &
   - android-wait-for-emulator
