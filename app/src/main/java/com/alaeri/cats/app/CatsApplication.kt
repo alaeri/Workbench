@@ -2,6 +2,7 @@ package com.alaeri.cats.app
 
 import android.app.Application
 import android.util.Log
+import androidx.multidex.MultiDexApplication
 import com.alaeri.cats.app.cats.catsModule
 import com.alaeri.cats.app.command.CommandModule
 import com.alaeri.cats.app.command.CommandModule.commandModule
@@ -35,7 +36,7 @@ import java.util.*
  * Created by Emmanuel Requier on 18/04/2020.
  */
 @ExperimentalCoroutinesApi
-class CatsApplication : Application(), ICommandRootOwner {
+class CatsApplication : MultiDexApplication(), ICommandRootOwner {
 
     private val coroutineScope = CoroutineScope(Dispatchers.Main)
     private val mutableLoggerStateFlow = MutableStateFlow<DefaultIRootCommandLogger?>(null)
