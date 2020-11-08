@@ -1,4 +1,4 @@
-#This configuration was found on ankidroid and changed a little
+#This configuration was found on ankidroid and changed a little.
 language: android
 
 jdk:
@@ -56,8 +56,13 @@ script:
   - ./gradlew jacocoTestReportDebug
   - bash <(curl -s https://codecov.io/bash)
   - ./gradlew detekt
+  - fossa init
+  - fossa analyze
   #where can we upload detekt results to have a badge?
 
+#FOSSA license check
+before_script:
+  - "curl -H 'Cache-Control: no-cache' https://raw.githubusercontent.com/fossas/fossa-cli/master/install.sh | sudo bash"
 
 before_cache:
   - rm -f $HOME/.gradle/caches/modules-2/modules-2.lock
