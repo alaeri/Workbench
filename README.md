@@ -1,41 +1,24 @@
-# Workbench - Kotentin?
+# Workbench
 
 [![Build Status](https://travis-ci.com/alaeri/Workbench.svg?branch=master)](https://travis-ci.com/alaeri/Workbench)
 [![codecov](https://codecov.io/gh/alaeri/Workbench/branch/master/graph/badge.svg)](https://codecov.io/gh/alaeri/Workbench)
 [![CodeFactor](https://www.codefactor.io/repository/github/alaeri/workbench/badge)](https://www.codefactor.io/repository/github/alaeri/workbench)
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Falaeri%2FWorkbench.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Falaeri%2FWorkbench?ref=badge_shield)
 
-This project contains an implementation of *ViewHolderFactory*, a *LifecycleAdapter* and a *LifecycleViewHolder*, it also contains an implementation of a Command Design Pattern.
 
-I began this project as a toyproject to experiment around the CleanArch and hierarchical usecases. 
-I also wanted to try the paging library and Koin.
-I used the CatsApi to do so.
-I realized half-way there that the best way to do it would be to visualize the application execution and that it was worth trying to do it with Kotlin.
-I realized half-way there that I was recreating a Command Design Pattern so I tried to implement the pattern
+## App
 
-## Command Design Pattern - Koticot - KoCoDePaIn
+A sample app to experiment with. It displays cats from the CatApi. It also showcases use of the **Command Library** and **RecyclerView Extras**
 
-Kotlin Command Design Pattern Inline
+## Command Library
+
+Inline Kotlin Command Design Pattern Logger
 
 [View the readme of the command-core module](/command-core/README.md)
-
-### Commands and Contexts: the code and the extension functions to use it.
-
-### Serialization
-
-### Visualization
 
 ## RecyclerView Extras
 
 Some code based on discussions at work and after work.
-
-### LifecycleAdapter / LifecycleViewholder
-
-TBC
-
-### ViewHolderFactory
-
-TBC
 
 ## TODO:
 
