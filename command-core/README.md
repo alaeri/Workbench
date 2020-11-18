@@ -12,9 +12,13 @@ This project does not use reflection.
 
 Replace with a video
 
-## Examples of animations 
+## Design goal
 
-### Illustrations
+What should be visible:
+* dependency graphs,
+* function calls starts and transit of observed values
+
+#### Illustrations from Android documentation to use as inspirations:
 
 The images below come from [Android documentation website](https://developer.android.com/): 
 
@@ -22,10 +26,6 @@ The images below come from [Android documentation website](https://developer.and
 ![Android doc example](/doc/androiddoc2.png)
 ![Android doc example](/doc/androiddoc3.png)
 ![Android doc example](/doc/androiddoc4.png)
-
-What should be visible:
-* dependency graphs,
-* function calls starts and transit of observed values
 
 ## Goal
 
