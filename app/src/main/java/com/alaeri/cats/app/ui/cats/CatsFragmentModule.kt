@@ -6,14 +6,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider.Factory
 import androidx.lifecycle.ViewModelStore
 import androidx.recyclerview.widget.AsyncDifferConfig
-import androidx.recyclerview.widget.extras.viewholder.ViewHolderProvider
-import androidx.recyclerview.widget.extras.viewholder.factory.IViewHolderFactory
-import androidx.recyclerview.widget.extras.viewholder.factory.ViewHolderFactory
 import com.alaeri.cats.app.cats.Cat
 import com.alaeri.cats.app.databinding.CatItemBinding
 import com.alaeri.command.core.Command
-import com.alaeri.command.di.commandModule
-import com.alaeri.ui.glide.FlowImageLoader
+import com.alaeri.command.koin.commandModule
+import com.alaeri.recyclerview.extras.viewholder.ViewHolderProvider
+import com.alaeri.recyclerview.extras.viewholder.factory.IViewHolderFactory
+import com.alaeri.recyclerview.extras.viewholder.factory.ViewHolderFactory
 import org.koin.core.module.Module
 
 /**
@@ -30,16 +29,16 @@ val catsFragmentModule : Command<Module> = CatsFragmentModule.commandModule {
         factory<Factory> {
             object: Factory{
                 override fun <T : ViewModel?> create(modelClass: Class<T>): T {
-                    return CatItemViewModel(get<FlowImageLoader>(), get()) as T
+                    return CatItemViewModel(get<com.alaeri.command.glide.FlowImageLoader>(), get()) as T
                 }
             }
         }
-        factory<IViewHolderFactory<Cat, CatItemVH>> {
+        factory<IViewHolderFactory<Cat, CatItemVH> > {
             ViewHolderFactory.newInstance<Cat, CatItemVH, CatItemBinding>(CatItemBinding::inflate){
                     binding, _ -> CatItemVH.CatVH(binding, get(), get(), get())
             }
         }
-        factory<ViewHolderProvider<Cat,CatItemVH>> {
+        factory<ViewHolderProvider<Cat, CatItemVH>> {
 
             val viewHolderFactories = getAll<IViewHolderFactory<Cat, CatItemVH>>()
             ViewHolderProvider<Cat, CatItemVH>(

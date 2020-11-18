@@ -1,9 +1,9 @@
 package com.alaeri.cats.app.ui.cats
 
 import androidx.lifecycle.*
-import com.alaeri.cats.app.DefaultIRootCommandLogger
+import com.alaeri.command.DefaultIRootCommandLogger
 import com.alaeri.command.ICommandRootOwner
-import com.alaeri.command.android.CommandNomenclature
+import com.alaeri.command.CommandNomenclature
 import com.alaeri.command.buildCommandRoot
 import com.alaeri.command.core.suspend.suspendInvokeAsFlow
 import com.alaeri.command.core.suspendInvokeAndFold

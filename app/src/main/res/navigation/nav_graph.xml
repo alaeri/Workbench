@@ -14,11 +14,11 @@
         android:label="CatsFragment" />
     <fragment
         android:id="@+id/commandsFragment"
-        android:name="com.alaeri.cats.app.command.CommandListFragment"
+        android:name="com.alaeri.command.android.visualizer.CommandListFragment"
         android:label="CommandListFragment" />
     <fragment
         android:id="@+id/graphFragment"
-        android:name="com.alaeri.cats.app.command.graph.GraphFragment"
+        android:name="com.alaeri.command.android.visualizer.graph.GraphFragment"
         android:label="GraphFragment" />
     <fragment
         android:id="@+id/loginFragment"

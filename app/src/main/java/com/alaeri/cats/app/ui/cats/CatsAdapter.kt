@@ -4,8 +4,8 @@ import android.view.ViewGroup
 import androidx.paging.PagedListAdapter
 import androidx.recyclerview.widget.AsyncDifferConfig
 import androidx.recyclerview.widget.DiffUtil
-import androidx.recyclerview.widget.extras.viewholder.ViewHolderProvider
 import com.alaeri.cats.app.cats.Cat
+import com.alaeri.recyclerview.extras.viewholder.ViewHolderProvider
 
 class CatsAdapter(
     private val viewHolderProvider: ViewHolderProvider<Cat, CatItemVH>,

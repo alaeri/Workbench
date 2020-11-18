@@ -2,8 +2,6 @@ package com.alaeri.cats.app.ui.viewpager
 
 import android.util.Log
 import androidx.lifecycle.*
-import com.alaeri.cats.app.command.focus.FocusCommandRepository
-import com.alaeri.cats.app.command.focus.FocusedAndZoomCommandHistory
 import com.alaeri.command.history.id.IndexAndUUID
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.filterNotNull
@@ -17,7 +15,7 @@ data class FocusViewState(val minStart : Float,
                           val focused: IndexAndUUID?,
                           val clearFocus: ()->Unit)
 @ExperimentalCoroutinesApi
-class ViewPagerViewModel(private val focusCommandRepository: FocusCommandRepository) : ViewModel(){
+class ViewPagerViewModel(private val focusCommandRepository: com.alaeri.command.android.visualizer.focus.FocusCommandRepository) : ViewModel(){
     fun onTimeRangeChanged(start: Float, end: Float) {
         viewModelScope.launch {
             focusCommandRepository.setTimeRange(start.toLong() to end.toLong())
@@ -45,7 +43,7 @@ class ViewPagerViewModel(private val focusCommandRepository: FocusCommandReposit
 
 }
 
-private fun FocusedAndZoomCommandHistory.toFocusViewState(clearFocus: () -> Unit): FocusViewState {
+private fun com.alaeri.command.android.visualizer.focus.FocusedAndZoomCommandHistory.toFocusViewState(clearFocus: () -> Unit): FocusViewState {
     Log.d("CATS","history: $this")
     check(minTime <= start)
     check(start<=end)

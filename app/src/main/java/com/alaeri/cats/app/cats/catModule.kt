@@ -3,7 +3,7 @@ package com.alaeri.cats.app.cats
 import com.alaeri.cats.app.cats.api.CatApi
 import com.alaeri.cats.app.db.AppDatabase
 import com.alaeri.cats.app.ui.cats.CatsViewModel
-import com.alaeri.command.di.commandModule
+import com.alaeri.command.koin.commandModule
 import kotlinx.coroutines.Dispatchers
 import retrofit2.Retrofit
 

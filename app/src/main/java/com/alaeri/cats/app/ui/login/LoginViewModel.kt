@@ -1,10 +1,10 @@
 package com.alaeri.cats.app.ui.login
 
 import androidx.lifecycle.*
-import com.alaeri.cats.app.DefaultIRootCommandLogger
+import com.alaeri.command.DefaultIRootCommandLogger
 import com.alaeri.cats.app.user.UserRepository
 import com.alaeri.command.ICommandRootOwner
-import com.alaeri.command.android.CommandNomenclature
+import com.alaeri.command.CommandNomenclature
 import com.alaeri.command.buildCommandRoot
 import com.alaeri.command.core.flow.syncInvokeFlow
 import com.alaeri.command.core.suspendInvokeAndFold
@@ -16,7 +16,8 @@ import kotlinx.coroutines.launch
  *
  */
 class LoginViewModel(private val userRepository: UserRepository,
-                     private val defaultSerializer: DefaultIRootCommandLogger) : ICommandRootOwner, ViewModel() {
+                     private val defaultSerializer: DefaultIRootCommandLogger
+) : ICommandRootOwner, ViewModel() {
 
     override val commandRoot = buildCommandRoot(this, null, CommandNomenclature.Root, defaultSerializer)
 

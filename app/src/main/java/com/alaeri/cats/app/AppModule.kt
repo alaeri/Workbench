@@ -2,9 +2,7 @@ package com.alaeri.cats.app
 
 import androidx.room.Room
 import com.alaeri.cats.app.db.AppDatabase
-import com.alaeri.command.di.commandModule
-import com.alaeri.ui.glide.FlowImageLoader
-import org.koin.android.ext.koin.androidContext
+import com.alaeri.command.koin.commandModule
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 
@@ -18,8 +16,8 @@ class AppModule {
                 "database-name"
             ).fallbackToDestructiveMigration().build()
         }
-        commandSingle<FlowImageLoader> {
-            FlowImageLoader(get())
+        commandSingle<com.alaeri.command.glide.FlowImageLoader> {
+            com.alaeri.command.glide.FlowImageLoader(get())
         }
         commandSingle<Retrofit> {
             Retrofit.Builder().addConverterFactory(MoshiConverterFactory.create())

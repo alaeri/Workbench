@@ -47,8 +47,8 @@ TBC
 * [X] Configure focus
 * [X] Repair graph
 * [X] ConfigureCodeCoverage
+* [X] Move the components to their own modules: command {core, android, koin, debug-ui, persistence}, recyclerview-helpers, catsApp { Koin, ManualDi } 
 * [ ] Repair injection/unit test/
-* [ ] Move the components to their own modules: command {core, android, koin, debug-ui, persistence}, recyclerview-helpers, catsApp { Koin, ManualDi } 
 * [ ] Improve README
 * [ ] Investigate async dependency injection patterns and create a manual injection version
 * [ ] Logserver

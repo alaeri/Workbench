@@ -9,9 +9,7 @@ import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.extras.viewholder.adapter.PagedListAdapterWithVHProvider
-import androidx.recyclerview.widget.toLifecycleAdapter
-import com.alaeri.cats.app.cats.Cat
+import com.alaeri.recyclerview.extras.toLifecycleAdapter
 import com.alaeri.cats.app.databinding.CatsFragmentBinding
 import org.koin.android.scope.lifecycleScope
 import org.koin.android.viewmodel.scope.viewModel

@@ -3,9 +3,9 @@ package com.alaeri.cats.app.ui.viewpager
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.DiffUtil
 import androidx.viewpager2.adapter.FragmentStateAdapter
-import com.alaeri.cats.app.command.CommandListFragment
-import com.alaeri.cats.app.command.graph.GraphFragment
-import com.alaeri.cats.app.command.lifecycle.FragmentExample
+import com.alaeri.command.android.visualizer.CommandListFragment
+import com.alaeri.command.android.visualizer.graph.GraphFragment
+import com.alaeri.command.android.visualizer.lifecycle.FragmentExample
 import com.alaeri.cats.app.ui.cats.CatsFragment
 import com.alaeri.cats.app.ui.login.LoginFragment
 
@@ -28,9 +28,9 @@ class FragmentsAdapter(parentFragment: Fragment) : FragmentStateAdapter(parentFr
         return when(page.id){
             PageId.Login -> LoginFragment()
             PageId.Cats -> CatsFragment()
-            PageId.CommandsList -> CommandListFragment()
-            PageId.CommandsWebview -> GraphFragment()
-            PageId.CommandsLifecycle -> FragmentExample()
+            PageId.CommandsList -> com.alaeri.command.android.visualizer.CommandListFragment()
+            PageId.CommandsWebview -> com.alaeri.command.android.visualizer.graph.GraphFragment()
+            PageId.CommandsLifecycle -> com.alaeri.command.android.visualizer.lifecycle.FragmentExample()
         }
     }
 

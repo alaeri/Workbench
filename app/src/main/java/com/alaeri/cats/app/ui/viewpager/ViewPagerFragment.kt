@@ -10,7 +10,6 @@ import androidx.lifecycle.Observer
 import com.alaeri.cats.app.R
 import com.alaeri.cats.app.databinding.ViewpagerFragmentBinding
 import com.google.android.material.tabs.TabLayoutMediator
-import kotlinx.android.synthetic.main.command_focus.*
 import kotlinx.android.synthetic.main.viewpager_fragment.*
 import org.koin.android.scope.lifecycleScope
 import org.koin.core.KoinComponent
@@ -69,24 +68,27 @@ class ViewPagerFragment : Fragment(), KoinComponent{
             tabLayoutMediator.attach()
         })
         viewPagerModel.focused.observe(viewLifecycleOwner, Observer { focusState ->
-            if(focusState.focused != null){
-                focusedCommandTextView.text = "${focusState.focused.index} - ${focusState.focused.uuid}"
-                clearButton.setOnClickListener{ focusState.clearFocus() }
-                focusedCommandLayout.visibility = View.VISIBLE
-            } else {
-                focusedCommandLayout.visibility = View.GONE
-            }
-            timeRangeSlider.apply {
-                Log.d("CATS", "focusState: $focusState")
-                valueTo = Float.MAX_VALUE
-                valueFrom = Float.MIN_VALUE
-                values = listOf(focusState.start, focusState.end)
-                valueFrom = focusState.minStart
-                valueTo = focusState.maxEnd
+            binding?.focus?.apply {
+                if(focusState.focused != null){
+                    focusedCommandTextView.text = "${focusState.focused.index} - ${focusState.focused.uuid}"
+                    clearButton.setOnClickListener{ focusState.clearFocus() }
+                    focusedCommandLayout.visibility = View.VISIBLE
+                } else {
+                    focusedCommandLayout.visibility = View.GONE
+                }
+                timeRangeSlider.apply {
+                    Log.d("CATS", "focusState: $focusState")
+                    valueTo = Float.MAX_VALUE
+                    valueFrom = Float.MIN_VALUE
+                    values = listOf(focusState.start, focusState.end)
+                    valueFrom = focusState.minStart
+                    valueTo = focusState.maxEnd
 
+                }
             }
+
         })
-        timeRangeSlider.apply {
+        binding?.focus?.timeRangeSlider?.apply {
             addOnChangeListener { slider, _, fromUser ->
                 if(fromUser){
                     val start = min(slider.values)

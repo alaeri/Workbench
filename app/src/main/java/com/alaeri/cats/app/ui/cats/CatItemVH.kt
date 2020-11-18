@@ -3,12 +3,12 @@ package com.alaeri.cats.app.ui.cats
 import android.util.Log
 import android.view.View
 import androidx.lifecycle.*
-import androidx.recyclerview.widget.extras.lifecycle.ViewModelVH
-import androidx.recyclerview.widget.extras.viewholder.Bindable
 import com.alaeri.cats.app.R
 import com.alaeri.cats.app.cats.Cat
 import com.alaeri.cats.app.databinding.CatItemBinding
-import com.alaeri.ui.glide.ImageLoadingState
+import com.alaeri.command.glide.ImageLoadingState
+import com.alaeri.recyclerview.extras.lifecycle.ViewModelVH
+import com.alaeri.recyclerview.extras.viewholder.Bindable
 
 
 /**
@@ -16,7 +16,8 @@ import com.alaeri.ui.glide.ImageLoadingState
  *
  *
  */
-sealed class CatItemVH(view: View, parentLifecycle: Lifecycle, vmStore: ViewModelStore): ViewModelVH(view, parentLifecycle, vmStore), Bindable<Cat>{
+sealed class CatItemVH(view: View, parentLifecycle: Lifecycle, vmStore: ViewModelStore): ViewModelVH(view, parentLifecycle, vmStore),
+    Bindable<Cat> {
 
 
     class CatVH(private val viewBinding: CatItemBinding,
@@ -78,7 +79,7 @@ sealed class CatItemVH(view: View, parentLifecycle: Lifecycle, vmStore: ViewMode
                 Log.d("CATS","$this $catItemViewModel $it")
                 viewBinding.apply {
                     when(it){
-                        is ImageLoadingState.Loading -> {
+                        is com.alaeri.command.glide.ImageLoadingState.Loading -> {
                             retryButton.visibility = View.GONE
                             progressCircular.visibility = View.VISIBLE
                             progressCircular.max = it.totalReadCount.toInt()
@@ -86,7 +87,7 @@ sealed class CatItemVH(view: View, parentLifecycle: Lifecycle, vmStore: ViewMode
                             catsLoadingTextView.visibility = View.VISIBLE
                             catsLoadingTextView.text = "loading"
                         }
-                        is ImageLoadingState.AwaitingLoad -> {
+                        is com.alaeri.command.glide.ImageLoadingState.AwaitingLoad -> {
                             retryButton.visibility = View.GONE
                             progressCircular.visibility = View.VISIBLE
                             progressCircular.max = 1
@@ -94,14 +95,14 @@ sealed class CatItemVH(view: View, parentLifecycle: Lifecycle, vmStore: ViewMode
                             catsLoadingTextView.text = "queued"
                             catsLoadingTextView.visibility = View.VISIBLE
                         }
-                        is ImageLoadingState.Failed -> {
+                        is com.alaeri.command.glide.ImageLoadingState.Failed -> {
                             retryButton.visibility = View.VISIBLE
                             progressCircular.visibility = View.GONE
                             catsLoadingTextView.visibility = View.VISIBLE
                             catsLoadingTextView.text = it.exception.message ?: "Error while loading"
                             catsLoadingTextView.visibility = View.VISIBLE
                         }
-                        is ImageLoadingState.Completed -> {
+                        is com.alaeri.command.glide.ImageLoadingState.Completed -> {
                             progressCircular.visibility = View.GONE
                             retryButton.visibility = View.GONE
                             catsLoadingTextView.visibility = View.GONE

@@ -2,9 +2,8 @@ package com.alaeri.cats.app.ui.viewpager
 
 
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.Lifecycle
 import com.alaeri.command.core.Command
-import com.alaeri.command.di.commandModule
+import com.alaeri.command.koin.commandModule
 import org.koin.core.module.Module
 
 /**
