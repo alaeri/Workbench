@@ -17,7 +17,7 @@ I realized half-way there that I was recreating a Command Design Pattern so I tr
 
 Kotlin Command Design Pattern Inline
 
-![Latest visualization](/doc/device-2020-09-07-012143.png)
+[View the readme of the command-core module](/command-core/README.md)
 
 ### Commands and Contexts: the code and the extension functions to use it.
 
