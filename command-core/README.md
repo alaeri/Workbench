@@ -6,6 +6,19 @@ You code your project almost as usual but you wrap some function bodies with the
 A bit like if java stacktraces could be recorded during code execution with a small impact on performance
 This project does not use reflection.
 
+## Goal
+
+Some of the building blocks we use to make apps are complex. (Glide, Dagger, Paging library, Room)
+They do heavy work to simplify entire domains for developers but they often are black boxes.
+Can we make a library that allows **developers** and **users** to visualize what is happening when they use an application or a library. 
+
+### Extensions
+
+* [Command-Koin](../command-koin/) Extensions for wrapping the DI Koin api
+* [Command-Android](../command-android/) Extensions for lifecycleowners so that they can become Command EntryPoints (ICommandRoot)
+* [Command-Android-Visualizer](../command-android-visualizer) Visualization Fragments
+* [Command-Glide](command-glide) Very bad wrapper around glide.
+
 ## Picture of the current state of the project
 
 ![Latest visualization](/doc/device-2020-09-07-012143.png)
@@ -27,18 +40,7 @@ The images below come from [Android documentation website](https://developer.and
 ![Android doc example](/doc/androiddoc3.png)
 ![Android doc example](/doc/androiddoc4.png)
 
-## Goal
 
-Some of the building blocks we use to make apps are complex. (Glide, Dagger, Paging library, Room)
-They do heavy work to simplify entire domains for developers but they often are black boxes.
-Can we make a library that allows **developers** and **users** to visualize what is happening when they use an application or a library. 
-
-### Extensions
-
-* [Command-Koin](../command-koin/) Extensions for wrapping the DI Koin api
-* [Command-Android](../command-android/) Extensions for lifecycleowners so that they can become Command EntryPoints (ICommandRoot)
-* [Command-Android-Visualizer](../command-android-visualizer) Visualization Fragments
-* [Command-Glide](command-glide) Very bad wrapper around glide.
 
 ## Nomenclature
 
