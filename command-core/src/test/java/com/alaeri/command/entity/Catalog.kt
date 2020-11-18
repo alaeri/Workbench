@@ -26,7 +26,7 @@ class Catalog {
         CoroutineScope(Dispatchers.IO)
             .launch {
             images.forEach {
-                suspendInvokeAndFold {
+                val imgData : ImgData = suspendInvokeAndFold {
                     download(it)
                 }
             }

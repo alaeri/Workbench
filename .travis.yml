@@ -53,7 +53,10 @@ install:
   - adb shell input keyevent 82 &
 
 script:
+  #Android modules
   - ./gradlew jacocoTestReportDebug
+  #Kotlin module
+  - ./gradlew jacocoTestReport
   - bash <(curl -s https://codecov.io/bash)
   - ./gradlew detekt
   - fossa --option online:true

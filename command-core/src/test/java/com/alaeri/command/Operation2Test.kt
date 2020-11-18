@@ -1,12 +1,16 @@
 package com.alaeri.command
 
-import com.alaeri.cats.app.DefaultIRootCommandLogger
-import com.alaeri.command.android.CommandNomenclature
-import com.alaeri.command.entity.Catalog
+import com.alaeri.command.core.IInvokationContext
+import com.alaeri.command.core.command
+import com.alaeri.command.core.invoke
 import com.alaeri.command.core.suspend.suspendingCommand
+import com.alaeri.command.core.suspendInvokeAndFold
+import com.alaeri.command.entity.Catalog
 import junit.framework.Assert.assertEquals
 import junit.framework.Assert.assertTrue
-import kotlinx.coroutines.*
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.TestCoroutineScope
 import kotlinx.coroutines.test.runBlockingTest
 import org.junit.After
@@ -26,7 +30,7 @@ class Operation2Test {
 
     @Before
     fun prepare(){
-        logger = buildCommandRoot(this, null, com.alaeri.command.android.CommandNomenclature.Test, object: DefaultIRootCommandLogger{
+        logger = buildCommandRoot(this, null, CommandNomenclature.Test, object: DefaultIRootCommandLogger{
             override fun log(context: IInvokationContext<*, *>, state: CommandState<*>) {
                 list.add(state)
                 println(state)
@@ -61,7 +65,7 @@ class Operation2Test {
 
     @Test
     fun testBasicSuspendOperationWorks() = runBlocking {
-        val value = owner.invokeSuspendingRootCommand<Int>("test", com.alaeri.command.android.CommandNomenclature.Test){
+        val value = owner.invokeSuspendingRootCommand<Int>("test", CommandNomenclature.Test){
             1
         }
         assertEquals(1, value)
@@ -69,7 +73,7 @@ class Operation2Test {
 
     @Test
     fun testBasicSyncOperationWorks() = runBlocking {
-        val value2 = owner.invokeRootCommand<Int>("test", com.alaeri.command.android.CommandNomenclature.Test){
+        val value2 = owner.invokeRootCommand<Int>("test", CommandNomenclature.Test){
             2
         }
         assertEquals(2, value2)
@@ -80,7 +84,7 @@ class Operation2Test {
     @Test
     fun testMoreComplexSuspendOperation(){
         runBlocking {
-            val value = owner.invokeSuspendingRootCommand<Int>("test", com.alaeri.command.android.CommandNomenclature.Test){
+            val value = owner.invokeSuspendingRootCommand<Int>("test", CommandNomenclature.Test){
                 val count = suspendInvokeAndFold {
                     suspendingCommand<Int> {
                         val a: Int =  1
@@ -94,10 +98,10 @@ class Operation2Test {
             }
             assertEquals(1, value)
         }
-        val value2 = owner.invokeRootCommand<Int>("test", com.alaeri.command.android.CommandNomenclature.Test){
+        val value2 = owner.invokeRootCommand<Int>("test", CommandNomenclature.Test){
             val count = invoke { command<Int>{  2  } }
             testCoroutineScope.launch {
-                suspendInvokeAndFold {
+                val count = suspendInvokeAndFold {
                     suspendingCommand<Int> {
                         delay(100)
                         0
@@ -114,7 +118,7 @@ class Operation2Test {
     @Test
     fun testWorksWithClass() = testCoroutineScope.runBlockingTest {
         val catalog = Catalog()
-        val count = owner.invokeSuspendingRootCommand<Int>("test", com.alaeri.command.android.CommandNomenclature.Test){
+        val count = owner.invokeSuspendingRootCommand<Int>("test", CommandNomenclature.Test){
             invoke {
                 catalog.count()
             }
@@ -125,7 +129,7 @@ class Operation2Test {
     @Test
     fun testContainsAllEvents() = testCoroutineScope.runBlockingTest {
         val catalog = Catalog()
-        val count = owner.invokeSuspendingRootCommand<Int>("test", com.alaeri.command.android.CommandNomenclature.Test){
+        val count = owner.invokeSuspendingRootCommand<Int>("test", CommandNomenclature.Test){
             invoke {
                 catalog.count()
             }

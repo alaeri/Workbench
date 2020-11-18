@@ -1,7 +1,5 @@
 package com.alaeri.command
 
-import com.alaeri.cats.app.DefaultIRootCommandLogger
-import com.alaeri.command.android.CommandNomenclature
 import com.alaeri.command.core.IInvokationContext
 import com.alaeri.command.core.invoke
 import com.alaeri.command.entity.Catalog
@@ -26,7 +24,7 @@ class OperationHistoryTest {
     lateinit var logger: IInvokationContext<Int, Int>.(CommandState<Int>) -> Unit
     val list = mutableListOf<CommandState<*>>()
 
-    val commandRoot = buildCommandRoot(this, "flatten", com.alaeri.command.android.CommandNomenclature.Test, object : DefaultIRootCommandLogger{
+    val commandRoot = buildCommandRoot(this, "flatten", CommandNomenclature.Test, object : DefaultIRootCommandLogger{
         override fun log(context: IInvokationContext<*, *>, state: CommandState<*>) {
            list.add(state)
         }
@@ -58,7 +56,7 @@ class OperationHistoryTest {
     @Test
     fun testFlatten() = testCoroutineScope.runBlockingTest{
         val catalog = Catalog()
-        val count = owner.invokeSuspendingRootCommand<Int>("test", com.alaeri.command.android.CommandNomenclature.Test){
+        val count = owner.invokeSuspendingRootCommand<Int>("test", CommandNomenclature.Test){
             invoke{
                 catalog.count()
             }
