@@ -33,6 +33,13 @@ Some of the building blocks we use to make apps are complex. (Glide, Dagger, Pag
 They do heavy work to simplify entire domains for developers but they often are black boxes.
 Can we make a library that allows **developers** and **users** to visualize what is happening when they use an application or a library. 
 
+### Extensions
+
+* [Command-Koin](../command-koin/) Extensions for wrapping the DI Koin api
+* [Command-Android](../command-android/) Extensions for lifecycleowners so that they can become Command EntryPoints (ICommandRoot)
+* [Command-Android-Visualizer](../command-android-visualizer) Visualization Fragments
+* [Command-Glide](command-glide) Very bad wrapper around glide.
+
 ## Nomenclature
 
 This nomenclature is far from being finalized. The naming issues are twofold:
@@ -52,6 +59,8 @@ Most apps will use:
 
 The library should provide a sane extensible Nomenclature for these common tasks
 
+
+
 ### Naming for the api.
 
 Some of these elements should be renamed as Scopes? - not sure yet when it should be a CommandContext vs a CommandScope
@@ -66,7 +75,9 @@ All these elements have two versions, a synchronized version and a suspending ve
 
 ## Naming of the project
 
-TBD
+* Koticot ?
+* KoCoDePaIn ?
+* Kotentin ?
 
 ## Test Coverage
 
@@ -75,3 +86,10 @@ Test coverage should be extensive before this is used in production.
 ## Benchmark
 
 A benchmark should be available so that users know the impact this will have on performance.
+
+## History
+
+I began this project during the lockdown as a toyproject to experiment around the CleanArch and hierarchical usecases. 
+I also wanted to try the paging library and Koin and view cats.
+I realized half-way there that the best way to do it would be to visualize the application execution and that it was worth trying to do it with Kotlin.
+I realized half-way there that I was recreating a Command Design Pattern so I tried to implement the pattern
