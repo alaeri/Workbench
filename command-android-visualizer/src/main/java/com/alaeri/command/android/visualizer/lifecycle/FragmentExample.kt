@@ -30,7 +30,7 @@ class FragmentExample: Fragment(), com.alaeri.command.android.LifecycleCommandOw
         lifecycleScope.launch {
             invokeSuspendingCommandWithLifecycle {
                 emit(CommandState.Update("coucou suspend"))
-                invoke { this@FragmentExample.command<String> { "coucou" } }
+                val s = invoke { this@FragmentExample.command<String> { "coucou" } }
             }
         }
         val commandRootContext = getKoin().get<DefaultIRootCommandLogger>()
@@ -41,7 +41,7 @@ class FragmentExample: Fragment(), com.alaeri.command.android.LifecycleCommandOw
         super.onResume()
         invokeCommandWithLifecycle<Unit> {
             emit(CommandState.Update("coucou"))
-            invoke { this@FragmentExample.command<String> { "hola" } }
+            val s = invoke { this@FragmentExample.command<String> { "hola" } }
         }
     }
 }

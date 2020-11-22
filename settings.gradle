@@ -1,3 +1,4 @@
+include ':tui-browser'
 include ':command-koin'
 include ':command-glide'
 include ':command-android-visualizer'
