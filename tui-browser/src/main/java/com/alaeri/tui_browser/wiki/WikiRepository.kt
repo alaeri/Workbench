@@ -1,5 +1,6 @@
 package com.alaeri.tui_browser.wiki
 
+import com.alaeri.tui_browser.ILogger
 import com.beust.klaxon.JsonReader
 import com.beust.klaxon.Klaxon
 import com.github.kittinunf.fuel.Fuel
@@ -18,7 +19,8 @@ import org.sweble.wikitext.parser.preprocessor.PreprocessedWikitext
 import org.sweble.wikitext.parser.utils.SimpleParserConfig
 import java.io.StringReader
 
-class WikiRepository {
+
+class WikiRepository(val logger: ILogger? = null) {
     fun loadWikiArticle(searchTerm: String?): Flow<LoadingStatus> = flow<LoadingStatus> {
         supervisorScope {
             if (searchTerm != null) {
@@ -34,7 +36,7 @@ class WikiRepository {
                 emit(LoadingStatus.Parsing(responseBody.length.toLong()))
 
                 val apiWikiArticle = withContext(Dispatchers.Default) {
-                    println(responseBody)
+                    logger?.println(responseBody)
                     async {
                         Klaxon().parse<ApiWikiArticle>(JsonReader(StringReader(responseBody)))
                             ?: throw RuntimeException("pas de bol")
@@ -67,7 +69,7 @@ class WikiRepository {
                             is WtInternalLink -> {
                                 val wtPageName : WtPageName = wtNode.mapNotNull { it as? WtPageName }.first()
                                 val wtText: WtText = wtPageName.mapNotNull { it as? WtText }.first()
-                                acc.lines.last().add(WikiText.InternalLink(wtText.content))
+                                acc.lines.last().add(WikiText.InternalLink(wtText.content, wtText.content))
                                 acc
                             }
                             is WtNewline -> {
@@ -86,5 +88,5 @@ class WikiRepository {
                 emit(LoadingStatus.Done(WikiArticle("empty search page", "this should never be visible", mutableListOf())))
             }
         }
-    }.catch { it -> println(it); emit(LoadingStatus.Error("could not load data", it)) }
+    }.catch { it -> logger?.println(it); emit(LoadingStatus.Error("could not load data", it)) }
 }
