@@ -36,9 +36,10 @@ object TuiBrowser {
             }catch (e: Exception){
                 logger.println(e)
             }
-
-            mutableList.forEach { println(it) }
+            val lineMaxLength = terminal.terminalSize.columns
+            mutableList.takeLast(10).forEach { println(it.toString().take(lineMaxLength)) }
             exitProcess(0)
+
         }
     }
 }
