@@ -1,14 +1,17 @@
-package com.alaeri.tui_browser
+package com.alaeri.presentation.tui
 
-import com.alaeri.tui_browser.wiki.LoadingStatus
-import com.alaeri.tui_browser.wiki.WikiArticle
-import com.alaeri.tui_browser.wiki.WikiText
+import com.alaeri.presentation.wiki.ViewModelFactory
+import com.alaeri.domain.ILogger
+import com.alaeri.presentation.tui.wrap.LineWrapper
+import com.alaeri.presentation.PresentationState
+import com.alaeri.domain.wiki.LoadingStatus
+import com.alaeri.domain.wiki.WikiArticle
+import com.alaeri.domain.wiki.WikiText
 import com.googlecode.lanterna.SGR
 import com.googlecode.lanterna.TerminalPosition
 import com.googlecode.lanterna.TerminalSize
 import com.googlecode.lanterna.gui2.*
 import com.googlecode.lanterna.input.KeyStroke
-import com.googlecode.lanterna.input.KeyType
 import com.googlecode.lanterna.screen.Screen
 import com.googlecode.lanterna.terminal.Terminal
 import kotlinx.coroutines.*

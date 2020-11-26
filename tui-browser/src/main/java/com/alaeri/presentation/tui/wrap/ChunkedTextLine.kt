@@ -1,6 +1,6 @@
-package com.alaeri.tui_browser
+package com.alaeri.presentation.tui.wrap
 
-import com.alaeri.tui_browser.wiki.WikiText
+import com.alaeri.domain.wiki.WikiText
 import com.googlecode.lanterna.TerminalPosition
 
 data class ChunkedTextLine(

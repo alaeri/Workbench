@@ -1,5 +1,6 @@
-package com.alaeri.tui_browser
+package com.alaeri.domain.wiki
 
+import com.alaeri.presentation.InputState
 import com.googlecode.lanterna.input.KeyStroke
 
 sealed class BrowserException(message: String, cause: Exception? = null): Exception(message, cause){

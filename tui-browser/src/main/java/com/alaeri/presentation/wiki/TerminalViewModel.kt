@@ -1,8 +1,14 @@
-package com.alaeri.tui_browser
+package com.alaeri.presentation.wiki
 
-import com.alaeri.tui_browser.wiki.LoadingStatus
-import com.alaeri.tui_browser.wiki.WikiRepository
-import com.alaeri.tui_browser.wiki.WikiText
+import com.alaeri.presentation.tui.ITerminalScreen
+import com.alaeri.presentation.tui.ITerminalViewModel
+import com.alaeri.domain.wiki.BrowserException
+import com.alaeri.domain.ILogger
+import com.alaeri.presentation.InputState
+import com.alaeri.presentation.PresentationState
+import com.alaeri.domain.wiki.LoadingStatus
+import com.alaeri.domain.wiki.WikiRepository
+import com.alaeri.domain.wiki.WikiText
 import com.googlecode.lanterna.input.KeyStroke
 import com.googlecode.lanterna.input.KeyType
 import kotlinx.coroutines.CoroutineScope

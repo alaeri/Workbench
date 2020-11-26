@@ -1,4 +1,4 @@
-package com.alaeri.tui_browser
+package com.alaeri.presentation.tui
 
 import kotlinx.coroutines.CoroutineScope
 

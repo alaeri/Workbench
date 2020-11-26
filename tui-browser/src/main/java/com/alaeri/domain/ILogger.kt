@@ -1,4 +1,4 @@
-package com.alaeri.tui_browser
+package com.alaeri.domain
 
 interface ILogger {
 

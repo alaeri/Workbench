@@ -1,4 +1,4 @@
-package com.alaeri.tui_browser.wiki
+package com.alaeri.domain.wiki
 
 data class WikiArticle(val about: String?,
                        val shortDescription: String?,

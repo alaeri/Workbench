@@ -1,5 +1,6 @@
-package com.alaeri.tui_browser
+package com.alaeri.presentation.tui
 
+import com.alaeri.presentation.PresentationState
 import kotlinx.coroutines.flow.Flow
 
 interface ITerminalViewModel{

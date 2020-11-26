@@ -1,4 +1,4 @@
-package com.alaeri.tui_browser
+package com.alaeri.presentation.tui
 
 import com.googlecode.lanterna.TerminalSize
 import com.googlecode.lanterna.input.KeyStroke

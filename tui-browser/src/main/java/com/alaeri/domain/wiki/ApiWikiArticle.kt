@@ -1,4 +1,4 @@
-package com.alaeri.tui_browser.wiki
+package com.alaeri.domain.wiki
 
 import com.beust.klaxon.Json
 

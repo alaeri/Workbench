@@ -1,7 +1,7 @@
-package com.alaeri.tui_browser
+package com.alaeri.presentation.tui.wrap
 
-import com.alaeri.tui_browser.wiki.LoadingStatus
-import com.alaeri.tui_browser.wiki.WikiText
+import com.alaeri.domain.wiki.LoadingStatus
+import com.alaeri.domain.wiki.WikiText
 import com.googlecode.lanterna.SGR
 import com.googlecode.lanterna.TerminalPosition
 import com.googlecode.lanterna.TerminalSize

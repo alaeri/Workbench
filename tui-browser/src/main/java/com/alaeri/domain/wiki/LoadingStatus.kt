@@ -1,4 +1,4 @@
-package com.alaeri.tui_browser.wiki
+package com.alaeri.domain.wiki
 
 sealed class LoadingStatus{
     data class Loading(val searchTerm: String?): LoadingStatus()

@@ -1,10 +1,13 @@
-package com.alaeri.tui_browser
+package com.alaeri
 
-import com.alaeri.tui_browser.wiki.WikiRepository
+import com.alaeri.data.WikiRepositoryImpl
+import com.alaeri.domain.ILogger
+import com.alaeri.presentation.tui.TermminalAppScreen
+import com.alaeri.presentation.wiki.ViewModelFactory
+import com.alaeri.domain.wiki.WikiRepository
 import com.googlecode.lanterna.screen.TerminalScreen
 import com.googlecode.lanterna.terminal.DefaultTerminalFactory
 import kotlinx.coroutines.*
-import kotlinx.coroutines.channels.Channel
 import kotlin.system.exitProcess
 
 
@@ -12,7 +15,7 @@ import kotlin.system.exitProcess
 object TuiBrowser {
 
     private val mutableList = mutableListOf<Any?>()
-    private val logger: ILogger = object : ILogger{
+    private val logger: ILogger = object : ILogger {
         override fun println(s: Any?) {
             mutableList.add(s)
         }
@@ -23,7 +26,7 @@ object TuiBrowser {
     fun main(args: Array<String>) {
         val terminal = DefaultTerminalFactory().createTerminal()
         val screen = TerminalScreen(terminal)
-        val wikiRepository = WikiRepository(logger)
+        val wikiRepository = WikiRepositoryImpl(logger)
         val viewModelFactory = ViewModelFactory(wikiRepository, logger)
         val terminalScreen = TermminalAppScreen(terminal, screen, logger, viewModelFactory)
 
