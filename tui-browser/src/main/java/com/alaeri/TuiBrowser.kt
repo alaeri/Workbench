@@ -1,5 +1,6 @@
 package com.alaeri
 
+import com.alaeri.command.server.CommandServer
 import com.alaeri.data.WikiRepositoryImpl
 import com.alaeri.domain.ILogger
 import com.alaeri.presentation.tui.TerminalAppScreen
@@ -13,10 +14,11 @@ import kotlin.system.exitProcess
 @ExperimentalCoroutinesApi
 object TuiBrowser {
 
-    private val mutableList = mutableListOf<Any?>()
+
+    val aServer = CommandServer()
     private val logger: ILogger = object : ILogger {
         override fun println(s: Any?) {
-            mutableList.add(s)
+            aServer.add(s.toString())
         }
     }
 
@@ -29,6 +31,7 @@ object TuiBrowser {
         val viewModelFactory = ViewModelFactory(wikiRepository, logger)
         val terminalScreen = TerminalAppScreen(terminal, screen, logger, viewModelFactory)
 
+        aServer.start()
         runBlocking {
             try{
                 terminalScreen.runAppAndWait()
@@ -36,8 +39,7 @@ object TuiBrowser {
                 logger.println("exiting with exception...")
                 logger.println(e)
             }
-            val lineMaxLength = terminal.terminalSize.columns
-            mutableList.takeLast(10).forEach { println(it.toString().take(lineMaxLength)) }
+            aServer.stop()
         }
         exitProcess(0)
     }
