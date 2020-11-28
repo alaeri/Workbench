@@ -60,11 +60,7 @@ abstract class LifecycleVH(itemView: View, private val parentLifecycle: Lifecycl
                 Lifecycle.State.CREATED
             }
         } else {
-            if(currentState >= Lifecycle.State.CREATED) {
-                Lifecycle.State.DESTROYED
-            }else{
-                Lifecycle.State.INITIALIZED
-            }
+            Lifecycle.State.DESTROYED
         }
         if(currentState != newState){
             lifecycleRegistry.currentState = newState
