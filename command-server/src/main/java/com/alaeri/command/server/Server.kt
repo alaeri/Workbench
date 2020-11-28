@@ -1,5 +1,7 @@
 package com.alaeri.command.server
 
+import com.alaeri.command.history.ICommandRepository
+import com.alaeri.command.history.id.IndexAndUUID
 import io.ktor.application.*
 import io.ktor.features.*
 import io.ktor.gson.*
@@ -8,9 +10,11 @@ import io.ktor.response.*
 import io.ktor.routing.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
 import java.util.concurrent.TimeUnit
 
-class CommandServer {
+class CommandServer(val commandRepository: ICommandRepository<IndexAndUUID>) {
 
     private val mutableList = mutableListOf<Any?>()
 
@@ -21,6 +25,12 @@ class CommandServer {
         routing {
             get("logs") {
                 call.respond(mutableList)
+            }
+            get("commands"){
+                val list = runBlocking {
+                    commandRepository.commands.first()
+                }
+                call.respond(list)
             }
             static("/") {
                 resource("/", "test/d3graph.html")

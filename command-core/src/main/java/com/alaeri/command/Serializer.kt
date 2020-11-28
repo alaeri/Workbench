@@ -13,10 +13,11 @@ class Serializer<Key>(private val idBank: IdBank<Key>,
     override fun log(context: IInvokationContext<*, *>, state: CommandState<*>){
         val flatList = spread(context, state, 0, context)
         flatList.map {
-            val serialized = serialize(it.parentContext, it.operationContext, it.state, it.depth) {
+            serialize(it.parentContext, it.operationContext, it.state, it.depth) {
                 idBank.keyOf(this)
             }
-            delayedLogger.log(serialized)
+        }.forEach {
+            delayedLogger.log(it)
         }
     }
 }
