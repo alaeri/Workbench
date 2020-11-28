@@ -16,15 +16,16 @@ import androidx.lifecycle.*
  * This implementation suffers from small issues when content is inserted into the list when the lifecycle is paused.
  * You will see RESUMED-PAUSED-RESUMED as it will be removed from window during the insertion of the other item
  *
- * TODO: with latest version of Jetpack's lifecycle, the lifecycle registry will throw IllegalStateException: no event up from DESTROYED
- *       if we cycle from destroyed -> created.
- * //Need to create a new lifecycle...
  */
 abstract class LifecycleVH(itemView: View, private val parentLifecycle: Lifecycle): BindAndAttachVH(itemView),
     LifecycleOwner, LifecycleObserver {
 
-    private val lifecycleRegistry : LifecycleRegistry = LifecycleRegistry(this).apply {
-        addObserver(this@LifecycleVH)
+    private var lifecycleRegistry : LifecycleRegistry = instantiateNewLifecycleRegistry()
+
+    private fun instantiateNewLifecycleRegistry() : LifecycleRegistry {
+        return LifecycleRegistry(this).apply {
+            addObserver(this@LifecycleVH)
+        }
     }
 
     override fun getLifecycle(): Lifecycle = lifecycleRegistry
@@ -67,6 +68,9 @@ abstract class LifecycleVH(itemView: View, private val parentLifecycle: Lifecycl
         }
         if(currentState != newState){
             lifecycleRegistry.currentState = newState
+            if(newState == Lifecycle.State.DESTROYED){
+                lifecycleRegistry = instantiateNewLifecycleRegistry()
+            }
         }
     }
 
