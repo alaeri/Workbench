@@ -7,9 +7,9 @@ import androidx.lifecycle.ViewModelStore
 import androidx.lifecycle.ViewModelStoreOwner
 import com.alaeri.command.android.visualizer.focus.FocusCommandRepository
 import com.alaeri.command.android.visualizer.focus.FocusCommandViewModel
-import com.alaeri.command.core.Command
-import com.alaeri.command.koin.commandModule
+import org.koin.android.viewmodel.dsl.viewModel
 import org.koin.core.module.Module
+import org.koin.dsl.module
 
 
 /**
@@ -18,8 +18,8 @@ import org.koin.core.module.Module
 val commandListFragmentModule = CommandListFragmentModule().module
 
 class CommandListFragmentModule {
-    val module: Command<Module> = commandModule {
-        commandScope<CommandListFragment> {
+    val module: Module = module {
+        scope<CommandListFragment> {
             scoped<Fragment> { (fragment: CommandListFragment) -> fragment }
             factory<Lifecycle> { get<Fragment>().lifecycle }
             scoped<ViewModelStoreOwner> {
@@ -27,13 +27,13 @@ class CommandListFragmentModule {
                 ViewModelStoreOwner { vmStore }
             }
             factory<CommandAdapter> { CommandAdapter() }
-            viewmodel<CommandListViewModel> {
+            viewModel<CommandListViewModel> {
                 Log.d("COMMAND2_VM","CLVM")
                 val commandRepository : CommandRepository = get()
                 Log.d("COMMAND2_VM","commandRepository: $commandRepository")
                 CommandListViewModel(commandRepository)
             }
-            viewmodel<FocusCommandViewModel> {
+            viewModel<FocusCommandViewModel> {
                 Log.d("COMMAND2_VM","CLVM")
                 val commandRepository : FocusCommandRepository = get()
                 Log.d("COMMAND2_VM","commandRepository: $commandRepository")

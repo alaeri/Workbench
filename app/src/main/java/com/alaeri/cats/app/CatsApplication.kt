@@ -7,7 +7,9 @@ import com.alaeri.cats.app.ui.viewpager.viewPagerFragmentModule
 import com.alaeri.cats.app.user.userModule
 import com.alaeri.command.*
 import com.alaeri.command.CommandNomenclature
+import com.alaeri.command.android.visualizer.CommandModule
 import com.alaeri.command.android.visualizer.CommandModule.commandModule
+import com.alaeri.command.android.visualizer.CommandOptionsFragmentModule
 import com.alaeri.command.android.visualizer.commandListFragmentModule
 import com.alaeri.command.di.DelayedCommandLogger
 import com.alaeri.command.koin.invokeModules
@@ -40,22 +42,19 @@ class CatsApplication : MultiDexApplication(), ICommandRootOwner {
             val koinApp = startKoin {
                 androidContext(this@CatsApplication)
                 invokeModules(this@invokeRootCommand,
-                    commandModule,
                     appModule,
                     viewPagerFragmentModule,
                     userModule,
                     catsModule,
                     catsFragmentModule,
-                    commandListFragmentModule
                     )
+
+                modules(commandModule, commandListFragmentModule, CommandOptionsFragmentModule().module)
             }
             mutableLoggerStateFlow.value = koinApp.koin.get<DefaultIRootCommandLogger>()
             //mutableStateFlow.value = koinApp.koin.get<CommandRepository>()
             Unit
         }
     }
-
-
-
 }
 

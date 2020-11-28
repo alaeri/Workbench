@@ -2,6 +2,7 @@ package com.alaeri.command.android.visualizer.focus
 
 import android.util.Log
 import com.alaeri.command.android.visualizer.CommandRepository
+import com.alaeri.command.android.visualizer.option.FilterCommandRepository
 import com.alaeri.command.history.id.IndexAndUUID
 import com.alaeri.command.history.serialization.SerializableCommandState
 import com.alaeri.command.history.serialization.SerializableCommandStateAndContext
@@ -29,7 +30,7 @@ data class FocusedAndZoomCommandHistory(
 )
 data class State(val isComputing: Boolean, val history: FocusedAndZoomCommandHistory?)
 @ExperimentalCoroutinesApi
-class FocusCommandRepository(private val repository: CommandRepository){
+class FocusCommandRepository(private val repository: FilterCommandRepository){
     val initializationTime = System.currentTimeMillis()
     private val currentFocus = MutableStateFlow<IndexAndUUID?>(null)
     private val currentTimeRange = MutableStateFlow<Pair<Long,Long>?>(null)
@@ -51,8 +52,8 @@ class FocusCommandRepository(private val repository: CommandRepository){
         val afterFocusedCount: Int
     )
 
-    private val historyFlow: Flow<FocusedAndZoomCommandHistory?> = combine(currentFocus, currentTimeRange){
-        focus, timeRange ->
+    private val historyFlow: Flow<FocusedAndZoomCommandHistory?> = combine(currentFocus, currentTimeRange, repository.list){
+        focus, timeRange, list ->
         isComputingMutable.value = true
         val initialData = Acc(
             beforeCount = 0,
@@ -63,8 +64,8 @@ class FocusCommandRepository(private val repository: CommandRepository){
         var numberOfBreaks = 0
 
         data class TimeAcc(val start: Long, val end: Long)
-        val timeBounds = if(repository.list.isNotEmpty()){
-            repository.list.fold(TimeAcc(start = Long.MAX_VALUE, end = Long.MIN_VALUE)){ acc, it ->
+        val timeBounds = if(list.isNotEmpty()){
+            list.fold(TimeAcc(start = Long.MAX_VALUE, end = Long.MIN_VALUE)){ acc, it ->
                 acc.copy(
                     start = acc.start.coerceAtMost(it.time),
                     end = acc.end.coerceAtLeast(it.time)
@@ -76,7 +77,7 @@ class FocusCommandRepository(private val repository: CommandRepository){
         val startOrNull = timeRange?.let { it.first.coerceAtMost(it.second) + initializationTime }?.let { it.coerceAtLeast(timeBounds.start) }
         val endOrNull = timeRange?.let { it.first.coerceAtLeast(it.second) + initializationTime }?.let { it.coerceAtLeast(timeBounds.start) }//?.let{ it.coerceAtMost(timeBounds.end) }
 
-        val history: Acc = repository.list.fold<SerializableCommandStateAndContext<IndexAndUUID>, Acc>(initialData){
+        val history: Acc = list.fold<SerializableCommandStateAndContext<IndexAndUUID>, Acc>(initialData){
                 acc, comm ->
                     val time = comm.time
                     val inFocus = focus?.let { comm.isFocused(focus) } ?: true

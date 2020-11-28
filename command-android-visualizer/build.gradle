@@ -42,7 +42,6 @@ dependencies {
     implementation 'androidx.appcompat:appcompat:1.2.0'
     implementation project(path: ':recyclerview-extras')
     implementation project(path: ':command-core')
-    implementation project(path: ':command-koin')
     implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
     implementation 'androidx.cardview:cardview:1.0.0'
     implementation project(path: ':command-android')
