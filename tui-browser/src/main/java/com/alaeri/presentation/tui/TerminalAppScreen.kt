@@ -19,12 +19,12 @@ import kotlinx.coroutines.flow.*
 import java.util.concurrent.Executors
 import kotlin.coroutines.CoroutineContext
 
-class TermminalAppScreen(terminal: Terminal,
-                         private val screen: Screen,
-                         private val logger: ILogger,
-                         private val viewModelFactory: ViewModelFactory,
-                         private val drawCoroutineContext : CoroutineContext = Executors.newSingleThreadExecutor().asCoroutineDispatcher(),
-                         private val readKeyCoroutineContext : CoroutineContext = Executors.newSingleThreadExecutor().asCoroutineDispatcher()) {
+class TerminalAppScreen(private val terminal: Terminal,
+                        private val screen: Screen,
+                        private val logger: ILogger,
+                        private val viewModelFactory: ViewModelFactory,
+                        private val drawCoroutineContext : CoroutineContext = Executors.newSingleThreadExecutor().asCoroutineDispatcher(),
+                        private val readKeyCoroutineContext : CoroutineContext = Executors.newSingleThreadExecutor().asCoroutineDispatcher()) {
 
     private var rootWindow: MultiWindowTextGUI
     private val textBox: TextBox
@@ -193,29 +193,29 @@ class TermminalAppScreen(terminal: Terminal,
     }
 
     suspend fun runAppAndWait() {
-
+        var executionJob: Job? = null
         supervisorScope {
-            val instantiationScope = CoroutineScope(currentCoroutineContext())
             try{
-                val sharedTerminalScreen =  SharedTerminalScreen(
-                    this@TermminalAppScreen.keyFlow,
-                    this@TermminalAppScreen.sizeFlow,
-                    instantiationScope)
-                val viewModel = viewModelFactory.provideViewModel(
-                    sharedTerminalScreen,
-                    instantiationScope)
+                executionJob = launch {
+                    val instantiationScope = this
+                    val sharedTerminalScreen =  SharedTerminalScreen(
+                        this@TerminalAppScreen.keyFlow,
+                        this@TerminalAppScreen.sizeFlow,
+                        instantiationScope)
+                    val viewModel = viewModelFactory.provideViewModel(
+                        sharedTerminalScreen,
+                        instantiationScope)
 
-                val executionJob = launch {
                     viewModel.screenState.flowOn(drawCoroutineContext).collect {
                         when(it){
-                            is PresentationState.Presentation -> this@TermminalAppScreen.emit(it)
-                            else -> instantiationScope.cancel()
+                            is PresentationState.Presentation -> this@TerminalAppScreen.emit(it)
+                            else -> executionJob?.cancelAndJoin()
                         }
-
                     }
                 }
-                executionJob.join()
+                executionJob?.join()
             }catch (e: Exception){
+                logger.println("screen will stop after exception")
                 logger.println(e)
             }
             finally {
