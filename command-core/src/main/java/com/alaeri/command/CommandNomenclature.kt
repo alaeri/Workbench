@@ -42,13 +42,20 @@ sealed class CommandNomenclature {
             object OnStop: Lifecycle()
             object OnDestroy: Lifecycle()
         }
-        sealed class UserInteraction: Android(){
-            object Click: Android()
 
-        }
     }
 
+
+
     sealed class Application : CommandNomenclature() {
+        object Start: Application()
+        object Exit: Application()
+        sealed class UserInteraction: CommandNomenclature(){
+            object Click: Application()
+
+
+        }
+
         sealed class Cats: Application(){
             object LoadImage: Cats()
             object BuildCatListMediatorLiveData : Cats()
@@ -56,5 +63,6 @@ sealed class CommandNomenclature {
             object FirstNameSubmitted : Cats()
             object InitLoginMediator : Cats()
         }
+
     }
 }

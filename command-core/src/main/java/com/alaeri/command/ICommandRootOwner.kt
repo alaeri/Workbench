@@ -15,7 +15,7 @@ interface ICommandRootOwner {
 inline fun <reified R> ICommandRootOwner.invokeRootCommand(
     name:String?,
     commandNomenclature: CommandNomenclature = CommandNomenclature.Undefined,
-    noinline body: ExecutionContext<R>.()->R): R{
+    crossinline body: ExecutionContext<R>.()->R): R{
 
     val executableContext =
         ExecutableContext<R>(this)

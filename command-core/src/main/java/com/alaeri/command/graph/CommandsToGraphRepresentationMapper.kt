@@ -1,6 +1,5 @@
-package com.alaeri.command.android.visualizer.graph
+package com.alaeri.command.graph
 
-import android.util.Log
 import com.alaeri.command.history.IdOwner
 import com.alaeri.command.history.id.IndexAndUUID
 import com.alaeri.command.history.serialization.SerializableCommandStateAndContext
@@ -52,22 +51,22 @@ object CommandsToGraphRepresentationMapper{
         while (remainingElements.isNotEmpty()) {
             val nextElements = remainingElements.filter {
                 val parents = connectionsGroupedByChild.get(it)?.map { it.parent }
-                Log.d("CATS", "it: $it parents: ${parents}")
+                //Log.d("CATS", "it: $it parents: ${parents}")
                 parents?.none { it in remainingElements } ?: true
             }.map {
                 ElementAndParents(it, connectionsGroupedByChild[it]?.map { it.parent } ?: listOf())
             }
             if (nextElements.isEmpty()) {
-                Log.d("CATS", "chain is broken...")
+                //Log.d("CATS", "chain is broken...")
                 break
             }
             levels += nextElements
             remainingElements =
                 remainingElements.filterNot { it in nextElements.map { it.element } }
-            Log.d(
-                "CATS",
-                "next: ${nextElements.size} remaining: ${remainingElements.size} depth: ${levels.size}"
-            )
+//            Log.d(
+//                "CATS",
+//                "next: ${nextElements.size} remaining: ${remainingElements.size} depth: ${levels.size}"
+//            )
         }
         val levelsToJson = Levels(levels.map { level ->
             level.map { elementAndParents ->

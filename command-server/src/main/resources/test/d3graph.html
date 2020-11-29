@@ -51,6 +51,11 @@
 
   </svg>
 <script>
+fetch("graph").then(function(response){
+    response.json().then(function(data){
+        loadPieChart(data);
+    })
+})
 <!-- loadPieChart();-->
 </script>
 

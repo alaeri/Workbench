@@ -15,34 +15,18 @@ import androidx.lifecycle.*
 import com.alaeri.command.android.visualizer.databinding.GraphFragmentBinding
 import com.alaeri.command.android.visualizer.focus.FocusCommandRepository
 import com.alaeri.command.android.visualizer.focus.FocusedCommandOrBreak
-import com.alaeri.command.history.*
-import com.alaeri.command.history.id.IndexAndUUID
-import com.alaeri.command.history.serialization.SerializableCommandStateAndContext
-import com.alaeri.command.history.serialization.SerializableInvokationContext
-import com.alaeri.command.history.serialization.SerializedClass
+import com.alaeri.command.graph.CommandsToGraphRepresentationMapper
+import com.alaeri.command.graph.Levels
 import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.Moshi
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.map
 import org.koin.core.KoinComponent
-import retrofit2.converter.moshi.MoshiConverterFactory
-
 
 
 /**
  * Created by Emmanuel Requier on 09/05/2020.
  */
-val serializedUnit = Unit.toSerializedClass()
-fun <Key> SerializableInvokationContext<Key>.toElement() = Element(id, serializedClass)
-fun <Key> IdOwner<Key>.toElement() : Element<Key>? = if(clazz != serializedUnit) { id?.let { id -> clazz?.let { Element(id, it) } } } else null
-fun Element<IndexAndUUID>.toStr() = "$id $clazz"
-data class Element<Key>(val id: Key, val clazz: SerializedClass)
-data class ElementConnection<Key>(val child: Element<Key>, val parent: Element<Key>)
-data class ElementAndParents<Key>(val element: Element<Key>, val parents: List<Element<Key>>)
-
-data class IdAndParents(val id: String, val parents: List<String>)
-data class Levels(val levels: List<List<IdAndParents>>)
-
 class GraphFragment: Fragment(), KoinComponent {
 
     private lateinit var binding: GraphFragmentBinding

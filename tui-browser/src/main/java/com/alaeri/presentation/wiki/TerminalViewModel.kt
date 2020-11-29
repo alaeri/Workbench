@@ -1,5 +1,10 @@
 package com.alaeri.presentation.wiki
 
+import com.alaeri.command.*
+import com.alaeri.command.core.flow.FlowCommand
+import com.alaeri.command.core.flow.flowCommand
+import com.alaeri.command.core.flow.syncInvokeFlow
+import com.alaeri.command.core.suspend.suspendInvokeFlow
 import com.alaeri.presentation.tui.ITerminalScreen
 import com.alaeri.presentation.tui.ITerminalViewModel
 import com.alaeri.domain.wiki.BrowserException
@@ -21,96 +26,102 @@ class TerminalViewModel(
     private val initializationScope: CoroutineScope,
     private val terminalScreen: ITerminalScreen,
     private val wikiRepository: WikiRepository,
-    private val logger: ILogger
-): ITerminalViewModel {
+    private val logger: ILogger,
+    private val commandLogger: DefaultIRootCommandLogger
+): ITerminalViewModel, ICommandRootOwner {
 
-
-    override val screenState: Flow<PresentationState>
+    override val screenState: FlowCommand<PresentationState>
 
     private val mutableSharedFlow = MutableSharedFlow<InputState>()
+    override val commandRoot = buildCommandRoot(this, "instantiation root", CommandNomenclature.Root, commandLogger)
 
     init {
-        val keyFlow = terminalScreen.keyFlow
-        val inputStateFlow = keyFlow.scan(InputState("")) { acc, keyStroke ->
-            val currentQueryLength = acc.text.length
-            val char = keyStroke.character
-            val keyType = keyStroke.keyType
-            return@scan when {
-                keyType == KeyType.Backspace -> if (currentQueryLength > 0) {
-                    val slicedText = acc.text.slice(0 until currentQueryLength - 1)
-                    acc.copy(text = slicedText, error = null)
-                } else {
-                    acc.copy(text = "", error = BrowserException.CaretAtStart)
+        screenState = invokeRootCommand<FlowCommand<PresentationState>>("Instantiate", CommandNomenclature.Root){
+            val keyFlow = terminalScreen.keyFlow
+            val inputStateFlow = syncInvokeFlow{ keyFlow }.scan(InputState("")) { acc, keyStroke ->
+                val currentQueryLength = acc.text.length
+                val char = keyStroke.character
+                val keyType = keyStroke.keyType
+                return@scan when {
+                    keyType == KeyType.Backspace -> if (currentQueryLength > 0) {
+                        val slicedText = acc.text.slice(0 until currentQueryLength - 1)
+                        acc.copy(text = slicedText, error = null)
+                    } else {
+                        acc.copy(text = "", error = BrowserException.CaretAtStart)
+                    }
+                    keyType == KeyType.Enter -> if (currentQueryLength > 0) {
+                        InputState("", acc.text, null)
+                    } else {
+                        acc.copy(error = BrowserException.NothingToSearch)
+                    }
+                    keyType == KeyType.ArrowRight ||
+                            keyType == KeyType.Tab -> acc
+                    char != null && !char.isWhitespace() -> acc.copy(
+                        text = acc.text + char,
+                        error = null
+                    )
+                    else -> acc.copy(error = BrowserException.InvalidInput(keyStroke, acc))
                 }
-                keyType == KeyType.Enter -> if (currentQueryLength > 0) {
-                    InputState("", acc.text, null)
-                } else {
-                    acc.copy(error = BrowserException.NothingToSearch)
-                }
-                keyType == KeyType.ArrowRight ||
-                keyType == KeyType.Tab -> acc
-                char != null && !char.isWhitespace() -> acc.copy(
-                    text = acc.text + char,
-                    error = null
-                )
-                else -> acc.copy(error = BrowserException.InvalidInput(keyStroke, acc))
-            }
-        }.distinctUntilChanged().shareIn(initializationScope, SharingStarted.WhileSubscribed(), replay = 0)
+            }.distinctUntilChanged().shareIn(initializationScope, SharingStarted.WhileSubscribed(), replay = 0)
 
-        val searchState = mutableSharedFlow.map { it.searchTerm }
-            .distinctUntilChanged()
-            .flatMapLatest { wikiRepository.loadWikiArticle(it) }
-            .conflate()
-            .shareIn(initializationScope, SharingStarted.WhileSubscribed())
-        val selectableElements = searchState
-            .map { it as? LoadingStatus.Done }
-            .map { done ->
-                done?.result?.lines?.flatMap { line -> line.mapNotNull { it as? WikiText.InternalLink } }
-                    ?: listOf()
-            }
-            .onStart { emit(listOf()) }
-        val selectedWikiText = selectableElements.flatMapLatest { selectables ->
-            if (selectables.isEmpty()) {
-                flowOf<WikiText.InternalLink?>(null)
-            } else {
-                keyFlow.filter { it.keyType == KeyType.Tab }
-                    .scan<KeyStroke, WikiText.InternalLink?>(null) { selected, keyStroke ->
-                        if (selected != null) {
-                            val index = selectables.indexOf(selected)
-                            selectables[index + 1 % selectables.size]
+            val searchState = mutableSharedFlow.map { it.searchTerm }
+                .distinctUntilChanged()
+                .flatMapLatest { suspendInvokeFlow{ wikiRepository.loadWikiArticle(it) } }
+                .conflate()
+                .shareIn(initializationScope, SharingStarted.WhileSubscribed())
+            val selectableElements = searchState
+                .map { it as? LoadingStatus.Done }
+                .map { done ->
+                    done?.result?.lines?.flatMap { line -> line.mapNotNull { it as? WikiText.InternalLink } }
+                        ?: listOf()
+                }
+                .onStart { emit(listOf()) }
+            val selectedWikiText = selectableElements.flatMapLatest { selectables ->
+                if (selectables.isEmpty()) {
+                    flowOf<WikiText.InternalLink?>(null)
+                } else {
+                    syncInvokeFlow { keyFlow }.filter { it.keyType == KeyType.Tab }
+                        .scan<KeyStroke, WikiText.InternalLink?>(null) { selected, keyStroke ->
+                            if (selected != null) {
+                                val index = selectables.indexOf(selected)
+                                selectables[index + 1 % selectables.size]
+                            } else {
+                                selectables.firstOrNull()
+                            }
+                        }
+                }
+            }.onEach { logger.println("HO") }.shareIn(initializationScope, SharingStarted.Lazily)
+
+            val launchSearch = combine(selectedWikiText, syncInvokeFlow { keyFlow }) { selected, keyStroke ->
+                if (selected != null && keyStroke.keyType == KeyType.ArrowRight) {
+                    InputState("", selected.target, null)
+                } else {
+                    null
+                }
+            }.filterNotNull()
+
+            val _screenState = flowCommand<PresentationState> {
+                syncInvokeFlow { keyFlow }.map { it.keyType != KeyType.EOF && it.keyType != KeyType.Escape }
+                    .distinctUntilChanged().flatMapLatest {
+                        if (it) {
+                            combine(
+                                mutableSharedFlow.onEach { logger.println("sharedInput") },
+                                searchState.onEach { logger.println("searchState") },
+                                selectedWikiText.onEach { logger.println("selection") }) { input, search, selected ->
+                                PresentationState.Presentation(input, search, selected)
+                            }
                         } else {
-                            selectables.firstOrNull()
+                            flowOf(PresentationState.Exit(listOf()))
                         }
                     }
             }
-        }.onEach { logger.println("HO") }.shareIn(initializationScope, SharingStarted.Lazily)
 
-        val launchSearch = combine(selectedWikiText, keyFlow) { selected, keyStroke ->
-            if (selected != null && keyStroke.keyType == KeyType.ArrowRight) {
-                InputState("", selected.target, null)
-            } else {
-                null
+            initializationScope.launch {
+                merge(inputStateFlow, launchSearch).onEach { logger.println("mergedInput: $it") }.collect { mutableSharedFlow.emit(it) }
             }
-        }.filterNotNull()
-
-
-        screenState = keyFlow.map { it.keyType != KeyType.EOF && it.keyType != KeyType.Escape }
-            .distinctUntilChanged().flatMapLatest {
-                if (it) {
-                    combine(
-                        mutableSharedFlow.onEach { logger.println("sharedInput") },
-                        searchState.onEach { logger.println("searchState") },
-                        selectedWikiText.onEach { logger.println("selection") }) { input, search, selected ->
-                        PresentationState.Presentation(input, search, selected)
-                    }
-                } else {
-                    flowOf(PresentationState.Exit(listOf()))
-                }
-            }
-
-        initializationScope.launch {
-            merge(inputStateFlow, launchSearch).onEach { logger.println("mergedInput: $it") }.collect { mutableSharedFlow.emit(it) }
+            _screenState
         }
+
 
     }
 

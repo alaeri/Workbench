@@ -1,5 +1,6 @@
 package com.alaeri.command.server
 
+import com.alaeri.command.graph.CommandsToGraphRepresentationMapper
 import com.alaeri.command.history.ICommandRepository
 import com.alaeri.command.history.id.IndexAndUUID
 import io.ktor.application.*
@@ -29,6 +30,15 @@ class CommandServer(val commandRepository: ICommandRepository<IndexAndUUID>) {
             get("commands"){
                 val list = runBlocking {
                     commandRepository.commands.first()
+                }
+                call.respond(list)
+            }
+            get("graph"){
+                val list = runBlocking {
+                    val levels = commandRepository.commands.first().let {
+                        CommandsToGraphRepresentationMapper.buildLevels(it)
+                    }
+                    call.respond(levels)
                 }
                 call.respond(list)
             }

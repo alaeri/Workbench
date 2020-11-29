@@ -1,5 +1,8 @@
 package com.alaeri.presentation.tui
 
+import com.alaeri.command.core.command
+import com.alaeri.command.core.suspend.*
+import com.alaeri.command.core.suspendInvoke
 import com.alaeri.presentation.wiki.ViewModelFactory
 import com.alaeri.domain.ILogger
 import com.alaeri.presentation.tui.wrap.LineWrapper
@@ -22,7 +25,7 @@ import kotlin.coroutines.CoroutineContext
 class TerminalAppScreen(private val terminal: Terminal,
                         private val screen: Screen,
                         private val logger: ILogger,
-                        private val viewModelFactory: ViewModelFactory,
+                        private val viewModelFactory: IViewModelFactory,
                         private val drawCoroutineContext : CoroutineContext = Executors.newSingleThreadExecutor().asCoroutineDispatcher(),
                         private val readKeyCoroutineContext : CoroutineContext = Executors.newSingleThreadExecutor().asCoroutineDispatcher()) {
 
@@ -82,7 +85,7 @@ class TerminalAppScreen(private val terminal: Terminal,
         rootWindow.updateScreen()
     }
 
-    suspend fun emit(combined: PresentationState.Presentation) {
+    suspend fun emit(combined: PresentationState.Presentation) : SuspendingCommand<Unit> = suspendingCommand{
 
         val inputState = combined.inputState
         val contentStatus = combined.contentStatus
@@ -192,7 +195,7 @@ class TerminalAppScreen(private val terminal: Terminal,
         }
     }
 
-    suspend fun runAppAndWait() {
+    suspend fun runAppAndWait() : SuspendingCommand<Unit> = suspendingCommand{
         var executionJob: Job? = null
         supervisorScope {
             try{
@@ -202,16 +205,22 @@ class TerminalAppScreen(private val terminal: Terminal,
                         this@TerminalAppScreen.keyFlow,
                         this@TerminalAppScreen.sizeFlow,
                         instantiationScope)
-                    val viewModel = viewModelFactory.provideViewModel(
-                        sharedTerminalScreen,
-                        instantiationScope)
 
-                    viewModel.screenState.flowOn(drawCoroutineContext).collect {
+                    val viewModel = suspendInvoke {
+                        viewModelFactory.provideViewModel(
+                            sharedTerminalScreen,
+                            instantiationScope
+                        )
+                    }
+
+                    val screenStateFlow = suspendInvokeFlow { viewModel.screenState }
+                    screenStateFlow.flowOn(drawCoroutineContext).collect {
                         when(it){
-                            is PresentationState.Presentation -> this@TerminalAppScreen.emit(it)
-                            else -> executionJob?.cancelAndJoin()
+                            is PresentationState.Presentation -> suspendInvoke { this@TerminalAppScreen.emit(it) }
+                            else -> suspendInvokeCommand { executionJob?.cancelAndJoin() }
                         }
                     }
+
                 }
                 executionJob?.join()
             }catch (e: Exception){

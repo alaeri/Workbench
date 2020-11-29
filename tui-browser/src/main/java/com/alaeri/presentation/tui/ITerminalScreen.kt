@@ -1,11 +1,12 @@
 package com.alaeri.presentation.tui
 
+import com.alaeri.command.core.flow.FlowCommand
 import com.googlecode.lanterna.TerminalSize
 import com.googlecode.lanterna.input.KeyStroke
 import kotlinx.coroutines.flow.Flow
 
 interface ITerminalScreen{
-    val keyFlow: Flow<KeyStroke>
+    val keyFlow: FlowCommand<KeyStroke>
     val sizeFlow: Flow<TerminalSize>
 
 }

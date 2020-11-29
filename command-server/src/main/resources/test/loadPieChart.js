@@ -304,12 +304,12 @@ const loadData = (levels)=> {
 
 
 //var newElement = document.createElementNS("http://www.w3.org/2000/svg", 'path');
-const loadPieChart = (commandsDataAsString)=>{
+const loadPieChart = (commandsData)=>{
     const width = 1000
     const height = 1000
 
-    console.log(commandsDataAsString)
-    const commandsData = JSON.parse(commandsDataAsString)
+//    console.log(commandsDataAsString)
+//    const commandsData = JSON.parse(commandsDataAsString)
     console.log(commandsData);
     const data = loadData(commandsData.levels);
 //    const data = loadData(levelsData)
