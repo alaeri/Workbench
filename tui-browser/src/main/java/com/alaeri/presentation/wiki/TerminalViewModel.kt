@@ -4,6 +4,7 @@ import com.alaeri.command.*
 import com.alaeri.command.core.flow.FlowCommand
 import com.alaeri.command.core.flow.flowCommand
 import com.alaeri.command.core.flow.syncInvokeFlow
+import com.alaeri.command.core.invoke
 import com.alaeri.command.core.suspend.suspendInvokeFlow
 import com.alaeri.presentation.tui.ITerminalScreen
 import com.alaeri.presentation.tui.ITerminalViewModel
@@ -29,12 +30,16 @@ class TerminalViewModel(
 
 
     override val commandRoot = buildCommandRoot(this, "instantiation root", CommandNomenclature.Root, commandLogger)
-    val browsingService = BrowsingService(wikiRepository, initializationScope)
+    val browsingService = BrowsingService(wikiRepository, initializationScope, commandLogger)
     override val screenState: Flow<PresentationState> = browsingService.presentationState
     private val keyStrokeToIntentUseCase = KeyStrokeToIntentUseCase(terminalScreen.keyFlow, browsingService, initializationScope)
 
     init {
-        keyStrokeToIntentUseCase.start()
+        invokeRootCommand<Unit>("process key strokes", CommandNomenclature.Application.Start){
+            invoke{
+                keyStrokeToIntentUseCase.start()
+            }
+        }
     }
 
 

@@ -35,7 +35,8 @@ class SharedTerminalScreen(_keyFlow: Flow<KeyStroke>,
     override val keyFlow: SharedFlow<KeyStroke> = //sharedFlowCommand(initializationScope) {
         _keyFlow.shareIn(
             initializationScope,
-            SharingStarted.Lazily
+            replay = 1,
+            started = SharingStarted.Lazily
         )
     //}
 

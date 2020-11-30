@@ -15,7 +15,7 @@ interface SuspendingExecutionContext<R>: ExecutionContext<R> {
         flow {
             emit(Starting<R>())
             try{
-                val result = coroutineScope { println("csC: $this") ; this@SuspendingExecutionContext.emitAndReturn() }
+                val result = coroutineScope { this@SuspendingExecutionContext.emitAndReturn() }
                 emit(CommandState.Done<R>(result))
             }catch (e: Throwable){
                 emit(CommandState.Failure<R>(e))

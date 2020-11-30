@@ -1,5 +1,9 @@
 package com.alaeri.presentation.wiki
 
+import com.alaeri.command.CommandState
+import com.alaeri.command.core.suspend.SuspendingCommand
+import com.alaeri.command.core.suspend.invoke
+import com.alaeri.command.core.suspend.suspendingCommand
 import com.alaeri.domain.wiki.WikiText
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharedFlow
@@ -9,7 +13,8 @@ class SelectUseCase(private val sharedSelectablesFlow: SharedFlow<List<WikiText.
                     private val selectionRepository: SelectionRepository
 ){
 
-    suspend fun selectNextLink(intent: Intent.SelectNextLink){
+    suspend fun selectNextLink(intent: Intent.SelectNextLink): SuspendingCommand<Unit> = suspendingCommand {
+        emit(CommandState.Update(intent))
         val selectables = sharedSelectablesFlow.first()
         val selection = selectionRepository.selectionFlow.first()
         val newSelection = if(selection != null){
@@ -22,6 +27,9 @@ class SelectUseCase(private val sharedSelectablesFlow: SharedFlow<List<WikiText.
         }else{
             selectables.firstOrNull()
         }
-        selectionRepository.select(newSelection)
+        invoke {
+            selectionRepository.select(newSelection)
+        }
+
     }
 }

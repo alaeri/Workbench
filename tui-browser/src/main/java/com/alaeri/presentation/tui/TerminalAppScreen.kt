@@ -1,9 +1,7 @@
 package com.alaeri.presentation.tui
 
-import com.alaeri.command.core.command
 import com.alaeri.command.core.suspend.*
 import com.alaeri.command.core.suspendInvoke
-import com.alaeri.presentation.wiki.ViewModelFactory
 import com.alaeri.domain.ILogger
 import com.alaeri.presentation.tui.wrap.LineWrapper
 import com.alaeri.presentation.PresentationState
@@ -85,7 +83,7 @@ class TerminalAppScreen(private val terminal: Terminal,
         rootWindow.updateScreen()
     }
 
-    suspend fun emit(combined: PresentationState.Presentation) : SuspendingCommand<Unit> = suspendingCommand{
+    suspend fun updateScreen(combined: PresentationState.Presentation) : SuspendingCommand<Unit> = suspendingCommand{
 
         val inputState = combined.inputState
         val contentStatus = combined.contentStatus
@@ -216,8 +214,12 @@ class TerminalAppScreen(private val terminal: Terminal,
                     val screenStateFlow = viewModel.screenState
                     screenStateFlow.flowOn(drawCoroutineContext).collect {
                         when(it){
-                            is PresentationState.Presentation -> suspendInvoke { this@TerminalAppScreen.emit(it) }
-                            else -> suspendInvokeCommand { executionJob?.cancelAndJoin() }
+                            is PresentationState.Presentation -> suspendInvoke {
+                                this@TerminalAppScreen.updateScreen(it)
+                            }
+                            else -> suspendInvokeCommand {
+                                executionJob?.cancelAndJoin()
+                            }
                         }
                     }
 

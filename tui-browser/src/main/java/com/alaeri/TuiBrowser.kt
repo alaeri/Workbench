@@ -1,6 +1,7 @@
 package com.alaeri
 
 import com.alaeri.command.*
+import com.alaeri.command.core.invoke
 import com.alaeri.command.core.invokeCommand
 import com.alaeri.command.core.suspendInvoke
 import com.alaeri.command.history.id.IdBank
@@ -64,8 +65,11 @@ object TuiBrowser: ICommandRootOwner {
             runBlocking {
                 invokeCommand<Unit,Unit> {
                     launch {
+
                         withContext(Dispatchers.IO){
-                            aServer.start()
+                            invoke {
+                                aServer.start()
+                            }
                         }
                     }
 
@@ -78,7 +82,9 @@ object TuiBrowser: ICommandRootOwner {
                    println("exiting with exception...")
                    println(e)
                 }
-                aServer.stop()
+                invoke {
+                    aServer.stop()
+                }
             }
         }
 

@@ -17,5 +17,5 @@ class LoadWikiOnPathUseCase(private val pathRepository: PathRepository,
             }else{
                 wikiRepository.loadWikiArticle(path)
             }
-        }.shareIn(sharedCoroutineScope, SharingStarted.Lazily)
+        }.shareIn(sharedCoroutineScope, replay = 1, started = SharingStarted.Lazily)
 }
