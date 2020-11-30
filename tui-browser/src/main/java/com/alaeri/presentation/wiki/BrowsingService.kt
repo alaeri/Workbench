@@ -1,8 +1,6 @@
 package com.alaeri.presentation.wiki
 
 import com.alaeri.domain.wiki.WikiRepository
-import com.alaeri.presentation.InputState
-import com.alaeri.presentation.PresentationState
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 
@@ -13,10 +11,8 @@ class BrowsingService(
     wikiRepository: WikiRepository,
     sharedCoroutineScope: CoroutineScope){
 
-    private val shouldExitMutableStateFlow = MutableStateFlow(false)
-
     private val innerScope = sharedCoroutineScope.plus(SupervisorJob())
-
+    private val shouldExitMutableStateFlow = MutableStateFlow(false)
     private val pathRepository = PathRepository()
     private val queryRepository = QueryRepository()
     private val selectionRepository = SelectionRepository()
@@ -29,6 +25,13 @@ class BrowsingService(
     private val selectUseCase = SelectUseCase(selectablesUseCase.selectablesFlow, selectionRepository)
     private val navigateToQueryUseCase = NavigateToQueryUseCase(queryRepository, pathRepository)
     private val navigateToSelectionUseCase = NavigateToSelectionUseCase(selectionRepository, pathRepository)
+    private val presentationUsecase = PresentationUsecase(innerScope,
+        shouldExitMutableStateFlow,
+        loadWikiOnPathUseCase,
+        selectionRepository,
+        queryRepository,
+        pathRepository
+    )
 
 
     suspend fun processIntent(intent: Intent){
@@ -44,18 +47,6 @@ class BrowsingService(
         }
     }
 
-
-    val presentationState = shouldExitMutableStateFlow.flatMapLatest {
-        if(it){
-            println("exit.....")
-            flowOf(PresentationState.Exit(listOf()))
-        }else{
-            combine(loadWikiOnPathUseCase.loadingStatusFlow, selectionRepository.selectionFlow, queryRepository.queryFlow, pathRepository.pathFlow){
-                loadingStatus, internalLink, query, path ->
-                println("combine.....")
-                PresentationState.Presentation(InputState(query, path), loadingStatus, internalLink)
-            }
-        }
-    }.shareIn(innerScope, SharingStarted.Lazily)
+    val presentationState = presentationUsecase.presentationState
 
 }

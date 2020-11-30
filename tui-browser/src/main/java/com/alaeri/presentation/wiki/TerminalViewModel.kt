@@ -15,10 +15,8 @@ import com.alaeri.domain.wiki.WikiRepository
 import com.alaeri.domain.wiki.WikiText
 import com.googlecode.lanterna.input.KeyStroke
 import com.googlecode.lanterna.input.KeyType
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
 
 @ExperimentalCoroutinesApi
 class TerminalViewModel(
@@ -36,9 +34,7 @@ class TerminalViewModel(
     private val keyStrokeToIntentUseCase = KeyStrokeToIntentUseCase(terminalScreen.keyFlow, browsingService, initializationScope)
 
     init {
-        initializationScope.launch {
-            keyStrokeToIntentUseCase.start()
-        }
+        keyStrokeToIntentUseCase.start()
     }
 
 
