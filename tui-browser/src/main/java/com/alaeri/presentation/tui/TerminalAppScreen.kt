@@ -213,7 +213,7 @@ class TerminalAppScreen(private val terminal: Terminal,
                         )
                     }
 
-                    val screenStateFlow = suspendInvokeFlow { viewModel.screenState }
+                    val screenStateFlow = viewModel.screenState
                     screenStateFlow.flowOn(drawCoroutineContext).collect {
                         when(it){
                             is PresentationState.Presentation -> suspendInvoke { this@TerminalAppScreen.emit(it) }

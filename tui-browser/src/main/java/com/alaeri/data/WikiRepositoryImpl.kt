@@ -29,7 +29,8 @@ import java.io.StringReader
  * The project builds even these warnings appear.
  */
 class WikiRepositoryImpl(val logger: ILogger? = null) : WikiRepository {
-    override fun loadWikiArticle(searchTerm: String?): FlowCommand<LoadingStatus> = flowCommand<LoadingStatus> {
+
+    override fun loadWikiArticle(searchTerm: String?): Flow<LoadingStatus> = //flowCommand<LoadingStatus> {
         flow {
             supervisorScope {
                 if (searchTerm != null) {
@@ -127,5 +128,5 @@ class WikiRepositoryImpl(val logger: ILogger? = null) : WikiRepository {
                 }
             }
         }.catch { it -> logger?.println(it); emit(LoadingStatus.Error("could not load data", it)) }
-    }
+//    }
 }

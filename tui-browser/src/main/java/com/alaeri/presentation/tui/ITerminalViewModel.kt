@@ -5,5 +5,5 @@ import com.alaeri.presentation.PresentationState
 import kotlinx.coroutines.flow.Flow
 
 interface ITerminalViewModel{
-    val screenState: FlowCommand<PresentationState>
+    val screenState: Flow<PresentationState>
 }

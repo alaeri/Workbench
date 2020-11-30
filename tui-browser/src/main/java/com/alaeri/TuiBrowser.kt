@@ -60,17 +60,23 @@ object TuiBrowser: ICommandRootOwner {
             val terminalScreen : TerminalAppScreen = invokeCommand {
                 TerminalAppScreen(terminal, screen, logger, viewModelFactory)
             }
-            invokeCommand<Unit,Unit> {
-                aServer.start()
-            }
+
             runBlocking {
+                invokeCommand<Unit,Unit> {
+                    launch {
+                        withContext(Dispatchers.IO){
+                            aServer.start()
+                        }
+                    }
+
+                }
                 try{
                     suspendInvoke {
                         terminalScreen.runAppAndWait()
                     }
                 }catch (e: Exception){
-                    logger.println("exiting with exception...")
-                    logger.println(e)
+                   println("exiting with exception...")
+                   println(e)
                 }
                 aServer.stop()
             }
