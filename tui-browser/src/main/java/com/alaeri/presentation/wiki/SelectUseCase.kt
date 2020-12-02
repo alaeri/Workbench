@@ -16,21 +16,24 @@ class SelectUseCase(private val selectablesUseCase: SelectablesUseCase,
 ){
 
     suspend fun selectNextLink(intent: Intent.SelectNextLink): SuspendingCommand<Unit> = suspendingCommand {
-        //emit(CommandState.Update(intent))
+        emit(CommandState.Update(intent))
         val selectables = syncInvokeFlow { selectablesUseCase.selectablesFlowCommand }.first() //syncInvokeFlow { selectablesUseCase.selectablesFlowCommand }.first()
-        val selection = selectionRepository.selectionFlow.first() //syncInvokeFlow { selectionRepository.selectionFlowCommand }.first()
-        val newSelection = if(selection != null){
-            val index = selectables.indexOf(selection)
-            if(index >= 0){
-                selectables[(index+1)%selectables.size]
+        if(selectables.isNotEmpty()){
+            val selection =  //selectionRepository.selectionFlow.first()
+                syncInvokeFlow { selectionRepository.selectionFlowCommand }.first()
+            val newSelection = if(selection != null){
+                val index = selectables.indexOf(selection)
+                if(index >= 0){
+                    selectables[(index+1)%selectables.size]
+                }else{
+                    selectables.firstOrNull()
+                }
             }else{
                 selectables.firstOrNull()
             }
-        }else{
-            selectables.firstOrNull()
-        }
-        invoke {
-            selectionRepository.select(newSelection)
+            invoke {
+                selectionRepository.select(newSelection)
+            }
         }
     }
 }
