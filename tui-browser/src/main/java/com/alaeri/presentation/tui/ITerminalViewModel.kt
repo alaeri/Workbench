@@ -6,4 +6,5 @@ import kotlinx.coroutines.flow.Flow
 
 interface ITerminalViewModel{
     val screenState: Flow<PresentationState>
+    val screenStateCommand: FlowCommand<PresentationState>
 }

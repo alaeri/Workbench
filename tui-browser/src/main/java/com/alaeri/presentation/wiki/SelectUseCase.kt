@@ -1,22 +1,24 @@
 package com.alaeri.presentation.wiki
 
 import com.alaeri.command.CommandState
+import com.alaeri.command.core.flow.syncInvokeFlow
 import com.alaeri.command.core.suspend.SuspendingCommand
 import com.alaeri.command.core.suspend.invoke
+import com.alaeri.command.core.suspend.suspendInvokeFlow
 import com.alaeri.command.core.suspend.suspendingCommand
 import com.alaeri.domain.wiki.WikiText
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.first
 
-class SelectUseCase(private val sharedSelectablesFlow: SharedFlow<List<WikiText.InternalLink>>,
+class SelectUseCase(private val selectablesUseCase: SelectablesUseCase,
                     private val selectionRepository: SelectionRepository
 ){
 
     suspend fun selectNextLink(intent: Intent.SelectNextLink): SuspendingCommand<Unit> = suspendingCommand {
-        emit(CommandState.Update(intent))
-        val selectables = sharedSelectablesFlow.first()
-        val selection = selectionRepository.selectionFlow.first()
+        //emit(CommandState.Update(intent))
+        val selectables = syncInvokeFlow { selectablesUseCase.selectablesFlowCommand }.first() //syncInvokeFlow { selectablesUseCase.selectablesFlowCommand }.first()
+        val selection = selectionRepository.selectionFlow.first() //syncInvokeFlow { selectionRepository.selectionFlowCommand }.first()
         val newSelection = if(selection != null){
             val index = selectables.indexOf(selection)
             if(index >= 0){
@@ -30,6 +32,5 @@ class SelectUseCase(private val sharedSelectablesFlow: SharedFlow<List<WikiText.
         invoke {
             selectionRepository.select(newSelection)
         }
-
     }
 }

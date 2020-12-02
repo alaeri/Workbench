@@ -1,7 +1,9 @@
 package com.alaeri.presentation.wiki
 
+import com.alaeri.command.CommandState
 import com.alaeri.command.core.command
 import com.alaeri.command.core.Command
+import com.alaeri.command.core.flow.syncInvokeFlow
 import com.alaeri.command.core.invoke
 import com.alaeri.command.core.suspendInvoke
 import com.alaeri.presentation.PresentationState
@@ -22,7 +24,9 @@ class KeyStrokeToIntentUseCase(private val keyFlow: SharedFlow<KeyStroke>,
             withContext(Dispatchers.Unconfined){
                 keyFlow.collect { keyStroke ->
                     //println("test $keyStroke")
-                    val presentationState = browsingService.presentationState.first()
+                    val presentationState = syncInvokeFlow { browsingService.presentationStateCommand }.first()
+                    emit(CommandState.Update(presentationState))
+                    emit(CommandState.Update(keyStroke))
                     //println("test2: $presentationState")
                     val intent: Intent = invoke { findIntentForKeyStroke(keyStroke, presentationState) }
                     suspendInvoke { browsingService.processIntent(intent) }

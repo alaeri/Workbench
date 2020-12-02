@@ -43,6 +43,9 @@ class CommandServer(val commandRepository: ICommandRepository<IndexAndUUID>) {
             get("logs") {
                 call.respond(mutableList)
             }
+            get("clear"){
+                commandRepository.clear()
+            }
             get("commands"){
                 val list = runBlocking {
                     commandRepository.commands.first()

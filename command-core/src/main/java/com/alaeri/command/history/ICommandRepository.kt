@@ -8,4 +8,5 @@ import kotlinx.coroutines.flow.Flow
  */
 interface ICommandRepository<Key>{
     val commands: Flow<List<SerializableCommandStateAndContext<Key>>>
+    fun clear()
 }

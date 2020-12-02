@@ -1,6 +1,7 @@
 package com.alaeri.presentation.wiki
 
 import com.alaeri.command.*
+import com.alaeri.command.core.flow.syncInvokeFlow
 import com.alaeri.command.core.invoke
 import com.alaeri.domain.wiki.WikiText
 import kotlinx.coroutines.CoroutineScope
@@ -11,7 +12,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
 
 class ResetSelectionOnNewNavigationUseCase(private val sharedCoroutineScope: CoroutineScope,
-                                           private val sharedSelectablesFlow: SharedFlow<List<WikiText.InternalLink>>,
+                                           private val selectablesUseCase: SelectablesUseCase,
                                            private val selectionRepository: SelectionRepository,
                                            private val iRootCommandLogger: DefaultIRootCommandLogger
 ): ICommandRootOwner{
@@ -25,7 +26,8 @@ class ResetSelectionOnNewNavigationUseCase(private val sharedCoroutineScope: Cor
         invokeRootCommand<Unit>("START", CommandNomenclature.Application.Start){
             sharedCoroutineScope.launch {
                 supervisorScope {
-                    sharedSelectablesFlow.collect {
+                    val flow = syncInvokeFlow { selectablesUseCase.selectablesFlowCommand }
+                    flow.collect {
                         invoke{
                             selectionRepository.select(null)
                         }

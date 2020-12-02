@@ -2,13 +2,12 @@ package com.alaeri.presentation.wiki
 
 import com.alaeri.command.CommandState
 import com.alaeri.command.DefaultIRootCommandLogger
-import com.alaeri.command.core.command
-import com.alaeri.command.core.invoke
+import com.alaeri.command.core.flow.flowCommand
 import com.alaeri.command.core.suspend.SuspendingCommand
-import com.alaeri.command.core.suspend.invoke
 import com.alaeri.command.core.suspend.suspendingCommand
 import com.alaeri.command.core.suspendInvoke
 import com.alaeri.domain.wiki.WikiRepository
+import com.alaeri.presentation.PresentationState
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 
@@ -18,7 +17,7 @@ import kotlinx.coroutines.flow.*
 class BrowsingService(
     wikiRepository: WikiRepository,
     sharedCoroutineScope: CoroutineScope,
-    iRootCommandLogger: DefaultIRootCommandLogger){
+    iRootCommandLogger: DefaultIRootCommandLogger) {
 
     private val innerScope = sharedCoroutineScope.plus(SupervisorJob())
 
@@ -28,13 +27,13 @@ class BrowsingService(
     private val selectionRepository = SelectionRepository()
 
     private val loadWikiOnPathUseCase = LoadWikiOnPathUseCase(pathRepository, innerScope, wikiRepository)
-    private val selectablesUseCase =  SelectablesUseCase(loadWikiOnPathUseCase.loadingStatusFlow, innerScope)
+    private val selectablesUseCase =  SelectablesUseCase(loadWikiOnPathUseCase, innerScope, iRootCommandLogger)
     private val resetSelectionOnNewNavigationUseCase = ResetSelectionOnNewNavigationUseCase(
         innerScope,
-        selectablesUseCase.selectablesFlow,
+        selectablesUseCase,
         selectionRepository,
         iRootCommandLogger)
-    private val selectUseCase = SelectUseCase(selectablesUseCase.selectablesFlow, selectionRepository)
+    private val selectUseCase = SelectUseCase(selectablesUseCase, selectionRepository)
     private val navigateToQueryUseCase = NavigateToQueryUseCase(queryRepository, pathRepository)
     private val navigateToSelectionUseCase = NavigateToSelectionUseCase(selectionRepository, pathRepository)
     private val presentationUsecase = PresentationUsecase(innerScope,
@@ -44,12 +43,12 @@ class BrowsingService(
         queryRepository,
         pathRepository
     )
-
+    private val editUseCase = EditUseCase(queryRepository)
 
     suspend fun processIntent(intent: Intent) : SuspendingCommand<Unit> = suspendingCommand {
         emit(CommandState.Update(intent))
         val comm = when(intent){
-            is Intent.Edit -> suspendInvoke { queryRepository.updateQuery(intent.newQuery) }
+            is Intent.Edit -> suspendInvoke { editUseCase.edit(intent) }
             is Intent.Exit -> suspendInvoke {
                 suspendingCommand<Unit> {
                     innerScope.cancel()
@@ -61,6 +60,7 @@ class BrowsingService(
             is Intent.NavigateToSelection -> suspendInvoke { navigateToSelectionUseCase.navigateToCurrentSelection(intent) }
         }
     }
-    val presentationState = presentationUsecase.presentationState
+    val presentationStateCommand = flowCommand<PresentationState> { presentationUsecase.presentationState }
+    //val presentationStateCommand = flowCommand<PresentationState> { syncInvokeFlow { presentationUsecase.presentationStateInCommand } }
 
 }

@@ -2,22 +2,16 @@ package com.alaeri.presentation.wiki
 
 import com.alaeri.command.*
 import com.alaeri.command.core.flow.FlowCommand
-import com.alaeri.command.core.flow.flowCommand
 import com.alaeri.command.core.flow.syncInvokeFlow
 import com.alaeri.command.core.invoke
-import com.alaeri.command.core.suspend.suspendInvokeFlow
+import com.alaeri.domain.ILogger
+import com.alaeri.domain.wiki.WikiRepository
+import com.alaeri.presentation.PresentationState
 import com.alaeri.presentation.tui.ITerminalScreen
 import com.alaeri.presentation.tui.ITerminalViewModel
-import com.alaeri.domain.ILogger
-import com.alaeri.presentation.InputState
-import com.alaeri.presentation.PresentationState
-import com.alaeri.domain.wiki.LoadingStatus
-import com.alaeri.domain.wiki.WikiRepository
-import com.alaeri.domain.wiki.WikiText
-import com.googlecode.lanterna.input.KeyStroke
-import com.googlecode.lanterna.input.KeyType
-import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
 
 @ExperimentalCoroutinesApi
 class TerminalViewModel(
@@ -31,7 +25,8 @@ class TerminalViewModel(
 
     override val commandRoot = buildCommandRoot(this, "instantiation root", CommandNomenclature.Root, commandLogger)
     val browsingService = BrowsingService(wikiRepository, initializationScope, commandLogger)
-    override val screenState: Flow<PresentationState> = browsingService.presentationState
+    override val screenState: Flow<PresentationState> = invokeRootCommand("getPresentationState", CommandNomenclature.Application.Start){ syncInvokeFlow { browsingService.presentationStateCommand } }
+    override val screenStateCommand: FlowCommand<PresentationState> = browsingService.presentationStateCommand
     private val keyStrokeToIntentUseCase = KeyStrokeToIntentUseCase(terminalScreen.keyFlow, browsingService, initializationScope)
 
     init {

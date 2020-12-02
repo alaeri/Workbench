@@ -18,20 +18,6 @@ class SharedTerminalScreen(_keyFlow: Flow<KeyStroke>,
                            initializationScope: CoroutineScope
 ): ITerminalScreen {
 
-    inline fun <R> Any.sharedFlowCommand(sharedScope: CoroutineScope,
-                                         name:String? = null,
-                                         nomenclature: CommandNomenclature = CommandNomenclature.Undefined,
-                                         crossinline op: ExecutionContext<R>.()->Flow<R>): FlowCommand<R> {
-        val executionContext =
-            ExecutableContext<R>(this)
-        return FlowCommand<R>(
-            this,
-            nomenclature,
-            name,
-            executionContext
-        ) { this@FlowCommand.op().shareIn(sharedScope, SharingStarted.Lazily) }
-    }
-
     override val keyFlow: SharedFlow<KeyStroke> = //sharedFlowCommand(initializationScope) {
         _keyFlow.shareIn(
             initializationScope,

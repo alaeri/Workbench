@@ -1,5 +1,7 @@
 package com.alaeri.presentation.wiki
 
+import com.alaeri.command.core.flow.flowCommand
+import com.alaeri.command.core.flow.syncInvokeFlow
 import com.alaeri.presentation.InputState
 import com.alaeri.presentation.PresentationState
 import kotlinx.coroutines.CoroutineScope
@@ -30,5 +32,26 @@ class PresentationUsecase(val sharingScope: CoroutineScope,
     }.shareIn(sharingScope, replay = 1, started = SharingStarted.Lazily).onSubscription {
         //println("subscribed: $this")
     }.onEach {  }
+
+    val presentationStateInCommand = flowCommand<PresentationState> {
+        exitFlow.flatMapLatest {
+            if(it){
+                println("exit.....")
+                flowOf(PresentationState.Exit(listOf()))
+            }else{
+                combine(
+                    syncInvokeFlow {  loadWikiOnPathUseCase.loadingStatusInCommand },
+                    syncInvokeFlow {  selectionRepository.selectionFlowCommand },
+                    syncInvokeFlow {  queryRepository.queryFlowCommand },
+                    syncInvokeFlow {  pathRepository.pathFlowCommand }
+                ) { loadingStatus, internalLink, query, path ->
+                    //println("combine.....")
+                    PresentationState.Presentation(InputState(query, path), loadingStatus, internalLink)
+                }
+            }
+        }.shareIn(sharingScope, replay = 1, started = SharingStarted.Lazily).onSubscription {
+            //println("subscribed: $this")
+        }.onEach {  }
+    }
 
 }

@@ -1,5 +1,6 @@
 package com.alaeri.presentation.wiki
 
+import com.alaeri.command.CommandState
 import com.alaeri.command.core.command
 import com.alaeri.command.core.Command
 import com.alaeri.command.core.invoke
@@ -12,7 +13,8 @@ class NavigateToQueryUseCase(private val queryRepository: QueryRepository,
                              private val pathRepository: PathRepository
 ){
    suspend fun navigateToCurrentQuery(intent: Intent.NavigateToQuery): SuspendingCommand<Unit> = suspendingCommand{
-        val query = queryRepository.queryFlow.firstOrNull()
+       emit(CommandState.Update(intent))
+       val query = queryRepository.queryFlow.firstOrNull()
         invoke{ pathRepository.select(query) }
         suspendInvoke{ queryRepository.updateQuery("") }
    }

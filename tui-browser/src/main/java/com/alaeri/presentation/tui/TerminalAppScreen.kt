@@ -1,5 +1,6 @@
 package com.alaeri.presentation.tui
 
+import com.alaeri.command.core.flow.syncInvokeFlow
 import com.alaeri.command.core.suspend.*
 import com.alaeri.command.core.suspendInvoke
 import com.alaeri.domain.ILogger
@@ -211,7 +212,7 @@ class TerminalAppScreen(private val terminal: Terminal,
                         )
                     }
 
-                    val screenStateFlow = viewModel.screenState
+                    val screenStateFlow = syncInvokeFlow { viewModel.screenStateCommand }
                     screenStateFlow.flowOn(drawCoroutineContext).collect {
                         when(it){
                             is PresentationState.Presentation -> suspendInvoke {

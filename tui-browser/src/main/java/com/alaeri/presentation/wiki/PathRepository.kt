@@ -2,6 +2,8 @@ package com.alaeri.presentation.wiki
 
 import com.alaeri.command.core.command
 import com.alaeri.command.core.Command
+import com.alaeri.command.core.flow.FlowCommand
+import com.alaeri.command.core.flow.flowCommand
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 
@@ -11,4 +13,8 @@ class PathRepository(){
         mutablePath.value = link
     }
     val pathFlow: SharedFlow<String?> = mutablePath
+    val pathFlowCommand: FlowCommand<String?> = flowCommand {
+        pathFlow
+    }
+
 }

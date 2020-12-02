@@ -18,4 +18,9 @@ class CommandRepository: ICommandRepository<IndexAndUUID>,
         list.add(value)
         sharedFlow.value = list.toList()
     }
+
+    override fun clear() {
+        list.clear()
+        sharedFlow.value = list.toList()
+    }
 }
