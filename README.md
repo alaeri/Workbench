@@ -8,7 +8,7 @@
 
 ## App
 
-A sample app to experiment with. It displays cats from the CatApi. It also showcases use of the **Command Library** and **RecyclerView Extras**
+A sample app to experiment with. It displays cats from the CatApi. It also showcases the use of the **Command Library** and **RecyclerView Extras**
 
 ## Command Library
 
