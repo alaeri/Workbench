@@ -15,7 +15,7 @@ import androidx.lifecycle.*
 import com.alaeri.command.android.visualizer.databinding.GraphFragmentBinding
 import com.alaeri.command.android.visualizer.focus.FocusCommandRepository
 import com.alaeri.command.android.visualizer.focus.FocusedCommandOrBreak
-import com.alaeri.command.graph.CommandsToGraphRepresentationMapper
+import com.alaeri.command.graph.ComponentsGraphMapper
 import com.alaeri.command.graph.Levels
 import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.Moshi
@@ -82,7 +82,7 @@ class GraphFragment: Fragment(), KoinComponent {
                 }
             }.asLiveData(lifecycleScope.coroutineContext)
         }.observe(this.viewLifecycleOwner, Observer {
-            val levelsToJson = CommandsToGraphRepresentationMapper.buildLevels(it)
+            val levelsToJson = ComponentsGraphMapper.buildLevels(it)
             //val converterFactory = MoshiConverterFactory.create()
             val moshi = Moshi.Builder().build();
             val jsonAdapter: JsonAdapter<Levels> = moshi.adapter(Levels::class.java)

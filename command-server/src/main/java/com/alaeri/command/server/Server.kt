@@ -2,7 +2,8 @@ package com.alaeri.command.server
 
 import com.alaeri.command.core.Command
 import com.alaeri.command.core.command
-import com.alaeri.command.graph.CommandsToGraphRepresentationMapper
+import com.alaeri.command.graph.CommandsGraphMapper
+import com.alaeri.command.graph.ComponentsGraphMapper
 import com.alaeri.command.history.ICommandRepository
 import com.alaeri.command.history.id.IndexAndUUID
 import com.google.gson.Gson
@@ -35,7 +36,7 @@ class CommandServer(val commandRepository: ICommandRepository<IndexAndUUID>) {
         routing {
             webSocket("/ws/") {
                 commandRepository.commands.map {
-                    CommandsToGraphRepresentationMapper.buildLevels(it)
+                    ComponentsGraphMapper.buildLevels(it)
                 }.collect {
                     outgoing.offer(Frame.Text(Gson().toJson(it)))
                 }
@@ -55,7 +56,7 @@ class CommandServer(val commandRepository: ICommandRepository<IndexAndUUID>) {
             get("graph"){
                 val list = runBlocking {
                     val levels = commandRepository.commands.first().let {
-                        CommandsToGraphRepresentationMapper.buildLevels(it)
+                        ComponentsGraphMapper.buildLevels(it)
                     }
                     call.respond(levels)
                 }
