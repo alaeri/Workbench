@@ -37,7 +37,9 @@ inline fun <R> Any.command(name :String? = null, noinline op: ExecutionContext<R
         ExecutableContext<R>(this)
     return Command(
         this,
-        executionContext
+        executionContext,
+        name,
+        CommandNomenclature.Undefined
     ) { this.executeAsFlow { this@Command.op() } }
 }
 inline fun <T, reified R> ExecutionContext<T>.invoke(commandCreator: ()-> Command<R>) : R {

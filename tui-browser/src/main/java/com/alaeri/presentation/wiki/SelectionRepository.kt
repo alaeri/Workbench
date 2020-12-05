@@ -9,9 +9,9 @@ import kotlinx.coroutines.flow.SharedFlow
 
 class SelectionRepository() {
     private val mutableSelectedWikiText = MutableStateFlow<WikiText.InternalLink?>(null)
-    fun select(link: WikiText.InternalLink?): Command<Unit> = command{
+    fun select(link: WikiText.InternalLink?): Command<Unit> = command(name ="select"){
         mutableSelectedWikiText.value = link
     }
     val selectionFlow: SharedFlow<WikiText.InternalLink?> = mutableSelectedWikiText
-    val selectionFlowCommand = flowCommand<WikiText.InternalLink?> { mutableSelectedWikiText }
+    val selectionFlowCommand = flowCommand<WikiText.InternalLink?>(name = "selection flow") { mutableSelectedWikiText }
 }

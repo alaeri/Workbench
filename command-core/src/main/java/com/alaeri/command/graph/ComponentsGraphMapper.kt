@@ -87,7 +87,7 @@ sealed class GraphElement(open val key: IndexAndUUID){
 
     fun toStr() : String= when(this){
         is Receiver -> "${key.index} $serializedClass"
-        is Command -> "${key.index}"
+        is Command -> "${key.index} ${if(commandNomenclature != CommandNomenclature.Undefined){ commandNomenclature.javaClass.simpleName}else {""}} ${name ?: ""}"
         is State -> "${key.index}" + if(this.serializedClass!= null){" $serializedClass" }else{""}
     }
 }
@@ -132,11 +132,11 @@ object CommandsGraphMapper: ISerializedCommandToGraphLevelsMapper{
                 val commandAndParents =
                     commandGraphElement to listOfNotNull(invokerKey, parentCommandKey, receiverKey)
                 val stateAndParents = if (stateGraphElement != null) {
-                    stateGraphElement to listOf(commandKey, receiverKey)
+                    null//stateGraphElement to listOf<IndexAndUUID>() //commandKey, executionKey
                 } else {
                     null
                 }
-                listOf(receiverAndParents, commandAndParents, stateAndParents).filterNotNull()
+                listOf( commandAndParents, stateAndParents).filterNotNull()
             }
         val map: Map<IndexAndUUID, List<Pair<GraphElement, List<IndexAndUUID>>>> = entries.groupBy {
             it.first.key
@@ -147,6 +147,8 @@ object CommandsGraphMapper: ISerializedCommandToGraphLevelsMapper{
             .mapValues {
                 val elementKey = it.key.key
                 it.value.filter { it != elementKey }
+            }.mapValues {
+                it.value.filter{ parent -> flatMap.any { it.key.key == parent } }
             }
         var remainingItemsMap = cleandedMap
 

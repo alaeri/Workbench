@@ -8,6 +8,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
 
@@ -23,7 +24,7 @@ class ResetSelectionOnNewNavigationUseCase(private val sharedCoroutineScope: Cor
         iRootCommandLogger)
 
     init {
-        invokeRootCommand<Unit>("START", CommandNomenclature.Application.Start){
+        invokeRootCommand<Unit>("reset selection on new path", CommandNomenclature.Application.Start){
             sharedCoroutineScope.launch {
                 supervisorScope {
                     val flow = syncInvokeFlow { selectablesUseCase.selectablesFlowCommand }

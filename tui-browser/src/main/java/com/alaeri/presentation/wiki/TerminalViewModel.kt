@@ -2,6 +2,7 @@ package com.alaeri.presentation.wiki
 
 import com.alaeri.command.*
 import com.alaeri.command.core.flow.FlowCommand
+import com.alaeri.command.core.flow.IFlowCommand
 import com.alaeri.command.core.flow.syncInvokeFlow
 import com.alaeri.command.core.invoke
 import com.alaeri.domain.ILogger
@@ -25,8 +26,8 @@ class TerminalViewModel(
 
     override val commandRoot = buildCommandRoot(this, "instantiation root", CommandNomenclature.Root, commandLogger)
     val browsingService = BrowsingService(wikiRepository, initializationScope, commandLogger)
-    override val screenState: Flow<PresentationState> = invokeRootCommand("getPresentationState", CommandNomenclature.Application.Start){ syncInvokeFlow { browsingService.presentationStateCommand } }
-    override val screenStateCommand: FlowCommand<PresentationState> = browsingService.presentationStateCommand
+    //override val screenState: Flow<PresentationState> = invokeRootCommand("getPresentationState", CommandNomenclature.Application.Start){ syncInvokeFlow { browsingService.presentationStateCommand } }
+    override val screenStateCommand: IFlowCommand<PresentationState> = browsingService.presentationStateCommand
     private val keyStrokeToIntentUseCase = KeyStrokeToIntentUseCase(terminalScreen.keyFlow, browsingService, initializationScope)
 
     init {

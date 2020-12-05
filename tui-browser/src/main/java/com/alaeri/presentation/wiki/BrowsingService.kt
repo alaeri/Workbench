@@ -3,6 +3,8 @@ package com.alaeri.presentation.wiki
 import com.alaeri.command.CommandState
 import com.alaeri.command.DefaultIRootCommandLogger
 import com.alaeri.command.core.flow.flowCommand
+import com.alaeri.command.core.flow.shared
+import com.alaeri.command.core.flow.syncInvokeFlow
 import com.alaeri.command.core.suspend.SuspendingCommand
 import com.alaeri.command.core.suspend.suspendingCommand
 import com.alaeri.command.core.suspendInvoke
@@ -45,12 +47,12 @@ class BrowsingService(
     )
     private val editUseCase = EditUseCase(queryRepository)
 
-    suspend fun processIntent(intent: Intent) : SuspendingCommand<Unit> = suspendingCommand {
+    suspend fun processIntent(intent: Intent) : SuspendingCommand<Unit> = suspendingCommand(name = "process intent") {
         emit(CommandState.Update(intent))
         val comm = when(intent){
             is Intent.Edit -> suspendInvoke { editUseCase.edit(intent) }
             is Intent.Exit -> suspendInvoke {
-                suspendingCommand<Unit> {
+                suspendingCommand<Unit>(name = "exit") {
                     innerScope.cancel()
                     shouldExitMutableStateFlow.value = true
                 }
@@ -60,7 +62,15 @@ class BrowsingService(
             is Intent.NavigateToSelection -> suspendInvoke { navigateToSelectionUseCase.navigateToCurrentSelection(intent) }
         }
     }
-    val presentationStateCommand = flowCommand<PresentationState> { presentationUsecase.presentationState }
+    val presentationStateCommand =
+        flowCommand<PresentationState>(name = "presentation state flow") {
+            println("browsing service")
+            syncInvokeFlow { presentationUsecase.presentationStateInCommand }.shareIn(
+                innerScope,
+                SharingStarted.Lazily,
+                1
+            )
+        }.shared()
     //val presentationStateCommand = flowCommand<PresentationState> { syncInvokeFlow { presentationUsecase.presentationStateInCommand } }
 
 }

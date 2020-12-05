@@ -1,6 +1,7 @@
 package com.alaeri.presentation.wiki
 
 import com.alaeri.command.core.flow.flowCommand
+import com.alaeri.command.core.flow.shared
 import com.alaeri.command.core.flow.syncInvokeFlow
 import com.alaeri.domain.wiki.LoadingStatus
 import com.alaeri.domain.wiki.WikiRepository
@@ -12,23 +13,16 @@ class LoadWikiOnPathUseCase(private val pathRepository: PathRepository,
                             private val wikiRepository: WikiRepository
 ){
 
-    val loadingStatusFlow : SharedFlow<LoadingStatus> = pathRepository
-        .pathFlow.flatMapLatest { path ->
-            if(path.isNullOrBlank()){
-                flowOf(LoadingStatus.Loading("----"))
-            }else{
-                wikiRepository.loadWikiArticle(path)
-            }
-        }.shareIn(sharedCoroutineScope, replay = 1, started = SharingStarted.Lazily)
-
-    val loadingStatusInCommand = flowCommand<LoadingStatus> {
-        val pathFlow: Flow<String?> = syncInvokeFlow { pathRepository.pathFlowCommand }
+    val loadingStatusInCommand = flowCommand<LoadingStatus>(name = "loading status flow") {
+        println("test: loadingStatus")
+        val pathFlow: Flow<String?> = syncInvokeFlow { pathRepository.pathFlowCommand }.distinctUntilChanged()
         pathFlow.flatMapLatest { path ->
             if(path.isNullOrBlank()){
                 flowOf(LoadingStatus.Loading("----"))
             }else{
-                wikiRepository.loadWikiArticle(path)
+                println("test: $path")
+               syncInvokeFlow { wikiRepository.loadWikiArticleCommand(path) }
             }
         }.shareIn(sharedCoroutineScope, replay = 1, started = SharingStarted.Lazily)
-    }
+    }.shared()
 }

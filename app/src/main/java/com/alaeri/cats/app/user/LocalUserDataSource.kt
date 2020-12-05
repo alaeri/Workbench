@@ -4,6 +4,7 @@ import com.alaeri.cats.app.user.db.UserDao
 import com.alaeri.cats.app.user.db.toDBUser
 import com.alaeri.cats.app.user.db.toUser
 import com.alaeri.command.core.flow.FlowCommand
+import com.alaeri.command.core.flow.IFlowCommand
 import com.alaeri.command.core.flow.flowCommand
 import com.alaeri.command.core.flow.syncInvokeFlow
 import com.alaeri.command.core.suspend.SuspendingCommand
@@ -31,6 +32,6 @@ class LocalUserDataSource(private val userDao: UserDao) {
         userDao.delete(user.toDBUser())
     }
 
-    val currentUser: FlowCommand<User?> = flowCommand{ userDao.currentUser.map { it?.toUser() } }
+    val currentUser: IFlowCommand<User?> = flowCommand{ userDao.currentUser.map { it?.toUser() } }
 
 }

@@ -9,13 +9,18 @@ import com.alaeri.command.core.ExecutableContext
 import com.alaeri.command.core.suspend.SuspendingExecutionContext
 import kotlinx.coroutines.flow.*
 
+interface IFlowCommand<R>: ICommand<R>{
+    val executableContext: ExecutableContext<R>
+    fun execute(syncOrSuspendExecutionContext: SuspendingExecutionContext<R>): Flow<CommandState<R>>
+}
+
 data class FlowCommand<R>(override val owner: Any,
                           override val nomenclature: CommandNomenclature,
                           override val name: String?,
-                          val executableContext: ExecutableContext<R>,
+                          override val executableContext: ExecutableContext<R>,
                           val executable: SuspendingExecutionContext<R>.()-> Flow<R>
-): ICommand<R> {
-    fun execute(syncOrSuspendExecutionContext: SuspendingExecutionContext<R>): Flow<CommandState<R>> = executable.invoke(syncOrSuspendExecutionContext)
+): IFlowCommand<R> {
+    override fun execute(syncOrSuspendExecutionContext: SuspendingExecutionContext<R>): Flow<CommandState<R>> = executable.invoke(syncOrSuspendExecutionContext)
         .map<R, CommandState<R>> {
             Value(
                 it

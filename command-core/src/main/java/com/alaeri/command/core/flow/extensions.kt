@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.mapNotNull
 /**
  * Created by Emmanuel Requier on 09/05/2020.
  */
-inline fun <T, reified R> ExecutionContext<T>.syncInvokeFlow(commandCreator: ()-> FlowCommand<R>) : Flow<R> {
+inline fun <T, reified R> ExecutionContext<T>.syncInvokeFlow(commandCreator: ()-> IFlowCommand<R>) : Flow<R> {
     val syncCommand = commandCreator.invoke()
     val syncInvokationContext =
         InvokationContext<T, R>(

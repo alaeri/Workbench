@@ -36,7 +36,7 @@ class CommandServer(val commandRepository: ICommandRepository<IndexAndUUID>) {
         routing {
             webSocket("/ws/") {
                 commandRepository.commands.map {
-                    ComponentsGraphMapper.buildLevels(it)
+                    CommandsGraphMapper.buildLevels(it)
                 }.collect {
                     outgoing.offer(Frame.Text(Gson().toJson(it)))
                 }
@@ -56,7 +56,7 @@ class CommandServer(val commandRepository: ICommandRepository<IndexAndUUID>) {
             get("graph"){
                 val list = runBlocking {
                     val levels = commandRepository.commands.first().let {
-                        ComponentsGraphMapper.buildLevels(it)
+                        CommandsGraphMapper.buildLevels(it)
                     }
                     call.respond(levels)
                 }

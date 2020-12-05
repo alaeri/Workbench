@@ -1,11 +1,10 @@
 package com.alaeri.presentation.wiki
 
 import com.alaeri.command.CommandState
-import com.alaeri.command.core.command
-import com.alaeri.command.core.Command
+import com.alaeri.command.core.*
 import com.alaeri.command.core.flow.syncInvokeFlow
-import com.alaeri.command.core.invoke
-import com.alaeri.command.core.suspendInvoke
+import com.alaeri.command.core.suspend.SuspendingCommand
+import com.alaeri.command.core.suspend.suspendingCommand
 import com.alaeri.presentation.PresentationState
 import com.googlecode.lanterna.input.KeyStroke
 import com.googlecode.lanterna.input.KeyType
@@ -19,26 +18,33 @@ class KeyStrokeToIntentUseCase(private val keyFlow: SharedFlow<KeyStroke>,
                                private val coroutineScope: CoroutineScope
 ){
 
-    fun start() : Command<Unit> = command {
+    fun start() : Command<Unit> = command(name ="start processing keystrokes") {
         coroutineScope.launch {
             withContext(Dispatchers.Unconfined){
                 keyFlow.collect { keyStroke ->
                     //println("test $keyStroke")
-                    val presentationState = syncInvokeFlow { browsingService.presentationStateCommand }.first()
-                    emit(CommandState.Update(presentationState))
-                    emit(CommandState.Update(keyStroke))
-                    //println("test2: $presentationState")
-                    val intent: Intent = invoke { findIntentForKeyStroke(keyStroke, presentationState) }
-                    suspendInvoke { browsingService.processIntent(intent) }
+                    suspendInvoke {
+                        processKeyStroke(keyStroke)
+                    }
+
                 }
             }
         }
     }
 
+    private suspend fun processKeyStroke(keyStroke: KeyStroke) : SuspendingCommand<Unit> = suspendingCommand(name = "process keystroke") {
+        val presentationState = syncInvokeFlow { browsingService.presentationStateCommand }.first()
+        emit(CommandState.Update(presentationState))
+        emit(CommandState.Update(keyStroke))
+        //println("test2: $presentationState")
+        val intent: Intent = invoke { findIntentForKeyStroke(keyStroke, presentationState) }
+        suspendInvoke { browsingService.processIntent(intent) }
+    }
+
     private fun findIntentForKeyStroke(
         keyStroke: KeyStroke,
         presentationState: PresentationState
-    ): Command<Intent> = command {
+    ): Command<Intent> = command("findintent") {
         val char = keyStroke.character
         val keyType = keyStroke.keyType
         when {

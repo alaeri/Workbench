@@ -15,7 +15,7 @@ class SelectUseCase(private val selectablesUseCase: SelectablesUseCase,
                     private val selectionRepository: SelectionRepository
 ){
 
-    suspend fun selectNextLink(intent: Intent.SelectNextLink): SuspendingCommand<Unit> = suspendingCommand {
+    suspend fun selectNextLink(intent: Intent.SelectNextLink): SuspendingCommand<Unit> = suspendingCommand("select next link") {
         emit(CommandState.Update(intent))
         val selectables = syncInvokeFlow { selectablesUseCase.selectablesFlowCommand }.first() //syncInvokeFlow { selectablesUseCase.selectablesFlowCommand }.first()
         if(selectables.isNotEmpty()){

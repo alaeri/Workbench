@@ -20,7 +20,7 @@ class ViewModelFactory(private val wikiRepository: WikiRepository,
     override suspend fun provideViewModel(
         terminalScreen: ITerminalScreen,
         initializationScope: CoroutineScope,
-    ): SuspendingCommand<ITerminalViewModel>  = suspendingCommand{
+    ): SuspendingCommand<ITerminalViewModel>  = suspendingCommand("provide view model"){
         TerminalViewModel(initializationScope, terminalScreen, wikiRepository, logger, commandLogger)
     }
 

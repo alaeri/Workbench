@@ -84,7 +84,7 @@ class TerminalAppScreen(private val terminal: Terminal,
         rootWindow.updateScreen()
     }
 
-    suspend fun updateScreen(combined: PresentationState.Presentation) : SuspendingCommand<Unit> = suspendingCommand{
+    suspend fun updateScreen(combined: PresentationState.Presentation) : SuspendingCommand<Unit> = suspendingCommand("update screen"){
 
         val inputState = combined.inputState
         val contentStatus = combined.contentStatus
@@ -194,7 +194,7 @@ class TerminalAppScreen(private val terminal: Terminal,
         }
     }
 
-    suspend fun runAppAndWait() : SuspendingCommand<Unit> = suspendingCommand{
+    suspend fun runAppAndWait() : SuspendingCommand<Unit> = suspendingCommand(name = "run and wait"){
         var executionJob: Job? = null
         supervisorScope {
             try{
@@ -211,7 +211,7 @@ class TerminalAppScreen(private val terminal: Terminal,
                             instantiationScope
                         )
                     }
-
+                    println("plop")
                     val screenStateFlow = syncInvokeFlow { viewModel.screenStateCommand }
                     screenStateFlow.flowOn(drawCoroutineContext).collect {
                         when(it){

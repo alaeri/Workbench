@@ -3,6 +3,7 @@ package com.alaeri.cats.app.user
 import com.alaeri.command.Step
 import com.alaeri.command.Waiting
 import com.alaeri.command.core.flow.FlowCommand
+import com.alaeri.command.core.flow.IFlowCommand
 import com.alaeri.command.core.flow.flowCommand
 import com.alaeri.command.core.flow.syncInvokeFlow
 import com.alaeri.command.core.suspend.SuspendingCommand
@@ -48,7 +49,7 @@ class UserRepository(private val remoteUserDataSource: RemoteUserDataSource,
         }
     }
 
-    val currentUser: FlowCommand<User?> = flowCommand {
+    val currentUser: IFlowCommand<User?> = flowCommand {
        syncInvokeFlow { localUserDataSource.currentUser }
     }
 

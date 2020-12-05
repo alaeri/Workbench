@@ -2,6 +2,7 @@ package com.alaeri.data
 
 import com.alaeri.command.CommandState
 import com.alaeri.command.core.flow.FlowCommand
+import com.alaeri.command.core.flow.IFlowCommand
 import com.alaeri.command.core.flow.flowCommand
 import com.alaeri.domain.wiki.*
 import com.alaeri.domain.ILogger
@@ -131,8 +132,9 @@ class WikiRepositoryImpl(val logger: ILogger? = null) : WikiRepository {
             }
         }.catch { it -> logger?.println(it); emit(LoadingStatus.Error("could not load data", it)) }
 
-    override fun loadWikiArticleCommand(searchTerm: String): FlowCommand<LoadingStatus> = flowCommand {
-        emit(CommandState.Update(searchTerm))
+    override fun loadWikiArticleCommand(searchTerm: String): IFlowCommand<LoadingStatus> = flowCommand(name = "load article flow") {
+        //emit(CommandState.Update(searchTerm))
+        println("test")
         loadWikiArticle(searchTerm)
     }
 }

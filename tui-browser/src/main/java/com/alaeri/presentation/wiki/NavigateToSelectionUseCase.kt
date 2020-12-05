@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.firstOrNull
 
 class NavigateToSelectionUseCase(private val selectionRepository: SelectionRepository, private val pathRepository: PathRepository){
 
-    suspend fun navigateToCurrentSelection(intent: Intent.NavigateToSelection): SuspendingCommand<Unit> = suspendingCommand {
+    suspend fun navigateToCurrentSelection(intent: Intent.NavigateToSelection): SuspendingCommand<Unit> = suspendingCommand(name = "navigate to selection") {
         emit(CommandState.Update(intent))
         val selection = syncInvokeFlow { selectionRepository.selectionFlowCommand }.firstOrNull()
         if(selection != null){

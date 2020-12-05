@@ -6,7 +6,7 @@ import com.alaeri.command.core.suspendInvoke
 
 class EditUseCase(private val queryRepository: QueryRepository){
 
-    suspend fun edit(intent: Intent.Edit) = suspendingCommand<Unit> {
+    suspend fun edit(intent: Intent.Edit) = suspendingCommand<Unit>(name = "edit query") {
         emit(CommandState.Update(intent))
         suspendInvoke {
             queryRepository.updateQuery(intent.newQuery)

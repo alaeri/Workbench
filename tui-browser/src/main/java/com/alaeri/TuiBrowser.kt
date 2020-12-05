@@ -46,24 +46,24 @@ object TuiBrowser: ICommandRootOwner {
 
         invokeRootCommand<Unit>("start", CommandNomenclature.Application.Start){
 
-            val terminal : Terminal = invokeCommand {
+            val terminal : Terminal = invokeCommand(name = "createTerminal") {
                 DefaultTerminalFactory().createTerminal()
             }
-            val screen : TerminalScreen = invokeCommand {
+            val screen : TerminalScreen = invokeCommand(name = "createTerminalScreen") {
                 TerminalScreen(terminal)
             }
-            val wikiRepository : WikiRepository = invokeCommand {
+            val wikiRepository : WikiRepository = invokeCommand(name= "createWikiRepository") {
                 WikiRepositoryImpl(logger)
             }
-            val viewModelFactory : IViewModelFactory = invokeCommand {
+            val viewModelFactory : IViewModelFactory = invokeCommand(name = "createViewModelFactory") {
                 ViewModelFactory(wikiRepository, logger, commandLogger)
             }
-            val terminalScreen : TerminalAppScreen = invokeCommand {
+            val terminalScreen : TerminalAppScreen = invokeCommand(name = "createTerminalAppScreen") {
                 TerminalAppScreen(terminal, screen, logger, viewModelFactory)
             }
 
             runBlocking {
-                invokeCommand<Unit,Unit> {
+                invokeCommand<Unit,Unit>(name = "launch command server") {
                     launch {
                         withContext(Dispatchers.IO){
                             invoke {

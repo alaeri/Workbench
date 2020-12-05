@@ -3,6 +3,7 @@ package com.alaeri.command.glide
 import android.content.Context
 import com.alaeri.command.core.command
 import com.alaeri.command.core.flow.FlowCommand
+import com.alaeri.command.core.flow.IFlowCommand
 import com.alaeri.command.core.flow.flowCommand
 import com.bumptech.glide.Glide
 import kotlinx.coroutines.*
@@ -30,7 +31,7 @@ class FlowImageLoader(private val applicationContext: Context,
 
     private val hashMap = hashMapOf<HttpUrl, ChannelAndObserverCount>()
 
-    fun loadImage(url: String, size: Size): FlowCommand<ImageLoadingState> = flowCommand {
+    fun loadImage(url: String, size: Size): IFlowCommand<ImageLoadingState> = flowCommand {
 
         //withContext(flowContext){
         val httpUrl = HttpUrl.parse(url)!!
