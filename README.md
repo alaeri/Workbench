@@ -12,9 +12,10 @@ A sample app to experiment with. It displays cats from the CatApi. It also showc
 
 ## Command Library
 
-Inline Kotlin Command Design Pattern Logger
+Structured Logger based on the command design pattern, implemented with inline functions and flows
 
 [View the readme of the command-core module](/command-core/README.md)
+![Last visualization](doc/commands-graph-20201205.svg)
 
 ## RecyclerView Extras
 
