@@ -182,7 +182,7 @@ const loadData = (levels)=> {
                      index[id].parents = index[id].parents.concat(n.parents)
                    }
                    else {
-                     index[id] = {id: id, parents: n.parents.slice(), level: i}
+                     index[id] = {id: id, parents: n.parents.slice(), level: i, label: n.label || id}
                    }
                    n.bundle = index[id]
                  })
@@ -351,8 +351,8 @@ const loadPieChart = (commandsData)=>{
   data.nodes.map(n => [
     `<line class="node" stroke="black" stroke-width="8" x1="${ n.x }" y1="${ n.y-n.height/2 }" x2="${ n.x }" y2="${ n.y+n.height/2 }"/>`,
     `<line class="node" stroke="white" stroke-width="4" x1="${ n.x }" y1="${ n.y-n.height/2 }" x2="${ n.x }" y2="${ n.y+n.height/2 }"/>`,
-    `<text x="${ n.x+4}" y="${ n.y-n.height/2-4 }" stroke="white" stroke-width="2">${ n.id }</text>`,
-    `<text x="${ n.x+4}" y="${ n.y-n.height/2-4 }">${ n.id }</text>`
+    `<text x="${ n.x+4}" y="${ n.y-n.height/2-4 }" stroke="white" stroke-width="2">${ n.label }</text>`,
+    `<text x="${ n.x+4}" y="${ n.y-n.height/2-4 }">${ n.label }</text>`
     ]).forEach(lineAndTexts => lineAndTexts.forEach(lineAndText => svg.appendSVG(lineAndText)));
 //
 //      // z holds a copy of the previous transform, so we can track its changes

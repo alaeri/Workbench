@@ -13,7 +13,7 @@ object CommandModule{
     val commandModule = module {
         single<DefaultIRootCommandLogger> {
             val idBank = IdBank<IndexAndUUID>(null) { previous ->
-                IndexAndUUID(index = (previous?.index ?: 0) + 1, uuid = UUID.randomUUID())
+                IndexAndUUID(index = (previous?.index ?: 0) + 1, uuid = UUID.randomUUID().toString())
             }
             Serializer<IndexAndUUID>(idBank, get<CommandRepository>())
         }

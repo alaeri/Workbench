@@ -9,7 +9,7 @@ class DefaultIdStore(firstIndex: IndexAndUUID?, nextKey: (lastKey: IndexAndUUID?
             ?:  throw IllegalStateException("The IdBank singleton is not set") }
         fun create(firstIndex: IndexAndUUID? = null,
                    nextKey: (IndexAndUUID?)-> IndexAndUUID = { previous ->
-                       IndexAndUUID(index = (previous?.index?:0) +1, uuid = UUID.randomUUID()) }) : DefaultIdStore = lazy {
+                       IndexAndUUID(index = (previous?.index?:0) +1, uuid = UUID.randomUUID().toString()) }) : DefaultIdStore = lazy {
             if(backingInstance != null){
                 throw IllegalStateException("The IdBank singleton is already set")
             }

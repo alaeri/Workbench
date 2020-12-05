@@ -1,4 +1,4 @@
-package com.alaeri.command.graph
+package com.alaeri.command.graph.component
 
 import com.alaeri.command.history.serialization.SerializedClass
 

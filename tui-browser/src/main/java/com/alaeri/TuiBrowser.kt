@@ -26,7 +26,7 @@ object TuiBrowser: ICommandRootOwner {
 
     private val commandRepository = CommandRepository()
     private val idBank = IdBank<IndexAndUUID>(null){ previous ->
-        IndexAndUUID(index = (previous?.index ?: 0) + 1, uuid = UUID.randomUUID())
+        IndexAndUUID(index = (previous?.index ?: 0) + 1, uuid = UUID.randomUUID().toString())
     }
 
     private val commandLogger : DefaultIRootCommandLogger = Serializer<IndexAndUUID>(idBank, commandRepository)

@@ -15,8 +15,9 @@ A sample app to experiment with. It displays cats from the CatApi. It also showc
 Structured Logger based on the command design pattern, implemented with inline functions and flows
 
 [View the readme of the command-core module](/command-core/README.md)
-![Last visualization](/doc/commands-graph-20201205-8.png)
 
+![Grouped commands visualization](/doc/grouped-commands-20201205.png)
+![Commands visualisations](/doc/commands-graph-20201205-8.png)
 ## RecyclerView Extras
 
 Some code based on discussions at work and after work.
