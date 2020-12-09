@@ -1,6 +1,6 @@
 package com.alaeri.command
 
-import com.alaeri.command.core.IInvokationContext
+import com.alaeri.command.core.IParentCommandScope
 
 sealed class CommandState<R>(val time: Long = System.currentTimeMillis()){
     open class Update<out U,R>(val value: U): CommandState<R>()
@@ -11,7 +11,7 @@ sealed class CommandState<R>(val time: Long = System.currentTimeMillis()){
 //            return subCommandAndState.first.name + " " + subCommandAndState.second.toString()
 //        }
 //    }
-    data class SubCommand<R, RST>(val subCommandAndState: Pair<IInvokationContext<R, RST>, CommandState<out RST>>): CommandState<R>(){
+    data class SubCommand<R, RST>(val subCommandAndState: Pair<IParentCommandScope<R, RST>, CommandState<out RST>>): CommandState<R>(){
         override fun toString(): String {
             return "SUBOP:" + subCommandAndState.first.toString() + " " + subCommandAndState.second.toString()
         }

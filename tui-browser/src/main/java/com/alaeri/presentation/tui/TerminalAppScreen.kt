@@ -89,7 +89,7 @@ class TerminalAppScreen(private val terminal: Terminal,
         val inputState = combined.inputState
         val contentStatus = combined.contentStatus
         val selectedWikiText = combined.selectedWikiText
-        logger.println("combined")
+//        logger.println("combined")
 
         textBox.text = inputState.text
 
@@ -211,7 +211,6 @@ class TerminalAppScreen(private val terminal: Terminal,
                             instantiationScope
                         )
                     }
-                    println("plop")
                     val screenStateFlow = syncInvokeFlow { viewModel.screenStateCommand }
                     screenStateFlow.flowOn(drawCoroutineContext).collect {
                         when(it){

@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.fold
 /**
  * Created by Emmanuel Requier on 09/05/2020.
  */
-suspend inline fun <T,R> SuspendingExecutionContext<T>.suspendInvokeCommand(nomenclature: CommandNomenclature = CommandNomenclature.Undefined, name: String? = null, noinline body: suspend SuspendingExecutionContext<R>.()->R) : R {
+suspend inline fun <T,R> SuspendingCommandScope<T>.suspendInvokeCommand(nomenclature: CommandNomenclature = CommandNomenclature.Undefined, name: String? = null, noinline body: suspend SuspendingCommandScope<R>.()->R) : R {
     return@suspendInvokeCommand suspendInvokeAndFold {
         this@suspendInvokeCommand.owner.suspendingCommand(name, nomenclature,body)
     }
@@ -27,59 +27,59 @@ suspend inline fun <T,R> SuspendingExecutionContext<T>.suspendInvokeCommand(nome
 //    val executionContext = syncCommand.executableContext.chain(suspendingInvokationContext)
 //    return syncCommand.execute(executionContext).mapUpdates<R,R>()
 //}
-suspend inline fun <T, reified R> SuspendingExecutionContext<T>.suspendInvokeFlow(suspOperationInvoker: suspend ()-> FlowCommand<R>) : Flow<R> {
+suspend inline fun <T, reified R> SuspendingCommandScope<T>.suspendInvokeFlow(suspOperationInvoker: suspend ()-> FlowCommand<R>) : Flow<R> {
     val suspendingCommand = suspOperationInvoker()
     val suspendingInvokationContext =
-        SuspendingInvokationContext2<T, R>(
+        SuspendingParentCommandScope2<T, R>(
             suspendingCommand,
             this
         )
-    val executionContext = suspendingCommand.executableContext.chain(suspendingInvokationContext)
+    val executionContext = suspendingCommand.chainableCommandScope.chain(suspendingInvokationContext)
     return suspendingCommand.execute(executionContext).mapUpdates<R,R>()
 }
-suspend inline fun <T,reified R> ExecutionContext<T>.suspendInvokeFlow(suspendingCommandCreator: suspend ()-> FlowCommand<R>) : Flow<R> {
+suspend inline fun <T,reified R> CommandScope<T>.suspendInvokeFlow(suspendingCommandCreator: suspend ()-> FlowCommand<R>) : Flow<R> {
     val suspendingCommand = suspendingCommandCreator.invoke()
     val syncInvokationContext2 =
-        InvokationContext<T, R>(
+        ParentCommandScope<T, R>(
             suspendingCommand,
             this
         )
-    val executionContext = suspendingCommand.executableContext.chain(syncInvokationContext2)
+    val executionContext = suspendingCommand.chainableCommandScope.chain(syncInvokationContext2)
     return suspendingCommand.execute(executionContext).mapUpdates<R,R>()
 }
-suspend inline fun <T,R, reified U> SuspendingExecutionContext<T>.suspendInvokeAsFlow(suspendingCommandCreator: ()-> SuspendingCommand<R>) : Flow<U> {
+suspend inline fun <T,R, reified U> SuspendingCommandScope<T>.suspendInvokeAsFlow(suspendingCommandCreator: ()-> SuspendingCommand<R>) : Flow<U> {
     val suspendingCommand = suspendingCommandCreator()
     val suspendingInvokationContext =
-        SuspendingInvokationContext2<T, R>(
+        SuspendingParentCommandScope2<T, R>(
             suspendingCommand,
             this
         )
-    val executionContext = suspendingCommand.executableContext.chain(suspendingInvokationContext)
+    val executionContext = suspendingCommand.chainableCommandScope.chain(suspendingInvokationContext)
     return suspendingCommand.suspendExecute(executionContext).mapUpdates()
 }
-inline fun <T,R, reified U> SuspendingExecutionContext<T>.syncInvokeAsFlow(syncCommandCreator: Any.()-> Command<R>) : Flow<U> {
+inline fun <T,R, reified U> SuspendingCommandScope<T>.syncInvokeAsFlow(syncCommandCreator: Any.()-> Command<R>) : Flow<U> {
     val syncCommand = syncCommandCreator()
     val suspendingInvokationContext =
-        SuspendingInvokationContext2<T, R>(
+        SuspendingParentCommandScope2<T, R>(
             syncCommand,
             this
         )
-    val executionContext = syncCommand.executableContext.chain(suspendingInvokationContext)
+    val executionContext = syncCommand.chainableCommandScope.chain(suspendingInvokationContext)
     return syncCommand.syncExecute(executionContext).mapUpdates()
 }
-suspend inline fun <T,R, reified U> ExecutionContext<T>.suspendInvokeAsFlow(suspendingCommandCreator: suspend ()-> SuspendingCommand<R>) : Flow<U> {
+suspend inline fun <T,R, reified U> CommandScope<T>.suspendInvokeAsFlow(suspendingCommandCreator: suspend ()-> SuspendingCommand<R>) : Flow<U> {
     val suspendingCommand = suspendingCommandCreator.invoke()
     val syncInvokationContext2 =
-        InvokationContext<T, R>(
+        ParentCommandScope<T, R>(
             suspendingCommand,
             this
         )
-    val executionContext = suspendingCommand.executableContext.chain(syncInvokationContext2)
+    val executionContext = suspendingCommand.chainableCommandScope.chain(syncInvokationContext2)
     return suspendingCommand.suspendExecute(executionContext).mapUpdates<R,U>()
 }
-suspend inline fun <R> Any.suspendingCommand(name: String? = null, nomenclature: CommandNomenclature = CommandNomenclature.Undefined, noinline op: suspend SuspendingExecutionContext<R>.()->R): SuspendingCommand<R> {
+suspend inline fun <R> Any.suspendingCommand(name: String? = null, nomenclature: CommandNomenclature = CommandNomenclature.Undefined, noinline op: suspend SuspendingCommandScope<R>.()->R): SuspendingCommand<R> {
     val executionContext =
-        ExecutableContext<R>(this)
+        ChainableCommandScope<R>(this)
     return@suspendingCommand SuspendingCommand(
         this,
         nomenclature,
@@ -98,14 +98,14 @@ suspend inline fun <R> Any.suspendingCommand(name: String? = null, nomenclature:
 //    val executionContext = suspendingCommand.executableContext.chain(suspendingInvokationContext)
 //    return suspendingCommand.suspendExecute(executionContext).suspendFold()
 //}
-inline fun <T, reified R> SuspendingExecutionContext<T>.invoke(syncOperationInvoker: Any.()-> Command<R>) : R {
+inline fun <T, reified R> SuspendingCommandScope<T>.invoke(syncOperationInvoker: Any.()-> Command<R>) : R {
     val syncCommand = syncOperationInvoker()
     val suspendingInvokationContext =
-        SuspendingInvokationContext2<T, R>(
+        SuspendingParentCommandScope2<T, R>(
             syncCommand,
             this
         )
-    val executionContext = syncCommand.executableContext.chain(suspendingInvokationContext)
+    val executionContext = syncCommand.chainableCommandScope.chain(suspendingInvokationContext)
     return syncCommand.syncExecute(executionContext).syncFold()
 }
 suspend inline fun <ChildType> Flow<CommandState<ChildType>>.suspendFold(): ChildType{

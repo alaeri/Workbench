@@ -7,10 +7,12 @@ import com.alaeri.cats.app.ui.viewpager.viewPagerFragmentModule
 import com.alaeri.cats.app.user.userModule
 import com.alaeri.command.*
 import com.alaeri.command.CommandNomenclature
-import com.alaeri.command.android.visualizer.CommandModule
 import com.alaeri.command.android.visualizer.CommandModule.commandModule
 import com.alaeri.command.android.visualizer.CommandOptionsFragmentModule
 import com.alaeri.command.android.visualizer.commandListFragmentModule
+import com.alaeri.command.core.root.DefaultRootCommandScope
+import com.alaeri.command.core.root.ICommandScopeOwner
+import com.alaeri.command.core.root.invokeRootCommand
 import com.alaeri.command.di.DelayedCommandLogger
 import com.alaeri.command.koin.invokeModules
 import kotlinx.coroutines.CoroutineScope
@@ -24,15 +26,17 @@ import org.koin.core.context.startKoin
  * Created by Emmanuel Requier on 18/04/2020.
  */
 @ExperimentalCoroutinesApi
-class CatsApplication : MultiDexApplication(), ICommandRootOwner {
+class CatsApplication : MultiDexApplication(), ICommandScopeOwner {
 
     private val coroutineScope = CoroutineScope(Dispatchers.Main)
-    private val mutableLoggerStateFlow = MutableStateFlow<DefaultIRootCommandLogger?>(null)
+    private val mutableLoggerStateFlow = MutableStateFlow<ICommandLogger?>(null)
     private val delayedCommandLogger = DelayedCommandLogger(coroutineScope, mutableLoggerStateFlow)
 
-    override val commandRoot: AnyCommandRoot = buildCommandRoot(this,
+    override val commandScope: DefaultRootCommandScope = com.alaeri.command.core.root.buildRootCommandScope(
+        this,
         nomenclature = CommandNomenclature.Root,
-        name = "root", iRootCommandLogger = delayedCommandLogger)
+        name = "root", iCommandLogger = delayedCommandLogger
+    )
 
 
     override fun onCreate() {
@@ -51,7 +55,7 @@ class CatsApplication : MultiDexApplication(), ICommandRootOwner {
 
                 modules(commandModule, commandListFragmentModule, CommandOptionsFragmentModule().module)
             }
-            mutableLoggerStateFlow.value = koinApp.koin.get<DefaultIRootCommandLogger>()
+            mutableLoggerStateFlow.value = koinApp.koin.get<ICommandLogger>()
             //mutableStateFlow.value = koinApp.koin.get<CommandRepository>()
             Unit
         }

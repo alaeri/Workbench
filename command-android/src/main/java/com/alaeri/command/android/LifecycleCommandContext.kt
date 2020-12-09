@@ -4,16 +4,16 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleObserver
 import androidx.lifecycle.OnLifecycleEvent
 import androidx.lifecycle.lifecycleScope
-import com.alaeri.command.core.suspend.SuspendingExecutionContext
-import com.alaeri.command.invokeSuspendingRootCommand
+import com.alaeri.command.core.root.invokeSuspendingRootCommand
+import com.alaeri.command.core.suspend.SuspendingCommandScope
 import kotlinx.coroutines.launch
 
 class LifecycleCommandContext(
     private val lifecycleCommandOwner: LifecycleCommandOwner
 ): LifecycleObserver {
 
-    private lateinit var _currentExecutionContext : SuspendingExecutionContext<Unit>
-    val currentExecutionContext: SuspendingExecutionContext<Unit>
+    private lateinit var _currentExecutionContext : SuspendingCommandScope<Unit>
+    val currentExecutionContext: SuspendingCommandScope<Unit>
             get() = _currentExecutionContext
 
     init{

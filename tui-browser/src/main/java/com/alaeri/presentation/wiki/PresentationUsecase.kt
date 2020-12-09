@@ -1,6 +1,7 @@
 package com.alaeri.presentation.wiki
 
 import com.alaeri.command.core.flow.flowCommand
+import com.alaeri.command.core.flow.shared
 import com.alaeri.command.core.flow.syncInvokeFlow
 import com.alaeri.presentation.InputState
 import com.alaeri.presentation.PresentationState
@@ -34,12 +35,9 @@ class PresentationUsecase(val sharingScope: CoroutineScope,
 //    }.onEach {  }
 
     val presentationStateInCommand by lazy {
-        println("lazy presentation usecase")
         flowCommand<PresentationState>(name = "presentation state flow") {
-            println("test presentation")
             exitFlow.flatMapLatest {
                 if (it) {
-                    println("exit.....")
                     flowOf(PresentationState.Exit(listOf()))
                 } else {
                     combine(
@@ -59,7 +57,7 @@ class PresentationUsecase(val sharingScope: CoroutineScope,
             }.shareIn(sharingScope, replay = 1, started = SharingStarted.Lazily).onSubscription {
                 //println("subscribed: $this")
             }.onEach { }
-        }
+        }.shared()
     }
 
 }

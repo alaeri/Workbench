@@ -16,7 +16,7 @@ import com.alaeri.command.android.visualizer.databinding.GraphFragmentBinding
 import com.alaeri.command.android.visualizer.focus.FocusCommandRepository
 import com.alaeri.command.android.visualizer.focus.FocusedCommandOrBreak
 import com.alaeri.command.graph.ComponentsGraphMapper
-import com.alaeri.command.graph.Levels
+import com.alaeri.command.graph.GraphRepresentation
 import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.Moshi
 import kotlinx.coroutines.flow.filterNotNull
@@ -78,14 +78,14 @@ class GraphFragment: Fragment(), KoinComponent {
             commandRepository.state.map { it.history?.list }.filterNotNull().map {
                 it.mapNotNull { focusedCommandOrBreak ->
                     val focused =  focusedCommandOrBreak as? FocusedCommandOrBreak.Focused
-                    focused?.serializableCommandStateAndContext
+                    focused?.serializableCommandStateAndScope
                 }
             }.asLiveData(lifecycleScope.coroutineContext)
         }.observe(this.viewLifecycleOwner, Observer {
-            val levelsToJson = ComponentsGraphMapper.buildLevels(it)
+            val levelsToJson = ComponentsGraphMapper.buildGraph(it)
             //val converterFactory = MoshiConverterFactory.create()
             val moshi = Moshi.Builder().build();
-            val jsonAdapter: JsonAdapter<Levels> = moshi.adapter(Levels::class.java)
+            val jsonAdapter: JsonAdapter<GraphRepresentation> = moshi.adapter(GraphRepresentation::class.java)
             //val oldText = createJsonManually(filteredList)
             val text = jsonAdapter.toJson(levelsToJson)
             Log.d("CATS","json text: $text")

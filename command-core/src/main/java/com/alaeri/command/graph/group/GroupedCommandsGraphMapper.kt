@@ -1,24 +1,23 @@
 package com.alaeri.command.graph.group
 
 import com.alaeri.command.graph.ISerializedCommandToGraphLevelsMapper
-import com.alaeri.command.graph.IdAndParents
-import com.alaeri.command.graph.Levels
-import com.alaeri.command.graph.serializedUnit
-import com.alaeri.command.history.id.IndexAndUUID
-import com.alaeri.command.history.serialization.SerializableCommandStateAndContext
+import com.alaeri.command.graph.GraphNode
+import com.alaeri.command.graph.GraphRepresentation
+import com.alaeri.command.serialization.id.IndexAndUUID
+import com.alaeri.command.serialization.entity.SerializableCommandStateAndScope
 
 object GroupedCommandsGraphMapper: ISerializedCommandToGraphLevelsMapper {
-    override fun buildLevels(list: List<SerializableCommandStateAndContext<IndexAndUUID>>): Levels {
+    override fun buildGraph(list: List<SerializableCommandStateAndScope<IndexAndUUID>>): GraphRepresentation {
         val entries: List<Pair<CommandGroupIdentifier, CommandInvokation>> =
             list.map { serialCommStateCont ->
                  val commandGroupIdentifier = CommandGroupIdentifier(
-                     serialCommStateCont.context.commandNomenclature,
-                     serialCommStateCont.context.commandName,
-                     serialCommStateCont.context.executionContext
+                     serialCommStateCont.scope.commandNomenclature,
+                     serialCommStateCont.scope.commandName,
+                     serialCommStateCont.scope.commandExecutionScope
                  )
-                commandGroupIdentifier to CommandInvokation(serialCommStateCont.context.commandId, listOfNotNull<IndexAndUUID>(
-                    if(serialCommStateCont.context.commandId!= serialCommStateCont.context.invokationCommandId){
-                        serialCommStateCont.context.invokationCommandId
+                commandGroupIdentifier to CommandInvokation(serialCommStateCont.scope.commandId, listOfNotNull<IndexAndUUID>(
+                    if(serialCommStateCont.scope.commandId!= serialCommStateCont.scope.invokationCommandId){
+                        serialCommStateCont.scope.invokationCommandId
                     }else{
                         null
                     })
@@ -53,39 +52,28 @@ object GroupedCommandsGraphMapper: ISerializedCommandToGraphLevelsMapper {
         val existingRoots = mutableListOf<CommandGroupIdentifier>()
 
         val existingParents = mutableListOf<CommandGroupIdentifier>()
-        data class NodeAndParents(val node: CommandGroupIdentifier, val parents: List<CommandGroupIdentifier>)
+        data class NodeAndParents(val node: CommandGroupIdentifier, val parents: List<CommandGroupIdentifier>, val invokationCount: Int)
         val levels = mutableListOf<List<NodeAndParents>>()
 
-//        println("starting items: ")
-//        println(remainingItemsMap)
         while (remainingItemsMap.isNotEmpty()){
             val levelEntries = remainingItemsMap.filterValues { parents -> parents.all { parent -> existingRoots.contains(parent) } }
             val level = levelEntries.map { entry ->
                 val parents = entry.value
-                NodeAndParents(entry.key, parents)
+                NodeAndParents(entry.key, parents.distinct(), parents.size)
             }
             levels += level
             existingRoots += levelEntries.keys
             existingParents += level.map { it.node }
             remainingItemsMap = remainingItemsMap.filter { !existingRoots.contains(it.key) }
-            if(levelEntries.isEmpty()){
-                //println("EMPTY LEVEL!!! remainingItems: ${remainingItemsMap.size}")
-                break
-            }else{
-                //println("items: ${levelEntries.size} remainingItems: ${remainingItemsMap.size}")
-            }
         }
-//        remainingItemsMap.entries.take(3).forEach {
-//            println(it.key)
-//            println(it.value)
-//        }
+
         val keys = groupedMap.keys
-        return Levels(levels.map { level ->
+        return GraphRepresentation(levels.map { level ->
             level.map {
-                IdAndParents(
+                GraphNode(
                     keys.indexOf(it.node).toString(),
                     it.parents.map { keys.indexOf(it).toString() },
-                    "${keys.indexOf(it.node).toString()} - ${it.node.receiverContext.serializedClass.simpleName} - ${it.node.name ?: ""}"
+                    "${it.node.receiverContext.serializedClass.simpleName} - ${it.node.name ?: ""} - (${it.invokationCount})"
                 )
             }
         })

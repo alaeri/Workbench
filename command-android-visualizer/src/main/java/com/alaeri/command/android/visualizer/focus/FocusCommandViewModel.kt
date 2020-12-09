@@ -4,8 +4,8 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
-import com.alaeri.command.history.id.IndexAndUUID
-import com.alaeri.command.history.serialization.SerializableCommandStateAndContext
+import com.alaeri.command.serialization.id.IndexAndUUID
+import com.alaeri.command.serialization.entity.SerializableCommandStateAndScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
@@ -20,7 +20,7 @@ sealed class FocusCommandItemVM{
         data class Break(val index: Int, val count: Int, val onClearFocus: ()->Unit) : Empty()
     }
     data class Content(
-        val commandStateAndContext: SerializableCommandStateAndContext<IndexAndUUID>,
+        val commandStateAndScope: SerializableCommandStateAndScope<IndexAndUUID>,
         val onItemWithIdClicked: (key : IndexAndUUID) -> Unit
     ): FocusCommandItemVM()
 }
@@ -60,7 +60,7 @@ private fun FocusedAndZoomCommandHistory.toVM(
                 onClearFocus
             )
             is FocusedCommandOrBreak.Focused -> FocusCommandItemVM.Content(
-                it.serializableCommandStateAndContext,
+                it.serializableCommandStateAndScope,
                 onItemWithIdClicked
             )
         }

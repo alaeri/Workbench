@@ -2,7 +2,6 @@ package com.alaeri.presentation.wiki
 
 import com.alaeri.command.*
 import com.alaeri.command.core.flow.*
-import com.alaeri.command.core.suspend.suspendInvokeFlow
 import com.alaeri.domain.wiki.LoadingStatus
 import com.alaeri.domain.wiki.WikiText
 import kotlinx.coroutines.CoroutineScope
@@ -11,12 +10,11 @@ import kotlinx.coroutines.flow.*
 class SelectablesUseCase(
     private val loadWikiOnPathUseCase: LoadWikiOnPathUseCase,
     private val sharedCoroutineScope: CoroutineScope,
-    private val iRootCommandLogger: DefaultIRootCommandLogger
+    private val iCommandLogger: ICommandLogger
 ){
 
 
     val selectablesFlowCommand : IFlowCommand<List<WikiText.InternalLink>> = flowCommand<List<WikiText.InternalLink>>(name = "selectables flow") {
-        println("selectablesFlow")
         val loadingStatusFlow = syncInvokeFlow { loadWikiOnPathUseCase.loadingStatusInCommand }
         loadingStatusFlow.map {
                 when(it){

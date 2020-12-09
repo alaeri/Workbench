@@ -133,8 +133,6 @@ class WikiRepositoryImpl(val logger: ILogger? = null) : WikiRepository {
         }.catch { it -> logger?.println(it); emit(LoadingStatus.Error("could not load data", it)) }
 
     override fun loadWikiArticleCommand(searchTerm: String): IFlowCommand<LoadingStatus> = flowCommand(name = "load article flow") {
-        //emit(CommandState.Update(searchTerm))
-        println("test")
         loadWikiArticle(searchTerm)
     }
 }

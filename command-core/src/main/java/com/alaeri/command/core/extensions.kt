@@ -6,15 +6,16 @@ import com.alaeri.command.core.suspend.*
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.supervisorScope
 
-inline fun <T, reified R> ExecutionContext<T>.invokeCommand(name: String? = null, nomenclature: CommandNomenclature = CommandNomenclature.Undefined, crossinline body: ExecutionContext<R>.()->R) : R {
+inline fun <T, reified R> CommandScope<T>.invokeCommand(name: String? = null, nomenclature: CommandNomenclature = CommandNomenclature.Undefined, crossinline body: CommandScope<R>.()->R) : R {
     return@invokeCommand this.invoke<T, R> {
         this@invokeCommand.owner.command(name, nomenclature, body)
     }
 }
-inline fun <reified R> Any.command(name: String ?= null, nomenclature: CommandNomenclature = CommandNomenclature.Undefined, crossinline op: ExecutionContext<R>.()->R): Command<R> {
+inline fun <reified R> Any.command(name: String ?= null, nomenclature: CommandNomenclature = CommandNomenclature.Undefined, crossinline op: CommandScope<R>.()->R): Command<R> {
     val executionContext =
-        ExecutableContext<R>(this)
+        ChainableCommandScope<R>(this)
     return Command(
         this,
         executionContext,
@@ -22,9 +23,9 @@ inline fun <reified R> Any.command(name: String ?= null, nomenclature: CommandNo
         nomenclature
     ) { this.executeAsFlow { this@Command.op() } }
 }
-inline fun <R> Any.command2(name: String ?= null, nomenclature: CommandNomenclature = CommandNomenclature.Undefined, noinline op: ExecutionContext<R>.()->R): Command<R> {
+inline fun <R> Any.command2(name: String ?= null, nomenclature: CommandNomenclature = CommandNomenclature.Undefined, noinline op: CommandScope<R>.()->R): Command<R> {
     val executionContext =
-        ExecutableContext<R>(this)
+        ChainableCommandScope<R>(this)
     return Command(
         this,
         executionContext,
@@ -32,9 +33,9 @@ inline fun <R> Any.command2(name: String ?= null, nomenclature: CommandNomenclat
         nomenclature
     ) { this.executeAsFlow { this@Command.op() } }
 }
-inline fun <R> Any.command(name :String? = null, noinline op: ExecutionContext<R>.()->R): Command<R> {
+inline fun <R> Any.command(name :String? = null, noinline op: CommandScope<R>.()->R): Command<R> {
     val executionContext =
-        ExecutableContext<R>(this)
+        ChainableCommandScope<R>(this)
     return Command(
         this,
         executionContext,
@@ -42,30 +43,32 @@ inline fun <R> Any.command(name :String? = null, noinline op: ExecutionContext<R
         CommandNomenclature.Undefined
     ) { this.executeAsFlow { this@Command.op() } }
 }
-inline fun <T, reified R> ExecutionContext<T>.invoke(commandCreator: ()-> Command<R>) : R {
+inline fun <T, reified R> CommandScope<T>.invoke(commandCreator: ()-> Command<R>) : R {
     val syncCommand = commandCreator.invoke()
     val syncInvokationContext =
-        InvokationContext<T, R>(
+        ParentCommandScope<T, R>(
             syncCommand,
             this
         )
-    val executionContext = syncCommand.executableContext.chain(syncInvokationContext)
+    val executionContext = syncCommand.chainableCommandScope.chain(syncInvokationContext)
     return syncCommand.syncExecute(executionContext).syncFold<R>()
 }
-suspend inline fun <T, reified R> ExecutionContext<T>.suspendInvoke(crossinline commandCreator: suspend ()-> SuspendingCommand<R>) : R {
+suspend inline fun <T, reified R> CommandScope<T>.suspendInvoke(crossinline commandCreator: suspend ()-> SuspendingCommand<R>) : R {
     val syncCommand = commandCreator.invoke()
     val syncInvokationContext =
-        InvokationContext<T, R>(
+        ParentCommandScope<T, R>(
             syncCommand,
             this
         )
-    val executionContext = syncCommand.executableContext.chain(syncInvokationContext)
+    val executionContext = syncCommand.chainableCommandScope.chain(syncInvokationContext)
     return@suspendInvoke coroutineScope { syncCommand.suspendExecute(executionContext).suspendFold() }
 }
 
 inline fun <reified ChildType> Flow<CommandState<ChildType>>.syncFold(): ChildType{
     val lastOperationState = runBlocking {
-        this@syncFold.fold<CommandState<ChildType>, CommandState<ChildType>?>(null, { _, operationState -> operationState})
+        supervisorScope {
+            this@syncFold.fold<CommandState<ChildType>, CommandState<ChildType>?>(null, { _, operationState -> operationState})
+        }
     }
     return@syncFold when(lastOperationState){
         is CommandState.Done -> lastOperationState.value
@@ -79,14 +82,14 @@ inline fun <reified ChildType> Flow<CommandState<ChildType>>.syncFold(): ChildTy
  * ADD currentCoroutineContext or callerCoroutineContext for blocking Functions?
  * ADD currentThread?
  */
-suspend inline fun <T,R> ExecutionContext<T>.suspendInvokeAndFold(crossinline suspendingCommandCreator: suspend ()-> SuspendingCommand<R>) : R {
+suspend inline fun <T,R> CommandScope<T>.suspendInvokeAndFold(crossinline suspendingCommandCreator: suspend ()-> SuspendingCommand<R>) : R {
     val suspendingCommand = suspendingCommandCreator.invoke()
     val syncInvokationContext2 =
-        InvokationContext<T, R>(
+        ParentCommandScope<T, R>(
             suspendingCommand,
             this
         )
-    val executionContext = suspendingCommand.executableContext.chain(syncInvokationContext2)
+    val executionContext = suspendingCommand.chainableCommandScope.chain(syncInvokationContext2)
     return@suspendInvokeAndFold coroutineScope { println("csB: $coroutineContext"); suspendingCommand.suspendExecute(executionContext).suspendFold() }
 }
 

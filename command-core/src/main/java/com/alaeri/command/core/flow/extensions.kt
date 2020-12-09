@@ -10,14 +10,14 @@ import kotlinx.coroutines.flow.mapNotNull
 /**
  * Created by Emmanuel Requier on 09/05/2020.
  */
-inline fun <T, reified R> ExecutionContext<T>.syncInvokeFlow(commandCreator: ()-> IFlowCommand<R>) : Flow<R> {
+inline fun <T, reified R> CommandScope<T>.syncInvokeFlow(commandCreator: ()-> IFlowCommand<R>) : Flow<R> {
     val syncCommand = commandCreator.invoke()
     val syncInvokationContext =
-        InvokationContext<T, R>(
+        ParentCommandScope<T, R>(
             syncCommand,
             this
         )
-    val executionContext = syncCommand.executableContext.chain(syncInvokationContext)
+    val executionContext = syncCommand.chainableCommandScope.chain(syncInvokationContext)
     return syncCommand.execute(executionContext).mapUpdates<R,R>()
 }
 
@@ -36,19 +36,19 @@ inline fun <R, reified U> Flow<CommandState<R>>.mapUpdates(): Flow<U>{
     }.map { it.value }
 }
 
-inline fun <T,R, reified U> ExecutionContext<T>.syncInvokeAsFlow(commandCreator: ()-> Command<R>) : Flow<U>  {
+inline fun <T,R, reified U> CommandScope<T>.syncInvokeAsFlow(commandCreator: ()-> Command<R>) : Flow<U>  {
     val syncCommand = commandCreator.invoke()
     val syncInvokationContext =
-        InvokationContext<T, R>(
+        ParentCommandScope<T, R>(
             syncCommand,
             this
         )
-    val executionContext = syncCommand.executableContext.chain(syncInvokationContext)
+    val executionContext = syncCommand.chainableCommandScope.chain(syncInvokationContext)
     return syncCommand.syncExecute(executionContext).mapUpdates()
 }
-inline fun <R> Any.flowCommand(name:String? = null, nomenclature: CommandNomenclature = CommandNomenclature.Undefined, crossinline op: ExecutionContext<R>.()->Flow<R>): FlowCommand<R> {
+inline fun <R> Any.flowCommand(name:String? = null, nomenclature: CommandNomenclature = CommandNomenclature.Undefined, crossinline op: CommandScope<R>.()->Flow<R>): FlowCommand<R> {
     val executionContext =
-        ExecutableContext<R>(this)
+        ChainableCommandScope<R>(this)
     return FlowCommand<R>(
         this,
         nomenclature,

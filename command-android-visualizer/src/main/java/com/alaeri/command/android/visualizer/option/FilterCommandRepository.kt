@@ -2,8 +2,8 @@ package com.alaeri.command.android.visualizer.option
 
 import com.alaeri.command.CommandNomenclature
 import com.alaeri.command.android.visualizer.CommandRepository
-import com.alaeri.command.history.id.IndexAndUUID
-import com.alaeri.command.history.serialization.SerializableCommandStateAndContext
+import com.alaeri.command.serialization.id.IndexAndUUID
+import com.alaeri.command.serialization.entity.SerializableCommandStateAndScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -19,9 +19,9 @@ class FilterCommandRepository(private val commandRepository: CommandRepository){
         mutableOptions.value = options
     }
 
-    val list: Flow<List<SerializableCommandStateAndContext<IndexAndUUID>>> = mutableOptions.mapLatest{ options ->
+    val list: Flow<List<SerializableCommandStateAndScope<IndexAndUUID>>> = mutableOptions.mapLatest{ options ->
         commandRepository.list.filter { serialized ->
-            when(serialized.context.commandNomenclature){
+            when(serialized.scope.commandNomenclature){
                 is CommandNomenclature.Injection -> options.showInjection
                 is CommandNomenclature.Android.Lifecycle -> options.showLifecycle
                 else -> true

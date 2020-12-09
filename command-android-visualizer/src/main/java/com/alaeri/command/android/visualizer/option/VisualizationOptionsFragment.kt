@@ -5,9 +5,8 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.Observer
 import com.alaeri.command.CommandState
-import com.alaeri.command.DefaultIRootCommandLogger
+import com.alaeri.command.ICommandLogger
 import com.alaeri.command.android.LifecycleCommandContext
 import com.alaeri.command.android.LifecycleCommandOwner
 import com.alaeri.command.android.invokeCommandWithLifecycle
@@ -22,14 +21,14 @@ import org.koin.core.KoinComponent
 @ExperimentalCoroutinesApi
 class VisualizationOptionsFragment: Fragment(), LifecycleCommandOwner, KoinComponent {
 
-    private val mutableCommandLoggerStateFlow= MutableStateFlow<DefaultIRootCommandLogger?>(null)
-    override val commandRoot = buildLifecycleCommandRoot(mutableCommandLoggerStateFlow)
+    private val mutableCommandLoggerStateFlow= MutableStateFlow<ICommandLogger?>(null)
+    override val commandScope = buildLifecycleCommandRoot(mutableCommandLoggerStateFlow)
     override val lifecycleCommandContext: LifecycleCommandContext = LifecycleCommandContext(this)
     private lateinit var listFragmentBinding: FiltersFragmentBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val commandRootContext = getKoin().get<DefaultIRootCommandLogger>()
+        val commandRootContext = getKoin().get<ICommandLogger>()
         mutableCommandLoggerStateFlow.value = commandRootContext
     }
 

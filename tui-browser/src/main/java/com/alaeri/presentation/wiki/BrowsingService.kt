@@ -1,7 +1,7 @@
 package com.alaeri.presentation.wiki
 
 import com.alaeri.command.CommandState
-import com.alaeri.command.DefaultIRootCommandLogger
+import com.alaeri.command.ICommandLogger
 import com.alaeri.command.core.flow.flowCommand
 import com.alaeri.command.core.flow.shared
 import com.alaeri.command.core.flow.syncInvokeFlow
@@ -19,7 +19,7 @@ import kotlinx.coroutines.flow.*
 class BrowsingService(
     wikiRepository: WikiRepository,
     sharedCoroutineScope: CoroutineScope,
-    iRootCommandLogger: DefaultIRootCommandLogger) {
+    iCommandLogger: ICommandLogger) {
 
     private val innerScope = sharedCoroutineScope.plus(SupervisorJob())
 
@@ -29,12 +29,12 @@ class BrowsingService(
     private val selectionRepository = SelectionRepository()
 
     private val loadWikiOnPathUseCase = LoadWikiOnPathUseCase(pathRepository, innerScope, wikiRepository)
-    private val selectablesUseCase =  SelectablesUseCase(loadWikiOnPathUseCase, innerScope, iRootCommandLogger)
+    private val selectablesUseCase =  SelectablesUseCase(loadWikiOnPathUseCase, innerScope, iCommandLogger)
     private val resetSelectionOnNewNavigationUseCase = ResetSelectionOnNewNavigationUseCase(
         innerScope,
         selectablesUseCase,
         selectionRepository,
-        iRootCommandLogger)
+        iCommandLogger)
     private val selectUseCase = SelectUseCase(selectablesUseCase, selectionRepository)
     private val navigateToQueryUseCase = NavigateToQueryUseCase(queryRepository, pathRepository)
     private val navigateToSelectionUseCase = NavigateToSelectionUseCase(selectionRepository, pathRepository)
@@ -64,7 +64,6 @@ class BrowsingService(
     }
     val presentationStateCommand =
         flowCommand<PresentationState>(name = "presentation state flow") {
-            println("browsing service")
             syncInvokeFlow { presentationUsecase.presentationStateInCommand }.shareIn(
                 innerScope,
                 SharingStarted.Lazily,

@@ -3,9 +3,13 @@ package com.alaeri
 import com.alaeri.command.*
 import com.alaeri.command.core.invoke
 import com.alaeri.command.core.invokeCommand
+import com.alaeri.command.core.root.ICommandScopeOwner
+import com.alaeri.command.core.root.buildRootCommandScope
+import com.alaeri.command.core.root.invokeRootCommand
 import com.alaeri.command.core.suspendInvoke
-import com.alaeri.command.history.id.IdBank
-import com.alaeri.command.history.id.IndexAndUUID
+import com.alaeri.command.serialization.GenericSerializer
+import com.alaeri.command.serialization.id.IdBank
+import com.alaeri.command.serialization.id.IndexAndUUID
 import com.alaeri.command.server.CommandServer
 import com.alaeri.data.WikiRepositoryImpl
 import com.alaeri.domain.ILogger
@@ -22,14 +26,14 @@ import kotlin.system.exitProcess
 
 
 @ExperimentalCoroutinesApi
-object TuiBrowser: ICommandRootOwner {
+object TuiBrowser: ICommandScopeOwner {
 
     private val commandRepository = CommandRepository()
     private val idBank = IdBank<IndexAndUUID>(null){ previous ->
         IndexAndUUID(index = (previous?.index ?: 0) + 1, uuid = UUID.randomUUID().toString())
     }
 
-    private val commandLogger : DefaultIRootCommandLogger = Serializer<IndexAndUUID>(idBank, commandRepository)
+    private val commandLogger : ICommandLogger = GenericSerializer<IndexAndUUID>(idBank, commandRepository)
     val commandServer = CommandServer(commandRepository)
 
     private val logger: ILogger = object : ILogger {
@@ -38,7 +42,7 @@ object TuiBrowser: ICommandRootOwner {
         }
     }
 
-    override val commandRoot = buildCommandRoot(this, "tui-browser", CommandNomenclature.Root, commandLogger)
+    override val commandScope = buildRootCommandScope(this, "tui-browser", CommandNomenclature.Root, commandLogger)
 
 
     @JvmStatic

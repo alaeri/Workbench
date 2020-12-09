@@ -1,14 +1,14 @@
 package com.alaeri.cats.app.ui.login
 
 import androidx.lifecycle.*
-import com.alaeri.command.DefaultIRootCommandLogger
 import com.alaeri.cats.app.user.UserRepository
-import com.alaeri.command.ICommandRootOwner
 import com.alaeri.command.CommandNomenclature
-import com.alaeri.command.buildCommandRoot
+import com.alaeri.command.ICommandLogger
 import com.alaeri.command.core.flow.syncInvokeFlow
+import com.alaeri.command.core.root.ICommandScopeOwner
+import com.alaeri.command.core.root.buildRootCommandScope
+import com.alaeri.command.core.root.invokeRootCommand
 import com.alaeri.command.core.suspendInvokeAndFold
-import com.alaeri.command.invokeRootCommand
 import kotlinx.coroutines.launch
 
 /**
@@ -16,10 +16,10 @@ import kotlinx.coroutines.launch
  *
  */
 class LoginViewModel(private val userRepository: UserRepository,
-                     private val defaultSerializer: DefaultIRootCommandLogger
-) : ICommandRootOwner, ViewModel() {
+                     private val defaultSerializer: ICommandLogger
+) : ICommandScopeOwner, ViewModel() {
 
-    override val commandRoot = buildCommandRoot(this, null, CommandNomenclature.Root, defaultSerializer)
+    override val commandScope = buildRootCommandScope(this, null, CommandNomenclature.Root, defaultSerializer)
 
     private val mediatorLiveData = MediatorLiveData<LoginState>().apply {
         invokeRootCommand("init login live data", CommandNomenclature.Application.Cats.InitLoginMediator){

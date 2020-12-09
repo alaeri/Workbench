@@ -3,17 +3,17 @@ package com.alaeri.command.graph
 import com.alaeri.command.graph.component.Element
 import com.alaeri.command.graph.component.ElementAndParents
 import com.alaeri.command.graph.component.ElementConnection
-import com.alaeri.command.history.IdOwner
-import com.alaeri.command.history.id.IndexAndUUID
-import com.alaeri.command.history.serialization.SerializableCommandStateAndContext
+import com.alaeri.command.serialization.IdOwner
+import com.alaeri.command.serialization.id.IndexAndUUID
+import com.alaeri.command.serialization.entity.SerializableCommandStateAndScope
 import toElement
 import toStr
 
 object ComponentsGraphMapper : ISerializedCommandToGraphLevelsMapper{
-    override fun buildLevels(filteredList: List<SerializableCommandStateAndContext<IndexAndUUID>>): Levels {
+    override fun buildGraph(filteredList: List<SerializableCommandStateAndScope<IndexAndUUID>>): GraphRepresentation {
         val connections = filteredList.flatMap {
-            val childContextElement = it.context.executionContext.toElement()
-            val parentContextElement = it.context.invokationContext.toElement()
+            val childContextElement = it.scope.commandExecutionScope.toElement()
+            val parentContextElement = it.scope.commandInvokationScope.toElement()
             val contextConnection = ElementConnection(
                 child = childContextElement,
                 parent = parentContextElement
@@ -73,9 +73,9 @@ object ComponentsGraphMapper : ISerializedCommandToGraphLevelsMapper{
 //                "next: ${nextElements.size} remaining: ${remainingElements.size} depth: ${levels.size}"
 //            )
         }
-        val levelsToJson = Levels(levels.map { level ->
+        val levelsToJson = GraphRepresentation(levels.map { level ->
             level.map { elementAndParents ->
-                IdAndParents(
+                GraphNode(
                     elementAndParents.element.toStr(),
                     elementAndParents.parents.map { it.toStr() })
             }

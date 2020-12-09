@@ -2,9 +2,9 @@ package com.alaeri.command.graph
 
 import com.alaeri.command.CommandNomenclature
 import com.alaeri.command.graph.group.GroupedCommandsGraphMapper
-import com.alaeri.command.history.id.IndexAndUUID
-import com.alaeri.command.history.serialization.SerializableCommandState
-import com.alaeri.command.history.serialization.SerializableCommandStateAndContext
+import com.alaeri.command.serialization.id.IndexAndUUID
+import com.alaeri.command.serialization.entity.SerializableCommandState
+import com.alaeri.command.serialization.entity.SerializableCommandStateAndScope
 import com.squareup.moshi.*
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import junit.framework.Assert.assertEquals
@@ -54,7 +54,7 @@ class CommandsGraphMapperIntegrationTest {
     private val file = File(ClassLoader.getSystemResource("commands.json").file)
 
     private val serializableCommandStateAndContextType: ParameterizedType = Types.newParameterizedType(
-        SerializableCommandStateAndContext::class.java,
+        SerializableCommandStateAndScope::class.java,
         IndexAndUUID::class.java
     )
     private val type : Type = Types.newParameterizedType(
@@ -63,9 +63,10 @@ class CommandsGraphMapperIntegrationTest {
     )
 
 
-    private val jsonAdapter : JsonAdapter<List<SerializableCommandStateAndContext<IndexAndUUID>>> = moshi.adapter(
+    private val jsonAdapter : JsonAdapter<List<SerializableCommandStateAndScope<IndexAndUUID>>> = moshi.adapter(
         type
     );
+
 
     private val commands = jsonAdapter.fromJson(file.readText())!!
 
@@ -75,9 +76,10 @@ class CommandsGraphMapperIntegrationTest {
         assertEquals(597, commands.size)
     }
 
+    //TODO create a new JSON file with the new serialization names
     @Test
     fun testGraphMappingWorks(){
-        val data = GroupedCommandsGraphMapper.buildLevels(commands)
+        val data = GroupedCommandsGraphMapper.buildGraph(commands)
         val levels = data.levels
         assertEquals(8, data.levels.size)
         levels.forEachIndexed { index, level ->

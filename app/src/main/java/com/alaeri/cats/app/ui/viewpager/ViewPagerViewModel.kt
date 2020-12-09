@@ -2,7 +2,7 @@ package com.alaeri.cats.app.ui.viewpager
 
 import android.util.Log
 import androidx.lifecycle.*
-import com.alaeri.command.history.id.IndexAndUUID
+import com.alaeri.command.serialization.id.IndexAndUUID
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.map

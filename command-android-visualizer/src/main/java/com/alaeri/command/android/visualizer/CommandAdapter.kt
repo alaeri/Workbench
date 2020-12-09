@@ -11,8 +11,8 @@ import com.alaeri.command.android.visualizer.CommandVH.RandomColors.randomColors
 import com.alaeri.command.android.visualizer.databinding.CommandEmptyBinding
 import com.alaeri.command.android.visualizer.databinding.CommandItemBinding
 import com.alaeri.command.android.visualizer.focus.FocusCommandItemVM
-import com.alaeri.command.history.id.IndexAndUUID
-import com.alaeri.command.history.serialization.SerializableCommandState
+import com.alaeri.command.serialization.id.IndexAndUUID
+import com.alaeri.command.serialization.entity.SerializableCommandState
 import com.alaeri.recyclerview.extras.viewholder.Bindable
 import kotlin.random.Random
 
@@ -30,24 +30,24 @@ class CommandVH(private val commandItemBinding: CommandItemBinding): FocusVH<Foc
 
 
     override fun setItem(itemContainer: FocusCommandItemVM.Content) {
-        val item = itemContainer.commandStateAndContext
-        Log.d("CATS","show item: ${item.context.commandId.index}")
+        val item = itemContainer.commandStateAndScope
+        Log.d("CATS","show item: ${item.scope.commandId.index}")
         commandItemBinding.apply {
 
             //commandItemBinding.root.setPadding(item.context.depth * 2, 2, 2,2)
-            receiverTextView.setBackgroundColor(item.context.executionContext.id.color())
+            receiverTextView.setBackgroundColor(item.scope.commandExecutionScope.id.color())
             receiverTextView.text =
-                "${item.context.executionContext}"
-            invokerTextView.setBackgroundColor(item.context.invokationContext.id.color())
-            invokerTextView.text = item.context.invokationContext.toString()
-            parentOperationIdTextView.setBackgroundColor(item.context.invokationCommandId.color())
-            parentOperationIdTextView.text = "${item.context.invokationCommandId}"
-            operationIdTextView.setBackgroundColor(item.context.commandId.color())
-            operationIdTextView.text = "${item.context.commandId} ${
-                if (item.context.commandNomenclature != CommandNomenclature.Undefined) {
-                    item.context.commandNomenclature::class.simpleName
+                "${item.scope.commandExecutionScope}"
+            invokerTextView.setBackgroundColor(item.scope.commandInvokationScope.id.color())
+            invokerTextView.text = item.scope.commandInvokationScope.toString()
+            parentOperationIdTextView.setBackgroundColor(item.scope.invokationCommandId.color())
+            parentOperationIdTextView.text = "${item.scope.invokationCommandId}"
+            operationIdTextView.setBackgroundColor(item.scope.commandId.color())
+            operationIdTextView.text = "${item.scope.commandId} ${
+                if (item.scope.commandNomenclature != CommandNomenclature.Undefined) {
+                    item.scope.commandNomenclature::class.simpleName
                 } else ""
-            } ${item.context.commandName?:""}"
+            } ${item.scope.commandName?:""}"
             val stateIndexAndUUID = when(val state = item.state){
                 is SerializableCommandState.Value<IndexAndUUID> -> state.valueId
                 is SerializableCommandState.Done<IndexAndUUID> -> state.valueId
@@ -66,16 +66,16 @@ class CommandVH(private val commandItemBinding: CommandItemBinding): FocusVH<Foc
                 stateIndexAndUUID?.let { itemContainer.onItemWithIdClicked(stateIndexAndUUID) }
             }
             receiverTextView.setOnClickListener {
-                itemContainer.onItemWithIdClicked(item.context.executionContext.id)
+                itemContainer.onItemWithIdClicked(item.scope.commandExecutionScope.id)
             }
             invokerTextView.setOnClickListener {
-                itemContainer.onItemWithIdClicked(item.context.invokationContext.id)
+                itemContainer.onItemWithIdClicked(item.scope.commandInvokationScope.id)
             }
             parentOperationIdTextView.setOnClickListener {
-                itemContainer.onItemWithIdClicked(item.context.invokationCommandId)
+                itemContainer.onItemWithIdClicked(item.scope.invokationCommandId)
             }
             operationIdTextView.setOnClickListener {
-                itemContainer.onItemWithIdClicked(item.context.commandId)
+                itemContainer.onItemWithIdClicked(item.scope.commandId)
             }
             operationIdTextView
         }

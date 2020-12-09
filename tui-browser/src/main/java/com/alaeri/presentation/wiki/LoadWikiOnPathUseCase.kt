@@ -14,13 +14,11 @@ class LoadWikiOnPathUseCase(private val pathRepository: PathRepository,
 ){
 
     val loadingStatusInCommand = flowCommand<LoadingStatus>(name = "loading status flow") {
-        println("test: loadingStatus")
         val pathFlow: Flow<String?> = syncInvokeFlow { pathRepository.pathFlowCommand }.distinctUntilChanged()
         pathFlow.flatMapLatest { path ->
             if(path.isNullOrBlank()){
                 flowOf(LoadingStatus.Loading("----"))
             }else{
-                println("test: $path")
                syncInvokeFlow { wikiRepository.loadWikiArticleCommand(path) }
             }
         }.shareIn(sharedCoroutineScope, replay = 1, started = SharingStarted.Lazily)

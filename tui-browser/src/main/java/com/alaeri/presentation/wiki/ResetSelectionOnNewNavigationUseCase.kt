@@ -3,25 +3,25 @@ package com.alaeri.presentation.wiki
 import com.alaeri.command.*
 import com.alaeri.command.core.flow.syncInvokeFlow
 import com.alaeri.command.core.invoke
-import com.alaeri.domain.wiki.WikiText
+import com.alaeri.command.core.root.DefaultRootCommandScope
+import com.alaeri.command.core.root.ICommandScopeOwner
+import com.alaeri.command.core.root.buildRootCommandScope
+import com.alaeri.command.core.root.invokeRootCommand
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
 
 class ResetSelectionOnNewNavigationUseCase(private val sharedCoroutineScope: CoroutineScope,
                                            private val selectablesUseCase: SelectablesUseCase,
                                            private val selectionRepository: SelectionRepository,
-                                           private val iRootCommandLogger: DefaultIRootCommandLogger
-): ICommandRootOwner{
+                                           private val iCommandLogger: ICommandLogger
+): ICommandScopeOwner{
 
-    override val commandRoot: AnyCommandRoot = buildCommandRoot(this,
+    override val commandScope: DefaultRootCommandScope = buildRootCommandScope(this,
         "resetSelection",
         CommandNomenclature.Application.Start,
-        iRootCommandLogger)
+        iCommandLogger)
 
     init {
         invokeRootCommand<Unit>("reset selection on new path", CommandNomenclature.Application.Start){

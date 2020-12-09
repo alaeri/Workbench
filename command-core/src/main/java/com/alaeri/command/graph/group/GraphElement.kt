@@ -1,9 +1,9 @@
 package com.alaeri.command.graph.group
 
 import com.alaeri.command.CommandNomenclature
-import com.alaeri.command.history.id.IndexAndUUID
-import com.alaeri.command.history.serialization.SerializableInvokationContext
-import com.alaeri.command.history.serialization.SerializedClass
+import com.alaeri.command.serialization.id.IndexAndUUID
+import com.alaeri.command.serialization.entity.SerializableCommandInvokationScope
+import com.alaeri.command.serialization.entity.SerializedClass
 
 sealed class GraphElement(open val key: IndexAndUUID){
     data class Receiver(override val key: IndexAndUUID, val serializedClass: SerializedClass): GraphElement(key)
@@ -20,7 +20,7 @@ sealed class GraphElement(open val key: IndexAndUUID){
 data class CommandGroupIdentifier(
     val commandNomenclature: CommandNomenclature,
     val name: String?,
-    val receiverContext: SerializableInvokationContext<IndexAndUUID>
+    val receiverContext: SerializableCommandInvokationScope<IndexAndUUID>
 )
 
 data class CommandInvokation(

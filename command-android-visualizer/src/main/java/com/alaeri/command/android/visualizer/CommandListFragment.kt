@@ -12,14 +12,14 @@ import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModel
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.alaeri.command.android.visualizer.focus.FocusCommandViewModel
-import com.alaeri.command.AnyCommandRoot
-import com.alaeri.command.DefaultIRootCommandLogger
+import com.alaeri.command.core.root.DefaultRootCommandScope
+import com.alaeri.command.ICommandLogger
 import com.alaeri.command.android.LifecycleCommandOwner
 import com.alaeri.command.android.invokeCommandWithLifecycle
 import com.alaeri.command.android.visualizer.databinding.ListFragmentBinding
 import com.alaeri.command.core.invokeCommand
-import com.alaeri.command.history.id.IndexAndUUID
-import com.alaeri.command.history.serialization.SerializableCommandStateAndContext
+import com.alaeri.command.serialization.id.IndexAndUUID
+import com.alaeri.command.serialization.entity.SerializableCommandStateAndScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.koin.android.scope.lifecycleScope
 import org.koin.core.KoinComponent
@@ -29,8 +29,8 @@ import org.koin.core.parameter.parametersOf
  * Created by Emmanuel Requier on 05/05/2020.
  */
 class CommandListViewModel(private val commandRepository: CommandRepository) : ViewModel(){
-    private val mutableLiveData = MutableLiveData<List<SerializableCommandStateAndContext<IndexAndUUID>>>()
-    val liveData:LiveData<List<SerializableCommandStateAndContext<IndexAndUUID>>>
+    private val mutableLiveData = MutableLiveData<List<SerializableCommandStateAndScope<IndexAndUUID>>>()
+    val liveData:LiveData<List<SerializableCommandStateAndScope<IndexAndUUID>>>
         get() = mutableLiveData
 
     init {
@@ -47,9 +47,9 @@ class CommandListFragment : Fragment(), KoinComponent,
     //private val catsFragment : Fragment by lifecycleScope.inject { parametersOf(this) }
     private lateinit var commandListViewModel: FocusCommandViewModel
     private lateinit var adapter: CommandAdapter
-    private val futureLogger =  MutableStateFlow<DefaultIRootCommandLogger?>(null)
+    private val futureLogger =  MutableStateFlow<ICommandLogger?>(null)
 
-    override val commandRoot: AnyCommandRoot = buildLifecycleCommandRoot(futureLogger)
+    override val commandScope: DefaultRootCommandScope = buildLifecycleCommandRoot(futureLogger)
     override val lifecycleCommandContext: com.alaeri.command.android.LifecycleCommandContext =
         com.alaeri.command.android.LifecycleCommandContext(this)
 
@@ -61,7 +61,7 @@ class CommandListFragment : Fragment(), KoinComponent,
         return invokeCommandWithLifecycle<ListFragmentBinding> {
             val executionContext = this
             commandListViewModel  = executionContext.invokeCommand<ListFragmentBinding, FocusCommandViewModel>{ lifecycleScope.get<FocusCommandViewModel>() }
-            futureLogger.value = executionContext.invokeCommand<ListFragmentBinding, DefaultIRootCommandLogger> { lifecycleScope.get<DefaultIRootCommandLogger>() }
+            futureLogger.value = executionContext.invokeCommand<ListFragmentBinding, ICommandLogger> { lifecycleScope.get<ICommandLogger>() }
             executionContext.invokeCommand<ListFragmentBinding, Unit> {
                 val fragment : Fragment by lifecycleScope.inject { parametersOf(this@CommandListFragment) }
                 val innerExecutionContext = this

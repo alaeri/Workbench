@@ -2,39 +2,39 @@ package com.alaeri.command.graph.command
 
 import com.alaeri.command.CommandNomenclature
 import com.alaeri.command.graph.ISerializedCommandToGraphLevelsMapper
-import com.alaeri.command.graph.IdAndParents
-import com.alaeri.command.graph.Levels
+import com.alaeri.command.graph.GraphNode
+import com.alaeri.command.graph.GraphRepresentation
 import com.alaeri.command.graph.serializedUnit
-import com.alaeri.command.history.IdOwner
-import com.alaeri.command.history.id.IndexAndUUID
-import com.alaeri.command.history.serialization.SerializableCommandStateAndContext
+import com.alaeri.command.serialization.IdOwner
+import com.alaeri.command.serialization.id.IndexAndUUID
+import com.alaeri.command.serialization.entity.SerializableCommandStateAndScope
 
 object CommandsGraphMapper: ISerializedCommandToGraphLevelsMapper {
-    override fun buildLevels(list: List<SerializableCommandStateAndContext<IndexAndUUID>>): Levels {
+    override fun buildGraph(list: List<SerializableCommandStateAndScope<IndexAndUUID>>): GraphRepresentation {
         val entries: List<Pair<GraphElement, List<IndexAndUUID>>> =
             list.flatMap { serialCommStateCont ->
-                val isRoot = serialCommStateCont.context.commandNomenclature == CommandNomenclature.Root
+                val isRoot = serialCommStateCont.scope.commandNomenclature == CommandNomenclature.Root
                 val commandGraphElement = GraphElement.Command(
-                    serialCommStateCont.context.commandId,
-                    serialCommStateCont.context.commandNomenclature,
-                    serialCommStateCont.context.commandName
+                    serialCommStateCont.scope.commandId,
+                    serialCommStateCont.scope.commandNomenclature,
+                    serialCommStateCont.scope.commandName
                 )
                 val receiverGraphElement = GraphElement.Receiver(
-                    serialCommStateCont.context.executionContext.id,
-                    serialCommStateCont.context.executionContext.serializedClass
+                    serialCommStateCont.scope.commandExecutionScope.id,
+                    serialCommStateCont.scope.commandExecutionScope.serializedClass
                 )
                 val invokerKey = if(!isRoot) {
-                    serialCommStateCont.context.invokationContext.id
+                    serialCommStateCont.scope.commandInvokationScope.id
                 }else{
                     null
                 }
                 val parentCommandKey = if(!isRoot){
-                    serialCommStateCont.context.invokationCommandId
+                    serialCommStateCont.scope.invokationCommandId
                 }else{
                     null
                 }
-                val receiverKey = serialCommStateCont.context.executionContext.id
-                val commandKey = serialCommStateCont.context.commandId
+                val receiverKey = serialCommStateCont.scope.commandExecutionScope.id
+                val commandKey = serialCommStateCont.scope.commandId
 
                 val idOwnerState = serialCommStateCont.state as? IdOwner<IndexAndUUID>
                 val stateGraphElement = idOwnerState?.let {
@@ -94,12 +94,12 @@ object CommandsGraphMapper: ISerializedCommandToGraphLevelsMapper {
             }
         }
         remainingItemsMap.entries.take(3).forEach {
-            println(it.key)
-            println(it.value)
+//            println(it.key)
+//            println(it.value)
         }
-        return Levels(levels.map { level ->
+        return GraphRepresentation(levels.map { level ->
             level.map {
-                IdAndParents(
+                GraphNode(
                     it.node.toStr(),
                     it.parents.map { it.toStr() })
             }

@@ -12,10 +12,12 @@ A sample app to experiment with. It displays cats from the CatApi. It also showc
 
 ## Command Library
 
-Structured Logger based on the command design pattern, implemented with inline functions and flows
+Structured Logger based on the command design pattern, implemented with inline functions and flows.
+It allows the user to view the program execution in real-time.
 
 [View the readme of the command-core module](/command-core/README.md)
-
+![Gif](/doc/command-demo-20201209.gif)
+![Small demonstration (french voiceover - old version)](command-demo-20201203.mov)
 ![Grouped commands visualization](/doc/grouped-commands-20201205.png)
 ![Commands visualisations](/doc/commands-graph-20201205-8.png)
 ## RecyclerView Extras

@@ -1,20 +1,20 @@
 package com.alaeri
 
-import com.alaeri.command.AbstractCommandLogger
-import com.alaeri.command.history.ICommandRepository
-import com.alaeri.command.history.id.IndexAndUUID
-import com.alaeri.command.history.serialization.SerializableCommandStateAndContext
+import com.alaeri.command.GenericLogger
+import com.alaeri.command.repository.ICommandRepository
+import com.alaeri.command.serialization.id.IndexAndUUID
+import com.alaeri.command.serialization.entity.SerializableCommandStateAndScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 
 class CommandRepository: ICommandRepository<IndexAndUUID>,
-    AbstractCommandLogger<SerializableCommandStateAndContext<IndexAndUUID>> {
+    GenericLogger<SerializableCommandStateAndScope<IndexAndUUID>> {
 
-    val list = mutableListOf<SerializableCommandStateAndContext<IndexAndUUID>>()
-    val sharedFlow = MutableStateFlow<List<SerializableCommandStateAndContext<IndexAndUUID>>>(list.toList())
+    private val list = mutableListOf<SerializableCommandStateAndScope<IndexAndUUID>>()
+    private val sharedFlow = MutableStateFlow<List<SerializableCommandStateAndScope<IndexAndUUID>>>(list.toList())
 
-    override val commands: Flow<List<SerializableCommandStateAndContext<IndexAndUUID>>> = sharedFlow
-    override fun log(value: SerializableCommandStateAndContext<IndexAndUUID>) {
+    override val commands: Flow<List<SerializableCommandStateAndScope<IndexAndUUID>>> = sharedFlow
+    override fun log(value: SerializableCommandStateAndScope<IndexAndUUID>) {
         list.add(value)
         sharedFlow.value = list.toList()
     }

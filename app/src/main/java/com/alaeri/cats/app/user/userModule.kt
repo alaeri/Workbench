@@ -1,7 +1,7 @@
 package com.alaeri.cats.app.user
 
 import android.util.Log
-import com.alaeri.command.DefaultIRootCommandLogger
+import com.alaeri.command.ICommandLogger
 import com.alaeri.cats.app.db.AppDatabase
 import com.alaeri.cats.app.ui.login.LoginViewModel
 import com.alaeri.cats.app.user.net.UserApi
@@ -30,7 +30,7 @@ class UserModule{
         commandViewModel<LoginViewModel> {
             val userRepository : UserRepository = get()
             Log.d("COMMAND3", "$userRepository")
-            val invokationContext : DefaultIRootCommandLogger = get()
+            val invokationContext : ICommandLogger = get()
             Log.d("COMMAND3", "$invokationContext")
             LoginViewModel(userRepository, get())
         }

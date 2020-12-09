@@ -1,11 +1,10 @@
 package com.alaeri.command.android.visualizer.focus
 
 import android.util.Log
-import com.alaeri.command.android.visualizer.CommandRepository
 import com.alaeri.command.android.visualizer.option.FilterCommandRepository
-import com.alaeri.command.history.id.IndexAndUUID
-import com.alaeri.command.history.serialization.SerializableCommandState
-import com.alaeri.command.history.serialization.SerializableCommandStateAndContext
+import com.alaeri.command.serialization.id.IndexAndUUID
+import com.alaeri.command.serialization.entity.SerializableCommandState
+import com.alaeri.command.serialization.entity.SerializableCommandStateAndScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -13,7 +12,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.conflate
 
 sealed class FocusedCommandOrBreak{
-    data class Focused(val serializableCommandStateAndContext: SerializableCommandStateAndContext<IndexAndUUID>): FocusedCommandOrBreak()
+    data class Focused(val serializableCommandStateAndScope: SerializableCommandStateAndScope<IndexAndUUID>): FocusedCommandOrBreak()
     data class Break(val index: Int, val count: Int): FocusedCommandOrBreak()
 }
 data class FocusedAndZoomCommandHistory(
@@ -77,7 +76,7 @@ class FocusCommandRepository(private val repository: FilterCommandRepository){
         val startOrNull = timeRange?.let { it.first.coerceAtMost(it.second) + initializationTime }?.let { it.coerceAtLeast(timeBounds.start) }
         val endOrNull = timeRange?.let { it.first.coerceAtLeast(it.second) + initializationTime }?.let { it.coerceAtLeast(timeBounds.start) }//?.let{ it.coerceAtMost(timeBounds.end) }
 
-        val history: Acc = list.fold<SerializableCommandStateAndContext<IndexAndUUID>, Acc>(initialData){
+        val history: Acc = list.fold<SerializableCommandStateAndScope<IndexAndUUID>, Acc>(initialData){
                 acc, comm ->
                     val time = comm.time
                     val inFocus = focus?.let { comm.isFocused(focus) } ?: true
@@ -156,11 +155,11 @@ class FocusCommandRepository(private val repository: FilterCommandRepository){
 
 }
 
-private fun <Key> SerializableCommandStateAndContext<Key>.isFocused(focus: Key): Boolean {
+private fun <Key> SerializableCommandStateAndScope<Key>.isFocused(focus: Key): Boolean {
     val state = this.state
-    return this.context.executionContext.id == focus ||
+    return this.scope.commandExecutionScope.id == focus ||
     (state is SerializableCommandState.Value && state.valueId == focus) ||
     (state is SerializableCommandState.Done && state.valueId == focus) ||
-    ( this.context.invokationContext.id == focus ) ||
-    ( this.context.invokationCommandId == focus ?: false )
+    ( this.scope.commandInvokationScope.id == focus ) ||
+    ( this.scope.invokationCommandId == focus ?: false )
 }

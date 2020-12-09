@@ -1,8 +1,8 @@
 package com.alaeri.command.graph.command
 
 import com.alaeri.command.CommandNomenclature
-import com.alaeri.command.history.id.IndexAndUUID
-import com.alaeri.command.history.serialization.SerializedClass
+import com.alaeri.command.serialization.id.IndexAndUUID
+import com.alaeri.command.serialization.entity.SerializedClass
 
 sealed class GraphElement(open val key: IndexAndUUID){
     data class Receiver(override val key: IndexAndUUID, val serializedClass: SerializedClass): GraphElement(key)
