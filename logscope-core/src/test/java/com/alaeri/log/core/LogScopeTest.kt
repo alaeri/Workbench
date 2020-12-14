@@ -1,5 +1,9 @@
-package com.alaeri.logscope.core
+package com.alaeri.log.core
 
+import com.alaeri.log.core.collector.LogCollector
+import com.alaeri.log.core.collector.LogPrinter
+import com.alaeri.log.core.context.EmptyLogContext
+import com.nhaarman.mockitokotlin2.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
@@ -14,6 +18,7 @@ import org.junit.Test
 class LogScopeTest {
 
     private val mainThreadSurrogate = newSingleThreadContext("UI thread")
+    private val logCollector: LogCollector = mock {  }
 
     @Before
     fun setUp() {
@@ -29,16 +34,19 @@ class LogScopeTest {
     @Test
     fun testSomeUI() : Unit = runBlocking {
         launch(Dispatchers.Main) {  // Will be launched in the mainThreadSurrogate dispatcher
-            val greeting = logScope(LogPrinter() + object : LogMetadata<EmptyLogRepresentation>{}) {
+            val greeting = log(collector = logCollector) {
                 "SALUT"
             }
+            verify(logCollector).emit(argThat { this is EmptyLogContext }, eq(LogState.Starting(listOf())))
+            verify(logCollector).emit(argThat { this is EmptyLogContext }, eq(LogState.Done<String>("SALUT")))
+            verifyNoMoreInteractions(logCollector)
         }
     }
 
     @Test
     fun testHierarchy() : Unit = runBlocking {
         launch(Dispatchers.Main) {
-            logScope(LogPrinter() + EmptyLogMetadata) {
+            log(collector = LogPrinter()) {
                 // Will be launched in the mainThreadSurrogate dispatcher
                 val result = TestParent().piou()
                 assertEquals("pi", result)
@@ -47,25 +55,25 @@ class LogScopeTest {
     }
 
     class TestParent(){
-        suspend fun piou() = logScope {
+        suspend fun piou() = log {
             TestChild().piii()
         }
     }
     class TestChild(){
-        suspend fun piii() = logScope {
+        suspend fun piii() = log {
             "pi"
         }
     }
 
     class BlockingParent(){
         val blockingChild = BlockingChild()
-        fun piou()  = blockingLogScope {
+        fun piou()  = logBlocking {
             blockingChild.pi()
         }
     }
 
     class BlockingChild(){
-        fun pi() = blockingLogScope {
+        fun pi() = logBlocking {
             "pi"
         }
     }
@@ -73,7 +81,7 @@ class LogScopeTest {
     @Test
     fun `check that blocking function works`(){
         val blockingParent = BlockingParent()
-        blockingLogScope(LogPrinter() + EmptyLogMetadata) {
+        logBlocking(collector = LogPrinter()) {
             // Will be launched in the mainThreadSurrogate dispatcher
             val result = blockingParent.piou()
             assertEquals("pi", result)
