@@ -1,5 +1,6 @@
 package com.alaeri.log.core
 import com.alaeri.log.core.collector.LogCollector
+import com.alaeri.log.core.collector.MissingCollectorException
 import com.alaeri.log.core.context.ChildLogContext
 import com.alaeri.log.core.context.EmptyLogContext
 import com.alaeri.log.core.context.LogContext
