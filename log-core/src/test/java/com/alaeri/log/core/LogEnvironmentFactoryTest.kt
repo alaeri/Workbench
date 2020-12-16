@@ -41,10 +41,11 @@ class LogEnvironmentFactoryTest {
         whenever(logEnvironment.collector).doReturn(collector)
         whenever(logEnvironment.context).doReturn(context)
         val temp = logEnvironmentFactory.logBlocking{
+            verify(logEnvironment).prepare()
             verify(logEnvironment).collector
             "HOT"
         }
-        verify(logEnvironment).disposeBlocking()
+        verify(logEnvironment).dispose()
         verify(logEnvironment, times(2)).context
         verify(logEnvironment, times(2)).collector
         verifyNoMoreInteractions(logEnvironment)
@@ -55,9 +56,11 @@ class LogEnvironmentFactoryTest {
         whenever(logEnvironment.collector).doReturn(collector)
         whenever(logEnvironment.context).doReturn(context)
         val temp = logEnvironmentFactory.log{
+            verify(logEnvironment).prepare()
             verify(logEnvironment).collector
             "HOT"
         }
+        verify(logEnvironment).dispose()
         verify(logEnvironment, times(2)).context
         verify(logEnvironment, times(2)).collector
         verify(collector, times(2)).emit(any(), any())

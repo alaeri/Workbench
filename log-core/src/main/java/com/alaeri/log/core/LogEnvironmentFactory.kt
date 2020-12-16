@@ -24,19 +24,25 @@ abstract class LogEnvironmentFactory {
                                        vararg params: Any? = arrayOf(),
                                        crossinline body :suspend ()->T) : T {
         val logEnvironment = suspendingLogEnvironment(logContext, collector)
-        return logEnvironment.logSuspending<T>(*params){
-            body.invoke()
+        logEnvironment.prepare()
+        val result = kotlin.runCatching {
+            logEnvironment.logSuspending<T>(*params){
+                body.invoke()
+            }
         }
+        logEnvironment.dispose()
+        return result.getOrThrow()
     }
     inline fun <reified T> logBlocking(logContext: LogContext = EmptyLogContext(),
                                        collector: LogCollector? = null,
                                        vararg params: Any? = arrayOf(),
                                        body :()->T): T {
         val logEnvironment = blockingLogEnvironment(logContext, collector)
+        logEnvironment.prepare()
         val result = runCatching {
             logEnvironment.logBlocking(params, body)
         }
-        logEnvironment.disposeBlocking()
+        logEnvironment.dispose()
         return result.getOrThrow()
     }
 

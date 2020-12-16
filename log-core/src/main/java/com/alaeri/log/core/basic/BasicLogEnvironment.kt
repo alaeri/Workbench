@@ -9,5 +9,8 @@ import com.alaeri.log.core.context.LogContext
  */
 class BasicLogEnvironment(override val context: LogContext, override val collector: LogCollector): LogEnvironment(){
 
-    override fun disposeBlocking() {}
+    override fun prepare() {}
+
+    override fun dispose() {}
+
 }

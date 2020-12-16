@@ -57,6 +57,7 @@ abstract class LogEnvironment{
         }
     }
 
-    abstract fun disposeBlocking()
+    abstract fun prepare()
+    abstract fun dispose()
 }
 

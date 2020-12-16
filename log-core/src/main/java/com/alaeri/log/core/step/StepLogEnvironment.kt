@@ -11,7 +11,11 @@ class StepLogEnvironment(override val context: LogContext,
                          override val collector: LogCollector,
                          private val threadToJoin: Thread): LogEnvironment() {
 
-    override fun disposeBlocking() {
+    override fun prepare() {
+        threadToJoin.start()
+    }
+
+    override fun dispose() {
         threadToJoin.join()
     }
 }
