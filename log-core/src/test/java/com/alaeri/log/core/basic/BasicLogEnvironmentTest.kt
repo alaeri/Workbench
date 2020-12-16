@@ -3,14 +3,10 @@ package com.alaeri.log.core.basic
 import com.alaeri.log.core.LogState
 import com.alaeri.log.core.collector.LogCollector
 import com.alaeri.log.core.context.LogContext
-import com.alaeri.log.core.serialize.LogDataAndState
 import com.nhaarman.mockitokotlin2.eq
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.verify
 import com.nhaarman.mockitokotlin2.verifyNoMoreInteractions
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.FlowCollector
-import kotlinx.coroutines.newSingleThreadContext
 import kotlinx.coroutines.test.*
 import org.junit.After
 import org.junit.Assert.assertEquals

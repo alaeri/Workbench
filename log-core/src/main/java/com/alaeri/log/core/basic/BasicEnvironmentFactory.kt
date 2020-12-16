@@ -8,6 +8,11 @@ import com.alaeri.log.core.context.LogContext
 
 /**
  * Created by Emmanuel Requier on 16/12/2020.
+ * This is a non relation version of the log environment factory.
+ * @see LogEnvironmentFactory
+ * @See BasicLogEnvironment
+ * This version will not link logContexts together.
+ * It can be used for printing messages, for tests, etc...
  */
 object BasicEnvironmentFactory : LogEnvironmentFactory() {
 

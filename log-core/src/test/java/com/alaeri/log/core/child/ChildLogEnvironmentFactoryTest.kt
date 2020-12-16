@@ -6,7 +6,6 @@ import com.alaeri.log.core.collector.NoopCollector
 import com.alaeri.log.core.context.EmptyLogContext
 import com.alaeri.log.core.context.ListLogContext
 import com.alaeri.log.core.context.LogContext
-import com.alaeri.log.core.logBlocking
 import com.nhaarman.mockitokotlin2.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestCoroutineDispatcher
@@ -148,8 +147,20 @@ class ChildLogEnvironmentFactoryTest {
         val abc = childLogEnvironmentFactory.log(logContext, noopCollector) {
             verify(noopCollector).emit(eq(logContext), eq(LogState.Starting(listOf())))
             val blockingLambda : () -> String = { "ABC" }
-            logBlocking {
+            childLogEnvironmentFactory.logBlocking {
                 blockingLambda()
+            }
+        }
+        assertEquals("ABC", abc)
+    }
+
+    @Test
+    fun testSuspendingThenSuspendingLog() = runBlockingTest{
+        val abc = childLogEnvironmentFactory.log(logContext, noopCollector) {
+            verify(noopCollector).emit(eq(logContext), eq(LogState.Starting(listOf())))
+            val suspendingLambda : suspend () -> String = suspend { "ABC" }
+            childLogEnvironmentFactory.log {
+                suspendingLambda()
             }
         }
         assertEquals("ABC", abc)
