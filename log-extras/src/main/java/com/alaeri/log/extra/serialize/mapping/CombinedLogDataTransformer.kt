@@ -8,11 +8,7 @@ import com.alaeri.log.extra.serialize.representation.FiliationRepresentation
 import com.alaeri.log.extra.serialize.representation.ListRepresentation
 
 class CombinedLogDataTransformer(private val innerTypedMappers: List<LogTypedTransformer<*, *>>):
-    TypedTransformer<LogContext, LogRepresentation<LogContext>> {
-
-    override val supportedType: Class<LogContext> = LogContext::class.java
-
-    val typesMap = innerTypedMappers.groupBy { it.supportedType }
+    TypedTransformer<LogContext, LogRepresentation<LogContext>>(LogContext::class) {
 
     override fun transform(logContext: LogContext) : LogRepresentation<LogContext> {
         return when(logContext){
@@ -26,6 +22,4 @@ class CombinedLogDataTransformer(private val innerTypedMappers: List<LogTypedTra
             }
         }
     }
-
-
 }

@@ -1,5 +1,6 @@
 package com.alaeri.log.core
 
+import com.alaeri.log.core.child.ChildLogEnvironmentFactory
 import com.alaeri.log.core.collector.LogCollector
 import com.alaeri.log.core.collector.LogPrinter
 import com.alaeri.log.core.context.EmptyLogContext
@@ -22,6 +23,7 @@ class IntegrationTest {
 
     @Before
     fun setUp() {
+        LogConfig.logEnvironmentFactory = ChildLogEnvironmentFactory
         Dispatchers.setMain(mainThreadSurrogate)
     }
 
@@ -38,8 +40,10 @@ class IntegrationTest {
             val greeting = log(collector = logCollector,  params = *arrayOf("bump")) {
                 salut
             }
-            verify(logCollector).emit(argThat { this is EmptyLogContext }, eq(LogState.Starting(listOf("bump"))))
-            verify(logCollector).emit(argThat { this is EmptyLogContext }, eq(LogState.Done<String>(salut)))
+            verify(logCollector).emit(any(), eq(LogState.Starting(listOf("bump"))))
+            verify(logCollector).emit(
+                any(),//argThat { this is EmptyLogContext },
+                eq(LogState.Done<String>(salut)))
             verifyNoMoreInteractions(logCollector)
         }
     }
@@ -68,7 +72,7 @@ class IntegrationTest {
 
     class BlockingParent(){
         val blockingChild = BlockingChild()
-        fun piou()  = logBlocking {
+        fun piou() = logBlocking {
             blockingChild.pi()
         }
     }

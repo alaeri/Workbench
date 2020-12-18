@@ -11,7 +11,7 @@ suspend inline fun <reified T> log(logContext: LogContext = EmptyLogContext(),
                                    collector: LogCollector? = null,
                                    vararg params: Any? = arrayOf(),
                                    crossinline body :suspend ()->T) : T  =
-    ChildLogEnvironmentFactory.log(logContext, collector, *params){
+    LogConfig.log(logContext, collector, *params){
         body.invoke()
     }
 
@@ -19,7 +19,7 @@ inline fun <reified T> logBlocking(logContext: LogContext = EmptyLogContext(),
                                    collector: LogCollector? = null,
                                    vararg params: Any? = arrayOf(),
                                    body :()->T): T =
-    ChildLogEnvironmentFactory.logBlocking(logContext, collector, params) {
+    LogConfig.logBlocking(logContext, collector, *params) {
         body.invoke()
     }
 
