@@ -2,12 +2,11 @@ package com.alaeri.log.extra
 
 import com.alaeri.log.core.LogState
 import com.alaeri.log.core.context.EmptyLogContext
-import com.alaeri.log.extra.serialize.LogDataAndState
+import com.alaeri.log.serialize.serialize.LogDataAndState
 import com.nhaarman.mockitokotlin2.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.FlowCollector
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.test.*
 import org.junit.After
 import org.junit.Before

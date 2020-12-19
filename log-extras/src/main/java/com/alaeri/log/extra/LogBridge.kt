@@ -3,7 +3,7 @@ package com.alaeri.log.extra
 import com.alaeri.log.core.LogState
 import com.alaeri.log.core.collector.LogCollector
 import com.alaeri.log.core.context.LogContext
-import com.alaeri.log.extra.serialize.LogDataAndState
+import com.alaeri.log.serialize.serialize.LogDataAndState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow

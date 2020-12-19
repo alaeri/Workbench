@@ -9,7 +9,7 @@ import com.alaeri.log.core.context.LogContext
 /**
  * Created by Emmanuel Requier on 15/12/2020.
  * TODO it might be possible to create a Debug stepper or something approaching it.
- * TODO investigate.
+ * TODO investigate if we can delay some results?
  *
  */
 class StepLogEnvironmentFactory : LogEnvironmentFactory() {

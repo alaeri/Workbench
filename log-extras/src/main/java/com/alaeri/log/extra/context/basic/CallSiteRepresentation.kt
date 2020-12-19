@@ -1,5 +1,5 @@
 package com.alaeri.log.extra.context.basic
 
-import com.alaeri.log.extra.serialize.LogRepresentation
+import com.alaeri.log.serialize.serialize.LogRepresentation
 
 class CallSiteRepresentation: LogRepresentation<CallSiteLogContext>
