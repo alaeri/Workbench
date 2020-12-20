@@ -1,8 +1,7 @@
 package com.alaeri.log.extra
 
-import com.alaeri.log.core.LogState
-import com.alaeri.log.core.context.EmptyLogContext
-import com.alaeri.log.serialize.serialize.LogDataAndState
+import com.alaeri.log.core.Data
+import com.alaeri.log.core.Log
 import com.nhaarman.mockitokotlin2.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.BufferOverflow
@@ -18,7 +17,7 @@ import org.junit.Test
 class LogBridgeTest {
 
     private val mainThreadSurrogate = newSingleThreadContext("UI thread")
-    private val collector: FlowCollector<LogDataAndState> = mock {  }
+    private val collector: FlowCollector<Log> = mock {  }
     private val testCoroutineDispatcher = TestCoroutineDispatcher()
     private val testCoroutineScope = TestCoroutineScope(testCoroutineDispatcher)
 
@@ -40,7 +39,7 @@ class LogBridgeTest {
         val collectionJob = launch {
             logBridge.logs.collect { collector.emit(it) }
         }
-        logBridge.emit(EmptyLogContext(), LogState.Done(Unit))
+        logBridge.emit()
         delay(100)
         verify(collector).emit(any())
         collectionJob.cancel()
@@ -54,7 +53,7 @@ class LogBridgeTest {
         }
         testCoroutineScope.pauseDispatcher()
         (0..99).forEach { _ ->
-            logBridge.emit(EmptyLogContext(), LogState.Done(Unit))
+            logBridge.emit()
         }
         verifyNoMoreInteractions(collector)
         testCoroutineScope.resumeDispatcher()
@@ -67,7 +66,7 @@ class LogBridgeTest {
         val logBridge = LogBridge(testCoroutineScope, 10, 0, BufferOverflow.DROP_OLDEST)
         testCoroutineScope.pauseDispatcher()
         (0..99).forEach { it ->
-            logBridge.emit(EmptyLogContext(), LogState.Done(it))
+            logBridge.emit()
         }
         val collectionJob = launch {
             logBridge.logs.collect { collector.emit(it) }
@@ -76,7 +75,7 @@ class LogBridgeTest {
         testCoroutineScope.resumeDispatcher()
         //We only receive values from 90..99
         verify(collector, times(10)).emit(argThat {
-            val logState = this.logState as LogState.Done<Int>
+            val logState = this.message as Data.Done<Int>
             logState.result >= 90
         })
         verifyNoMoreInteractions(collector)

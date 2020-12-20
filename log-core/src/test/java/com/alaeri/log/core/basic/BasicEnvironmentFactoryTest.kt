@@ -1,8 +1,7 @@
 package com.alaeri.log.core.basic
 
-import com.alaeri.log.core.LogState
 import com.alaeri.log.core.collector.LogCollector
-import com.alaeri.log.core.context.LogContext
+import com.alaeri.log.core.Tag
 import com.nhaarman.mockitokotlin2.*
 import junit.framework.Assert.assertEquals
 import kotlinx.coroutines.test.TestCoroutineDispatcher
@@ -15,7 +14,7 @@ import java.lang.RuntimeException
  * Created by Emmanuel Requier on 16/12/2020.
  */
 class BasicEnvironmentFactoryTest {
-    private val logContext : LogContext = mock{}
+    private val tag : Tag = mock{}
     private val logCollector : LogCollector = mock{}
     private val basicLogEnvironmentFactory = BasicEnvironmentFactory
 
@@ -25,60 +24,58 @@ class BasicEnvironmentFactoryTest {
 
     @Test
     fun testBlockingBuild(){
-        val build = basicLogEnvironmentFactory.blockingLogEnvironment(logContext, logCollector)
+        val build = basicLogEnvironmentFactory.blockingLogEnvironment(tag, logCollector)
         assertEquals(BasicLogEnvironment::class.java, build.javaClass)
         assertEquals(logCollector, build.collector)
-        assertEquals(logContext, build.context)
+        assertEquals(tag, build.tag)
     }
 
     @Test
     fun testSuspendingBuild()= testCoroutineScope.runBlockingTest {
-        val build = basicLogEnvironmentFactory.suspendingLogEnvironment(logContext, logCollector)
+        val build = basicLogEnvironmentFactory.suspendingLogEnvironment(tag, logCollector)
         assertEquals(BasicLogEnvironment::class.java, build.javaClass)
         assertEquals(logCollector, build.collector)
-        assertEquals(logContext, build.context)
+        assertEquals(tag, build.tag)
     }
 
     @Test
     fun testBlockingLog(){
-        basicLogEnvironmentFactory.logBlocking(logContext, logCollector) {
-            verify(logCollector).emit(eq(logContext), eq(LogState.Starting(listOf())))
+        basicLogEnvironmentFactory.logBlocking(tag, logCollector) {
+            verify(logCollector).emit()
         }
-        verify(logCollector).emit(eq(logContext), eq(LogState.Done(Unit)))
+        verify(logCollector).emit()
     }
 
     @Test
     fun testBlockingException(){
         kotlin.runCatching {
-            basicLogEnvironmentFactory.logBlocking(logContext, logCollector) {
-                verify(logCollector).emit(eq(logContext), eq(LogState.Starting(listOf())))
+            basicLogEnvironmentFactory.logBlocking(tag, logCollector) {
+                verify(logCollector).emit()
                 throw RuntimeException("Piou")
                 @Suppress("UNREACHABLE_CODE")
                 Unit
             }
         }
-        verify(logCollector).emit(eq(logContext), argThat {
-            this is LogState.Failed && this.exception?.message == "Piou"
-        })
+        verify(logCollector).emit()
     }
 
     @Test
     fun testSuspendingLog()= testCoroutineScope.runBlockingTest {
-        val log = basicLogEnvironmentFactory.log(logContext, logCollector, "params") {
-            verify(logCollector).emit(eq(logContext), eq(LogState.Starting(listOf("params"))))
+        val log = basicLogEnvironmentFactory.log(tag, logCollector, "params") {
+            verify(logCollector).emit()
             "PIOU"
         }
-        verify(logCollector).emit(eq(logContext), eq(LogState.Done("PIOU")))
+        verify(logCollector).emit()
         assertEquals("PIOU", log)
     }
 
     @Test
     fun testSuspendingLog2()= testCoroutineScope.runBlockingTest {
-        val log = basicLogEnvironmentFactory.log(logContext, logCollector) {
-            verify(logCollector).emit(eq(logContext), eq(LogState.Starting(listOf())))
+        val log = basicLogEnvironmentFactory.log(tag, logCollector) {
+            verify(logCollector).emit()
             "ABC"
         }
-        verify(logCollector).emit(eq(logContext), eq(LogState.Done("ABC")))
+        verify(logCollector).emit()
         assertEquals("ABC", log)
     }
 

@@ -1,9 +1,7 @@
 package com.alaeri.log.extra
 
-import com.alaeri.log.core.LogState
 import com.alaeri.log.core.collector.LogCollector
-import com.alaeri.log.core.context.LogContext
-import com.alaeri.log.serialize.serialize.LogDataAndState
+import com.alaeri.log.core.Log
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -15,22 +13,23 @@ import kotlinx.coroutines.launch
  * val logs: SharedFlow<LogAndState>
  * which will emit all logs received by this instance.
  *
- * TODO: define what should happen on BufferOverflow
  * TODO: define what should happen on emissionScope cancellation
+ * TODO: investigate if we need to make this internal and only expose the serialized version?
+ * /!\ logContext and logState are not serialized  at this stage !
  *
- * /!\ logContext and logState at this stage are not serialized!
- *
- * TBD: make this internal and only expose the serialized version?
  */
-class LogBridge(private val emissionScope: CoroutineScope, replay: Int = 0, extraBuffer: Int = 0, bufferOverflow: BufferOverflow = BufferOverflow.SUSPEND):
+class LogBridge(private val emissionScope: CoroutineScope,
+                replay: Int = 0,
+                extraBuffer: Int = 0,
+                bufferOverflow: BufferOverflow = BufferOverflow.SUSPEND):
     LogCollector {
 
-    private val mLogs = MutableSharedFlow<LogDataAndState>(replay, extraBuffer, bufferOverflow)
-    val logs: SharedFlow<LogDataAndState> = mLogs
+    private val mLogs = MutableSharedFlow<Log>(replay, extraBuffer, bufferOverflow)
+    val logs: SharedFlow<Log> = mLogs
 
-    override fun emit(logContext: LogContext, logState: LogState) {
+    override fun emit(log: Log) {
         emissionScope.launch {
-            mLogs.emit(LogDataAndState(logContext, logState))
+            mLogs.emit(log)
         }
     }
 }

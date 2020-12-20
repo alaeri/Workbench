@@ -1,7 +1,7 @@
 package com.alaeri.log.core
 
-import com.alaeri.log.core.context.ListLogContext
-import com.alaeri.log.core.context.LogContext
+import com.alaeri.log.core.context.ListTag
+import com.alaeri.log.core.Tag
 import com.nhaarman.mockitokotlin2.mock
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -14,22 +14,22 @@ class ListContextTest{
 
     @Test
     fun testCanAddLogContextToList(){
-        val list = ListLogContext(listOf())
-        val other : LogContext = mock {  }
+        val list = ListTag(listOf())
+        val other : Tag = mock {  }
         val result = list + other
-        assertEquals(ListLogContext::class.java, result.javaClass)
-        val resultList = result as ListLogContext
+        assertEquals(ListTag::class.java, result.javaClass)
+        val resultList = result as ListTag
         assertEquals(1, resultList.list.size)
         assertEquals(other, resultList.list.first())
     }
 
     @Test
     fun testNullLogContextAddedToListIsIgnored(){
-        val list = ListLogContext(listOf())
-        val other : LogContext? = null
+        val list = ListTag(listOf())
+        val other : Tag? = null
         val result = list + other
-        assertEquals(ListLogContext::class.java, result.javaClass)
-        val resultList = result as ListLogContext
+        assertEquals(ListTag::class.java, result.javaClass)
+        val resultList = result as ListTag
         assertTrue(resultList === list)
         assertEquals(0, resultList.list.size)
     }

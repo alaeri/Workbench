@@ -2,7 +2,6 @@ package com.alaeri.log.core
 
 import com.alaeri.log.core.child.CoroutineLogEnvironment
 import com.alaeri.log.core.collector.LogCollector
-import com.alaeri.log.core.context.LogContext
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.withContext
@@ -16,23 +15,23 @@ import kotlinx.coroutines.withContext
  */
 abstract class LogEnvironment{
 
-    abstract val context: LogContext
+    abstract val tag: Log.Tag
     abstract val collector: LogCollector
 
     inline fun <T> logBlocking(
         params: Array<out Any?>,
         body: () -> T
     ): T {
-        collector.emit(context, LogState.Starting(params.toList()))
+        collector.emit(Log(tag, Log.Message.Starting(params.toList())))
         val result = runCatching {
             body.invoke()
         }
-        val logState = if (result.isSuccess) {
-            LogState.Done(result.getOrNull())
+        val message = if (result.isSuccess) {
+            Log.Message.Done(result.getOrNull())
         } else {
-            LogState.Failed(result.exceptionOrNull())
+            Log.Message.Failed(result.exceptionOrNull())
         }
-        collector.emit(context, logState)
+        collector.emit(Log(tag, message))
         return result.getOrThrow()
     }
 
@@ -41,18 +40,18 @@ abstract class LogEnvironment{
         crossinline body : suspend ()->T): T {
         val coroutineLogEnvironment = CoroutineLogEnvironment(this)
         return withContext(currentCoroutineContext() + coroutineLogEnvironment){
-            collector.emit(context, LogState.Starting(params.toList()))
+            collector.emit(Log(tag, Log.Message.Starting(params.toList())))
             val result = supervisorScope {
                 runCatching {
                     body.invoke()
                 }
             }
-            val logState = if(result.isSuccess){
-                LogState.Done(result.getOrNull())
+            val message = if(result.isSuccess){
+                Log.Message.Done(result.getOrNull())
             }else{
-                LogState.Failed(result.exceptionOrNull())
+                Log.Message.Failed(result.exceptionOrNull())
             }
-            collector.emit(context, logState)
+            collector.emit(Log(tag, message))
             result.getOrThrow()
         }
     }

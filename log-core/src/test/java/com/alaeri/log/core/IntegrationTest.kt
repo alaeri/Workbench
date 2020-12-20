@@ -3,7 +3,7 @@ package com.alaeri.log.core
 import com.alaeri.log.core.child.ChildLogEnvironmentFactory
 import com.alaeri.log.core.collector.LogCollector
 import com.alaeri.log.core.collector.LogPrinter
-import com.alaeri.log.core.context.EmptyLogContext
+import com.alaeri.log.core.context.EmptyTag
 import com.nhaarman.mockitokotlin2.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.test.resetMain
@@ -16,6 +16,23 @@ import org.junit.Test
 /**
  * Created by Emmanuel Requier on 12/12/2020.
  */
+
+suspend inline fun <reified T> log(tag: Log.Tag = EmptyTag(),
+                                   collector: LogCollector? = null,
+                                   vararg params: Any? = arrayOf(),
+                                   crossinline body :suspend ()->T) : T  =
+    LogConfig.log(tag, collector, *params){
+        body.invoke()
+    }
+
+inline fun <reified T> logBlocking(tag: Log.Tag = EmptyTag(),
+                                   collector: LogCollector? = null,
+                                   vararg params: Any? = arrayOf(),
+                                   body :()->T): T =
+    LogConfig.logBlocking(tag, collector, *params) {
+        body.invoke()
+    }
+
 class IntegrationTest {
 
     private val mainThreadSurrogate = newSingleThreadContext("UI thread")
@@ -40,10 +57,8 @@ class IntegrationTest {
             val greeting = log(collector = logCollector,  params = *arrayOf("bump")) {
                 salut
             }
-            verify(logCollector).emit(any(), eq(LogState.Starting(listOf("bump"))))
-            verify(logCollector).emit(
-                any(),//argThat { this is EmptyLogContext },
-                eq(LogState.Done<String>(salut)))
+            verify(logCollector).emit()
+            verify(logCollector).emit()
             verifyNoMoreInteractions(logCollector)
         }
     }

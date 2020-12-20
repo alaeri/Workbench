@@ -1,8 +1,8 @@
 package com.alaeri.log.core
 
 import com.alaeri.log.core.collector.LogCollector
-import com.alaeri.log.core.context.EmptyLogContext
-import com.alaeri.log.core.context.LogContext
+import com.alaeri.log.core.context.EmptyTag
+import com.alaeri.log.core.Log.Tag
 
 /**
  * Created by Emmanuel Requier on 15/12/2020.
@@ -10,20 +10,20 @@ import com.alaeri.log.core.context.LogContext
 abstract class LogEnvironmentFactory {
 
     abstract suspend fun suspendingLogEnvironment(
-        logContext: LogContext,
+        tag: Tag,
         collector: LogCollector?
     ): LogEnvironment
 
     abstract fun blockingLogEnvironment(
-        logContext: LogContext,
+        tag: Tag,
         collector: LogCollector?
     ): LogEnvironment
 
-    suspend inline fun <reified T> log(logContext: LogContext = EmptyLogContext(),
+    suspend inline fun <reified T> log(tag: Tag = EmptyTag(),
                                        collector: LogCollector? = null,
                                        vararg params: Any? = arrayOf(),
                                        crossinline body :suspend ()->T) : T {
-        val logEnvironment = suspendingLogEnvironment(logContext, collector)
+        val logEnvironment = suspendingLogEnvironment(tag, collector)
         logEnvironment.prepare()
         val result = kotlin.runCatching {
             logEnvironment.logSuspending<T>(*params){
@@ -33,11 +33,11 @@ abstract class LogEnvironmentFactory {
         logEnvironment.dispose()
         return result.getOrThrow()
     }
-    inline fun <reified T> logBlocking(logContext: LogContext = EmptyLogContext(),
+    inline fun <reified T> logBlocking(tag: Tag = EmptyTag(),
                                        collector: LogCollector? = null,
                                        vararg params: Any? = arrayOf(),
                                        body :()->T): T {
-        val logEnvironment = blockingLogEnvironment(logContext, collector)
+        val logEnvironment = blockingLogEnvironment(tag, collector)
         logEnvironment.prepare()
         val result = runCatching {
             logEnvironment.logBlocking(params, body)

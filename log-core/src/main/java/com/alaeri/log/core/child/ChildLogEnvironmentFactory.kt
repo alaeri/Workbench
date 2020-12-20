@@ -3,7 +3,7 @@ package com.alaeri.log.core.child
 import com.alaeri.log.core.*
 import com.alaeri.log.core.collector.LogCollector
 import com.alaeri.log.core.collector.MissingCollectorException
-import com.alaeri.log.core.context.LogContext
+import com.alaeri.log.core.Log.Tag
 import kotlinx.coroutines.currentCoroutineContext
 
 object ChildLogEnvironmentFactory : LogEnvironmentFactory() {
@@ -11,7 +11,7 @@ object ChildLogEnvironmentFactory : LogEnvironmentFactory() {
     internal val threadLocal =  ThreadLocal<LogEnvironment>()
 
     override suspend fun suspendingLogEnvironment(
-        logContext: LogContext,
+        tag: Tag,
         collector: LogCollector?
     ): LogEnvironment {
         val currentCoroutineContext = currentCoroutineContext()
@@ -20,12 +20,12 @@ object ChildLogEnvironmentFactory : LogEnvironmentFactory() {
         val parentLogEnvironment = parentCoroutineLogEnvironment?.logEnvironment
         val threadLogEnvironment = threadLocal.get()
         val childLogData = if (parentLogEnvironment != null) {
-            ChildLogContext(parentLogEnvironment.context) + logContext
+            ChildTag(parentLogEnvironment.tag) + tag
         } else {
             if (threadLogEnvironment != null) {
-                ChildLogContext(threadLogEnvironment.context) + logContext
+                ChildTag(threadLogEnvironment.tag) + tag
             } else {
-                logContext
+                tag
             }
         }
         //If there is a parentCoroutineLogDataAndCollector use this collector + the local one
@@ -46,14 +46,14 @@ object ChildLogEnvironmentFactory : LogEnvironmentFactory() {
     }
 
     override fun blockingLogEnvironment(
-        logContext: LogContext,
+        tag: Tag,
         collector: LogCollector?
     ): LogEnvironment {
         val threadLogEnvironment : LogEnvironment? = threadLocal.get()
         val logData = if (threadLogEnvironment != null) {
-            ChildLogContext(threadLogEnvironment.context) + logContext
+            ChildTag(threadLogEnvironment.tag) + tag
         } else {
-            logContext
+            tag
         }
         val logCollector = if (threadLogEnvironment != null) {
             threadLogEnvironment.collector + collector

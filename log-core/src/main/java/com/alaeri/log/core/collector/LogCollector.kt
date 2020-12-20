@@ -1,7 +1,6 @@
 package com.alaeri.log.core.collector
 
-import com.alaeri.log.core.LogState
-import com.alaeri.log.core.context.LogContext
+import com.alaeri.log.core.Log
 
 /**
  * LogCollector allows you to collect logging metadata and state and do what you want with it
@@ -17,7 +16,7 @@ import com.alaeri.log.core.context.LogContext
  */
 interface LogCollector {
 
-    fun emit(logContext: LogContext, logState: LogState)
+    fun emit(log: Log)
 
     infix operator fun plus(other: LogCollector?): LogCollector {
         return if(other != null){

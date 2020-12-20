@@ -1,8 +1,8 @@
 package com.alaeri.log.serialize.serialize.representation
 
-import com.alaeri.log.core.child.ChildLogContext
-import com.alaeri.log.serialize.serialize.LogRepresentation
+import com.alaeri.log.core.child.ChildTag
+import com.alaeri.log.serialize.serialize.SerializedTag
 
 data class FiliationRepresentation(
-    val parentRepresentation: LogRepresentation<*>
-) : LogRepresentation<ChildLogContext>
+    val parentRepresentation: SerializedTag<*>
+) : SerializedTag<ChildTag>

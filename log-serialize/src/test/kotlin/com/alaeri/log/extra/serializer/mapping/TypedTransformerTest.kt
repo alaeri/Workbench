@@ -1,8 +1,8 @@
 package com.alaeri.log.extra.serializer.mapping
 
-import com.alaeri.log.core.context.EmptyLogContext
-import com.alaeri.log.core.context.ListLogContext
-import com.alaeri.log.serialize.serialize.LogRepresentation
+import com.alaeri.log.core.context.EmptyTag
+import com.alaeri.log.core.context.ListTag
+import com.alaeri.log.serialize.serialize.SerializedTag
 import com.alaeri.log.serialize.serialize.mapping.TypedTransformer
 import com.nhaarman.mockitokotlin2.*
 import org.junit.Assert.assertNotNull
@@ -14,10 +14,10 @@ import org.junit.Test
  */
 class TypedTransformerTest {
 
-    private val typedTransformer = object : TypedTransformer<EmptyLogContext, LogRepresentation<EmptyLogContext>>(EmptyLogContext::class){
+    private val typedTransformer = object : TypedTransformer<EmptyTag, SerializedTag<EmptyTag>>(EmptyTag::class){
 
-        override fun transform(logData: EmptyLogContext): LogRepresentation<EmptyLogContext> {
-            return object : LogRepresentation<EmptyLogContext>{}
+        override fun transform(logData: EmptyTag): SerializedTag<EmptyTag> {
+            return object : SerializedTag<EmptyTag>{}
         }
     }
 
@@ -25,7 +25,7 @@ class TypedTransformerTest {
 
     @Test
     fun `testMappingWithCompatibleLogContext`(){
-        val emptyLogContext = EmptyLogContext()
+        val emptyLogContext = EmptyTag()
         val representation = spiedTypedTransformer.transformOrNull(emptyLogContext)
         verify(spiedTypedTransformer).transform(emptyLogContext)
         assertNotNull(representation)
@@ -33,7 +33,7 @@ class TypedTransformerTest {
 
     @Test
     fun `testMappingWithIncompatibleLogContext`(){
-        val listLogContext = ListLogContext(listOf())
+        val listLogContext = ListTag(listOf())
         val representation = spiedTypedTransformer.transformOrNull(listLogContext)
         verify(spiedTypedTransformer).transformOrNull(any())
         verifyNoMoreInteractions(spiedTypedTransformer)

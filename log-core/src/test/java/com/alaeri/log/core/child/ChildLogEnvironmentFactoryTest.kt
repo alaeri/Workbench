@@ -1,11 +1,9 @@
 package com.alaeri.log.core.child
 
-import com.alaeri.log.core.LogState
 import com.alaeri.log.core.collector.LogCollector
 import com.alaeri.log.core.collector.NoopCollector
-import com.alaeri.log.core.context.EmptyLogContext
-import com.alaeri.log.core.context.ListLogContext
-import com.alaeri.log.core.context.LogContext
+import com.alaeri.log.core.context.EmptyTag
+import com.alaeri.log.core.Tag
 import com.nhaarman.mockitokotlin2.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestCoroutineDispatcher
@@ -21,7 +19,7 @@ import org.junit.Test
 @ExperimentalCoroutinesApi
 class ChildLogEnvironmentFactoryTest {
 
-    private val logContext : LogContext = mock{}
+    private val tag : Tag = mock{}
     private val logCollector : LogCollector = mock{}
     private val childLogEnvironmentFactory = ChildLogEnvironmentFactory
 
@@ -30,65 +28,63 @@ class ChildLogEnvironmentFactoryTest {
 
     @Test
     fun testBlockingBuild(){
-        val build = childLogEnvironmentFactory.blockingLogEnvironment(logContext, logCollector)
+        val build = childLogEnvironmentFactory.blockingLogEnvironment(tag, logCollector)
         assertEquals(ChildLogEnvironment::class.java, build.javaClass)
         assertEquals(logCollector, build.collector)
-        assertEquals(logContext, build.context)
+        assertEquals(tag, build.tag)
         assertNull(childLogEnvironmentFactory.threadLocal.get())
     }
 
     @Test
     fun testSuspendingBuild()= testCoroutineScope.runBlockingTest {
-        val build = childLogEnvironmentFactory.suspendingLogEnvironment(logContext, logCollector)
+        val build = childLogEnvironmentFactory.suspendingLogEnvironment(tag, logCollector)
         assertEquals(ChildLogEnvironment::class.java, build.javaClass)
         assertEquals(logCollector, build.collector)
-        assertEquals(logContext, build.context)
+        assertEquals(tag, build.tag)
     }
 
     @Test
     fun testBlockingLog(){
-        childLogEnvironmentFactory.logBlocking(logContext, logCollector) {
-            verify(logCollector).emit(eq(logContext), eq(LogState.Starting(listOf())))
+        childLogEnvironmentFactory.logBlocking(tag, logCollector) {
+            verify(logCollector).emit()
             assertNotNull(childLogEnvironmentFactory.threadLocal.get())
         }
-        verify(logCollector).emit(eq(logContext), eq(LogState.Done(Unit)))
+        verify(logCollector).emit()
         assertNull(childLogEnvironmentFactory.threadLocal.get())
     }
 
     @Test
     fun testBlockingException(){
         kotlin.runCatching {
-            childLogEnvironmentFactory.logBlocking(logContext, logCollector) {
-                verify(logCollector).emit(eq(logContext), eq(LogState.Starting(listOf())))
+            childLogEnvironmentFactory.logBlocking(tag, logCollector) {
+                verify(logCollector).emit()
                 assertNotNull(childLogEnvironmentFactory.threadLocal.get())
                 throw RuntimeException("Piou")
                 @Suppress("UNREACHABLE_CODE")
                 Unit
             }
         }
-        verify(logCollector).emit(eq(logContext), argThat {
-            this is LogState.Failed && this.exception?.message == "Piou"
-        })
+        verify(logCollector).emit()
         assertNull(childLogEnvironmentFactory.threadLocal.get())
     }
 
     @Test
     fun testSuspendingLog()= testCoroutineScope.runBlockingTest {
-        val log = childLogEnvironmentFactory.log(logContext, logCollector, "params") {
-            verify(logCollector).emit(eq(logContext), eq(LogState.Starting(listOf("params"))))
+        val log = childLogEnvironmentFactory.log(tag, logCollector, "params") {
+            verify(logCollector).emit()
             "PIOU"
         }
-        verify(logCollector).emit(eq(logContext), eq(LogState.Done("PIOU")))
+        verify(logCollector).emit()
         assertEquals("PIOU", log)
     }
 
     @Test
     fun testSuspendingLog2()= testCoroutineScope.runBlockingTest {
-        val log = childLogEnvironmentFactory.log(logContext, logCollector) {
-            verify(logCollector).emit(eq(logContext), eq(LogState.Starting(listOf())))
+        val log = childLogEnvironmentFactory.log(tag, logCollector) {
+            verify(logCollector).emit()
             "ABC"
         }
-        verify(logCollector).emit(eq(logContext), eq(LogState.Done("ABC")))
+        verify(logCollector).emit()
         assertEquals("ABC", log)
     }
 
@@ -96,56 +92,47 @@ class ChildLogEnvironmentFactoryTest {
 
     @Test
     fun testBlockingThenSuspendingLog(){
-        val abc = childLogEnvironmentFactory.logBlocking(logContext, noopCollector) {
-            verify(noopCollector).emit(eq(logContext), eq(LogState.Starting(listOf())))
+        val abc = childLogEnvironmentFactory.logBlocking(tag, noopCollector) {
+            verify(noopCollector).emit()
             var result: String? = null
             testCoroutineScope.runBlockingTest {
                 result = childLogEnvironmentFactory.log {
-                    verify(noopCollector).emit(
-                        argThat { this is ListLogContext },
-                        eq(LogState.Starting(listOf())))
+                    verify(noopCollector).emit()
                     val suspendLambda : suspend () -> String = suspend { "ABC" }
                     withContext(testCoroutineDispatcher) { suspendLambda() }
                 }
-                verify(noopCollector).emit(
-                    argThat { this is ListLogContext },
-                    eq(LogState.Done("ABC")))
+                verify(noopCollector).emit()
             }
             result
         }
-        verify(noopCollector).emit(eq(logContext), eq(LogState.Done("ABC")))
+        verify(noopCollector).emit()
         assertEquals("ABC", abc)
     }
 
     @Suppress("CHANGING_ARGUMENTS_EXECUTION_ORDER_FOR_NAMED_VARARGS")
     @Test
     fun testBlockingThenBlockingLog(){
-        val abc = childLogEnvironmentFactory.logBlocking(logContext, noopCollector) {
-            verify(noopCollector).emit(eq(logContext), eq(LogState.Starting(listOf())))
+        val abc = childLogEnvironmentFactory.logBlocking(tag, noopCollector) {
+            verify(noopCollector).emit()
             val result = childLogEnvironmentFactory.logBlocking(
-                logContext = EmptyLogContext(),
+                tag = EmptyTag(),
                 collector = null,
                 params = arrayOf()) {
-                verify(noopCollector).emit(
-                    argThat { this is ListLogContext },
-                    eq(LogState.Starting(listOf()))
-                )
+                verify(noopCollector).emit()
                 val blockingLambda: () -> String = { "ABC" }
                 blockingLambda()
             }
-            verify(noopCollector).emit(
-                argThat { this is ListLogContext },
-                eq(LogState.Done("ABC")))
+            verify(noopCollector).emit()
             result
         }
-        verify(noopCollector).emit(eq(logContext), eq(LogState.Done("ABC")))
+        verify(noopCollector).emit()
         assertEquals("ABC", abc)
     }
 
     @Test
     fun testSuspendingThenBlockingLog() = runBlockingTest{
-        val abc = childLogEnvironmentFactory.log(logContext, noopCollector) {
-            verify(noopCollector).emit(eq(logContext), eq(LogState.Starting(listOf())))
+        val abc = childLogEnvironmentFactory.log(tag, noopCollector) {
+            verify(noopCollector).emit()
             val blockingLambda : () -> String = { "ABC" }
             childLogEnvironmentFactory.logBlocking {
                 blockingLambda()
@@ -156,8 +143,8 @@ class ChildLogEnvironmentFactoryTest {
 
     @Test
     fun testSuspendingThenSuspendingLog() = runBlockingTest{
-        val abc = childLogEnvironmentFactory.log(logContext, noopCollector) {
-            verify(noopCollector).emit(eq(logContext), eq(LogState.Starting(listOf())))
+        val abc = childLogEnvironmentFactory.log(tag, noopCollector) {
+            verify(noopCollector).emit()
             val suspendingLambda : suspend () -> String = suspend { "ABC" }
             childLogEnvironmentFactory.log {
                 suspendingLambda()

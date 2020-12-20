@@ -4,7 +4,7 @@ import com.alaeri.log.core.LogEnvironment
 import com.alaeri.log.core.LogEnvironmentFactory
 import com.alaeri.log.core.collector.LogCollector
 import com.alaeri.log.core.collector.NoopCollector
-import com.alaeri.log.core.context.LogContext
+import com.alaeri.log.core.Log.Tag
 
 /**
  * Created by Emmanuel Requier on 16/12/2020.
@@ -17,12 +17,12 @@ import com.alaeri.log.core.context.LogContext
 object BasicEnvironmentFactory : LogEnvironmentFactory() {
 
     override suspend fun suspendingLogEnvironment(
-        logContext: LogContext,
+        tag: Tag,
         collector: LogCollector?
-    ): LogEnvironment = BasicLogEnvironment(logContext, collector ?: NoopCollector)
+    ): LogEnvironment = BasicLogEnvironment(tag, collector ?: NoopCollector)
 
     override fun blockingLogEnvironment(
-        logContext: LogContext,
+        tag: Tag,
         collector: LogCollector?
-    ): LogEnvironment = BasicLogEnvironment(logContext, collector ?: NoopCollector)
+    ): LogEnvironment = BasicLogEnvironment(tag, collector ?: NoopCollector)
 }

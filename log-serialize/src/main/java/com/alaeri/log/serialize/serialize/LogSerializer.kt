@@ -1,34 +1,35 @@
 package com.alaeri.log.serialize.serialize
 
-import com.alaeri.log.core.context.LogContext
-import com.alaeri.log.core.LogState
+import com.alaeri.log.core.Log
+import com.alaeri.log.core.Log.Tag
+import com.alaeri.log.core.Log.Message
 import com.alaeri.log.serialize.serialize.mapping.EntityTransformer
-import com.alaeri.log.serialize.serialize.mapping.LogTypedTransformer
+import com.alaeri.log.serialize.serialize.mapping.TagTypedSerializer
 import com.alaeri.log.serialize.serialize.representation.EntityRepresentation
 
 class LogSerializer(
-    private val logTypedMapper: LogTypedTransformer<LogContext, LogRepresentation<LogContext>>,
+    private val logTypedMapper: TagTypedSerializer<Tag, SerializedTag<Tag>>,
     private val entityTransformer: EntityTransformer<Any, EntityRepresentation<Any>>
 ) : ILogSerializer{
 
-    override fun serialize(logDataAndState: LogDataAndState): SerializedLogDataAndState{
-        val state = logDataAndState.logState
-        return SerializedLogDataAndState(
-            logTypedMapper.transformOrNull(logDataAndState.logContext) ?: EmptyLogRepresentation(),
+    override fun serialize(log: Log): SerializedLog{
+        val state = log.message
+        return SerializedLog(
+            logTypedMapper.transformOrNull(log.tag) ?: EmptySerializedTag(),
             when (state) {
-                is LogState.Done<*> -> SerializedLogState.Success(state.result?.let {
+                is Message.Done<*> -> SerializedLogMessage.Success(state.result?.let {
                     entityTransformer.transform(
                         it
                     )
                 })
-                is LogState.Starting -> SerializedLogState.Start(state.params.map {
+                is Message.Starting -> SerializedLogMessage.Start(state.params.map {
                     it?.let {
                         entityTransformer.transform(
                             it
                         )
                     }
                 })
-                is LogState.Failed -> SerializedLogState.Error(state.exception?.let{ entityTransformer.transform(it) })
+                is Message.Failed -> SerializedLogMessage.Error(state.exception?.let{ entityTransformer.transform(it) })
             }
         )
     }

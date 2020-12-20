@@ -1,8 +1,7 @@
 package com.alaeri.log.core.collector
 
-import com.alaeri.log.core.LogState
-import com.alaeri.log.core.context.LogContext
-import com.nhaarman.mockitokotlin2.eq
+import com.alaeri.log.core.Data
+import com.alaeri.log.core.Tag
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.verify
 import org.junit.Assert.assertEquals
@@ -45,13 +44,13 @@ class CollectorSetTest {
 
     @Test
     fun `test emit calls emit on set members`(){
-        val logContext: LogContext = mock {  }
-        val logState: LogState = mock {  }
+        val tag: Tag = mock {  }
+        val data: Data = mock {  }
         val result = collectorsSet + LogCollectorsSet(setOf(other))
         assertEquals(LogCollectorsSet::class.java, result.javaClass)
         val resultSet = result as LogCollectorsSet
-        result.emit(logContext, logState)
-        verify(other).emit(eq(logContext), eq(logState))
+        result.emit()
+        verify(other).emit()
     }
 
 }

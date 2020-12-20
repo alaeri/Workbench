@@ -1,13 +1,12 @@
 package com.alaeri.log.core.collector
 
-import com.alaeri.log.core.context.LogContext
-import com.alaeri.log.core.LogState
+import com.alaeri.log.core.Log
 
 data class LogCollectorsSet(val collectors: Set<LogCollector>): LogCollector {
 
-    override fun emit(logContext: LogContext, logState: LogState) {
+    override fun emit(log: Log) {
         collectors.forEach {
-            it.emit(logContext, logState)
+            it.emit(log)
         }
     }
 
