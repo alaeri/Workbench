@@ -1,7 +1,10 @@
 package com.alaeri.log.sample.lib
 
+import com.alaeri.log.core.Log
 import com.alaeri.log.core.LogConfig
+import com.alaeri.log.core.collector.LogCollector
 import com.alaeri.log.core.collector.LogPrinter
+import com.alaeri.log.core.collector.NoopCollector
 import com.alaeri.log.extra.tag.callsite.CallSiteTag
 import com.alaeri.log.extra.tag.coroutine.CoroutineContextTag
 import com.alaeri.log.extra.tag.name.NamedTag
@@ -17,7 +20,12 @@ import kotlinx.coroutines.currentCoroutineContext
  *
  * Created by Emmanuel Requier on 20/12/2020.
  */
-internal suspend inline fun <reified T> Any.log(name: String,
+val collector = object: LogCollector{
+    override fun emit(log: Log) {
+        "HERE GOES NOTHING"
+    }
+}
+internal suspend inline fun <reified T> Any.logLib(name: String,
                                    vararg params: Any? = arrayOf(),
                                    crossinline body :suspend ()->T) : T {
     val currentCoroutineContext = currentCoroutineContext()
@@ -26,20 +34,19 @@ internal suspend inline fun <reified T> Any.log(name: String,
             ReceiverTag(this) +
             NamedTag(name) +
             ThreadTag()
-    val collector = LogPrinter()
+
     return LogConfig.log(logContext, collector, *params){
         body.invoke()
     }
 }
 
-internal inline fun <reified T> Any.logBlocking(name: String,
+internal inline fun <reified T> Any.logBlockingLib(name: String,
                                    vararg params: Any? = arrayOf(),
                                    body :()->T): T {
     val logContext =  CallSiteTag() +
             ReceiverTag(this) +
             NamedTag(name) +
             ThreadTag()
-    val collector = LogPrinter()
     return LogConfig.logBlocking(logContext, collector, *params){
         body.invoke()
     }

@@ -1,6 +1,8 @@
 package com.alaeri.log.sample
 
+import com.alaeri.log.core.Log
 import com.alaeri.log.core.LogConfig
+import com.alaeri.log.core.collector.LogCollector
 import com.alaeri.log.core.collector.LogPrinter
 import com.alaeri.log.extra.tag.callsite.CallSiteTag
 import com.alaeri.log.extra.tag.coroutine.CoroutineContextTag
@@ -17,6 +19,7 @@ import kotlinx.coroutines.currentCoroutineContext
  *
  * Created by Emmanuel Requier on 20/12/2020.
  */
+val collector : LogCollector = LogPrinter()
 internal suspend inline fun <reified T> Any.log(name: String,
                                    vararg params: Any? = arrayOf(),
                                    crossinline body :suspend ()->T) : T {
@@ -26,7 +29,6 @@ internal suspend inline fun <reified T> Any.log(name: String,
             ReceiverTag(this) +
             NamedTag(name) +
             ThreadTag()
-    val collector = LogPrinter()
     return LogConfig.log(logContext, collector, *params){
         body.invoke()
     }
@@ -39,7 +41,6 @@ internal inline fun <reified T> Any.logBlocking(name: String,
             ReceiverTag(this) +
             NamedTag(name) +
             ThreadTag()
-    val collector = LogPrinter()
     return LogConfig.logBlocking(logContext, collector, *params){
         body.invoke()
     }

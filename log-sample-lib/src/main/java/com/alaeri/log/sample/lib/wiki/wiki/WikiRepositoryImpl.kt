@@ -2,8 +2,7 @@ package com.alaeri.log.sample.lib.wiki.wiki
 
 
 import com.alaeri.domain.wiki.*
-import com.alaeri.log.sample.lib.log
-import com.alaeri.log.sample.lib.logBlocking
+import com.alaeri.log.sample.lib.logLib
 import com.beust.klaxon.JsonReader
 import com.beust.klaxon.Klaxon
 import com.github.kittinunf.fuel.Fuel
@@ -29,7 +28,7 @@ import java.io.StringReader
  */
 class WikiRepositoryImpl : WikiRepository {
 
-    override suspend fun loadWikiArticle(searchTerm: String?): Flow<LoadingStatus> = log("load article") {
+    override suspend fun loadWikiArticle(searchTerm: String?): Flow<LoadingStatus> = logLib("load article") {
         flow {
             supervisorScope {
                 if (searchTerm != null) {
@@ -46,7 +45,7 @@ class WikiRepositoryImpl : WikiRepository {
                     emit(LoadingStatus.Parsing(responseBody.length.toLong()))
 
                     val apiWikiArticle = withContext(Dispatchers.Default) {
-                        log("httpResponse:","http") { responseBody }
+                        logLib("httpResponse:","http") { responseBody }
                         async {
                             Klaxon().parse<ApiWikiArticle>(JsonReader(StringReader(responseBody)))
                                 ?: throw RuntimeException("pas de bol")
@@ -128,7 +127,7 @@ class WikiRepositoryImpl : WikiRepository {
                 }
             }
         }.catch { it ->
-            log("error wiki") { it }; emit(
+            logLib("error wiki") { it }; emit(
             LoadingStatus.Error(
                 "could not load data",
                 it

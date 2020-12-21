@@ -1,10 +1,16 @@
 package com.alaeri.log.sample
 
+import com.alaeri.log.core.LogConfig
+import com.alaeri.log.core.child.ChildLogEnvironmentFactory
 import com.alaeri.log.sample.lib.wiki.wiki.WikiRepositoryImpl
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.collect
 
 object Main {
+
+    init {
+        LogConfig.logEnvironmentFactory = ChildLogEnvironmentFactory
+    }
 
 
     @JvmStatic

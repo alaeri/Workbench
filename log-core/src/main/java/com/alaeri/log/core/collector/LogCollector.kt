@@ -19,7 +19,7 @@ interface LogCollector {
     fun emit(log: Log)
 
     infix operator fun plus(other: LogCollector?): LogCollector {
-        return if(other != null){
+        return if(other != null && other != this){
             LogCollectorsSet(setOf(this, other))
         }else{
             this
