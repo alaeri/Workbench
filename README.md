@@ -4,7 +4,7 @@
 [![codecov](https://codecov.io/gh/alaeri/Workbench/branch/master/graph/badge.svg)](https://codecov.io/gh/alaeri/Workbench)
 [![CodeFactor](https://www.codefactor.io/repository/github/alaeri/workbench/badge)](https://www.codefactor.io/repository/github/alaeri/workbench)
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Falaeri%2FWorkbench.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Falaeri%2FWorkbench?ref=badge_shield)
-
+[![Mad Scorecard](/doc/mad_scorecard/summary.png)]()
 
 ## App
 

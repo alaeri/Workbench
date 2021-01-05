@@ -1,12 +1,14 @@
 package com.alaeri.log.extra.tag.thread
 
+import com.alaeri.log.extra.identity.IdentityRepresentation
 import com.alaeri.log.extra.identity.IdentityTransformer
+import com.alaeri.log.serialize.serialize.mapping.TagTypedSerializer
 import com.alaeri.log.serialize.serialize.mapping.TypedTransformer
 
 /**
  * Created by Emmanuel Requier on 19/12/2020.
  */
-class ThreadTransformer(private val identityTransformer: IdentityTransformer): TypedTransformer<ThreadTag, ThreadRepresentation>(ThreadTag::class) {
+class ThreadTransformer(private val identityTransformer: IdentityTransformer): TagTypedSerializer<ThreadTag, ThreadRepresentation>(ThreadTag::class) {
     override fun transform(logData: ThreadTag): ThreadRepresentation {
         val thread = logData.thread
         val threadGroup = thread.threadGroup

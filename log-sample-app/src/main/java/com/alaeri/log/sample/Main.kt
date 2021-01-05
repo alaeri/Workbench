@@ -5,6 +5,7 @@ import com.alaeri.log.core.child.ChildLogEnvironmentFactory
 import com.alaeri.log.sample.lib.wiki.wiki.WikiRepositoryImpl
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.flow
 
 object Main {
 
@@ -16,24 +17,33 @@ object Main {
     @JvmStatic
     fun main(args: Array<String>) {
         logBlocking("print args", args.joinToString(",")){}
-        val job = logBlocking<Job>("createJob", *args) {
-            GlobalScope.launch {
-                log("coroutine", 1) {
-                    println("fun")
-                    val wikiRepository = log("initialize Wiki Repo") { WikiRepositoryImpl() }
-                    val flow = wikiRepository.loadWikiArticle("fun")
-                    log("collect flow", flow) {
-                        flow.collect { it ->
-                            log("update flow", "flowupdate", it) {
-                                println(it)
-                            }
-                        }
-                    }
+
+
+        logBlocking("await Job") {
+            runBlocking {
+                SampleLogServer.start()
+                println("type enter to continue: server should be up at http://localhost:8080/")
+                readLine()
+                withContext(Dispatchers.IO){
+                    loadWikiArticleSuspend()
                 }
+                println("type enter to quit")
+                readLine()
+                SampleLogServer.quit()
+
             }
         }
-        logBlocking("await Job", job) {
-            runBlocking { job.join() }
+
+    }
+
+    private suspend fun CoroutineScope.loadWikiArticleSuspend() {
+        log("coroutine", 1) {
+            println("fun")
+            val wikiRepository = this@Main.log("initialize Wiki Repo") { WikiRepositoryImpl() }
+            val flow = wikiRepository.loadWikiArticle("fun")
+            this@Main.logCollect("collect wiki flow", flow) { it ->
+                println(it)
+            }
         }
     }
 }

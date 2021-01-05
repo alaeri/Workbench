@@ -9,7 +9,7 @@ import kotlin.reflect.cast
  * Created by Emmanuel Requier on 13/12/2020.
  *
  */
-abstract class TypedTransformer<InputType: Any, OutputType: Representation<InputType>>(private val supportedType: KClass<InputType>){
+abstract class TypedTransformer<InputType: Any, OutputType: Representation<Any>>(private val supportedType: KClass<InputType>){
 
     abstract fun transform(logData: InputType) : OutputType
 

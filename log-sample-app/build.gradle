@@ -1,8 +1,26 @@
 plugins {
+    id "application"
     id 'java-library'
     id 'kotlin'
+    id 'com.github.johnrengelman.shadow' version '6.1.0'
+}
+repositories{
+    mavenCentral()
 }
 
+ext {
+    javaMainClass = "com.alaeri.log.sample.Main"
+}
+jar {
+    manifest {
+        attributes(
+                'Main-Class': 'com.alaeri.log.sample.Main'
+        )
+    }
+}
+application {
+    mainClassName = javaMainClass
+}
 java {
     sourceCompatibility = JavaVersion.VERSION_1_7
     targetCompatibility = JavaVersion.VERSION_1_7
@@ -14,9 +32,15 @@ dependencies {
     implementation project(path: ':log-extras')
     implementation project(path: ':log-core')
     implementation project(path: ':log-sample-lib')
+    implementation project(path: ':log-server')
+    implementation project(path: ':log-repository')
 
     //Flow
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.1'
     testImplementation 'org.jetbrains.kotlinx:kotlinx-coroutines-test:1.3.5'
     testImplementation 'junit:junit:4.13.1'
+
+    //SLF4J -- get rid of warning
+    //TODO find why this is needed and remove the dependency
+    implementation group: 'org.slf4j', name: 'slf4j-nop', version: '2.0.0-alpha1'
 }

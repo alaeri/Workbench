@@ -2,7 +2,7 @@ plugins {
     id 'java-library'
     id 'kotlin'
 }
-
+apply plugin: 'kotlinx-serialization'
 java {
     sourceCompatibility = JavaVersion.VERSION_1_7
     targetCompatibility = JavaVersion.VERSION_1_7
@@ -11,7 +11,7 @@ java {
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     implementation project(path: ':log-core')
-
+    implementation "org.jetbrains.kotlinx:kotlinx-serialization-json:1.0.1"
     //Flow
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.1'
     implementation project(path: ':log-serialize')

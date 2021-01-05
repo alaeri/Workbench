@@ -2,6 +2,7 @@ package com.alaeri.log.core
 
 import com.alaeri.log.core.child.CoroutineLogEnvironment
 import com.alaeri.log.core.collector.LogCollector
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.withContext
@@ -39,7 +40,7 @@ abstract class LogEnvironment{
         vararg params: Any? = arrayOf(),
         crossinline body : suspend ()->T): T {
         val coroutineLogEnvironment = CoroutineLogEnvironment(this)
-        return withContext(currentCoroutineContext() + coroutineLogEnvironment){
+        return withContext(currentCoroutineContext() + coroutineLogEnvironment + SupervisorJob()){
             collector.emit(Log(tag, Log.Message.Starting(params.toList())))
             val result = supervisorScope {
                 runCatching {

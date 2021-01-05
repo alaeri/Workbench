@@ -1,11 +1,12 @@
 package com.alaeri.log.extra
 
-import com.alaeri.log.core.Data
 import com.alaeri.log.core.Log
+import com.alaeri.log.core.context.EmptyTag
 import com.nhaarman.mockitokotlin2.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.FlowCollector
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.test.*
 import org.junit.After
 import org.junit.Before
@@ -39,7 +40,7 @@ class LogBridgeTest {
         val collectionJob = launch {
             logBridge.logs.collect { collector.emit(it) }
         }
-        logBridge.emit()
+        logBridge.emit(any())
         delay(100)
         verify(collector).emit(any())
         collectionJob.cancel()
@@ -53,7 +54,7 @@ class LogBridgeTest {
         }
         testCoroutineScope.pauseDispatcher()
         (0..99).forEach { _ ->
-            logBridge.emit()
+            logBridge.emit(any())
         }
         verifyNoMoreInteractions(collector)
         testCoroutineScope.resumeDispatcher()
@@ -66,7 +67,7 @@ class LogBridgeTest {
         val logBridge = LogBridge(testCoroutineScope, 10, 0, BufferOverflow.DROP_OLDEST)
         testCoroutineScope.pauseDispatcher()
         (0..99).forEach { it ->
-            logBridge.emit()
+            logBridge.emit(Log(EmptyTag(), Log.Message.Done(it)))
         }
         val collectionJob = launch {
             logBridge.logs.collect { collector.emit(it) }
@@ -75,7 +76,7 @@ class LogBridgeTest {
         testCoroutineScope.resumeDispatcher()
         //We only receive values from 90..99
         verify(collector, times(10)).emit(argThat {
-            val logState = this.message as Data.Done<Int>
+            val logState = this.message as Log.Message.Done<Int>
             logState.result >= 90
         })
         verifyNoMoreInteractions(collector)

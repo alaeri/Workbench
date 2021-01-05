@@ -1,7 +1,9 @@
 package com.alaeri.log.extra.tag.receiver
 
+import com.alaeri.log.extra.identity.IdentityRepresentation
 import com.alaeri.log.extra.identity.IdentityTransformer
 import com.alaeri.log.extra.type.TypeTypedTransformer
+import com.alaeri.log.serialize.serialize.mapping.TagTypedSerializer
 import com.alaeri.log.serialize.serialize.mapping.TypedTransformer
 
 /**
@@ -10,7 +12,7 @@ import com.alaeri.log.serialize.serialize.mapping.TypedTransformer
 class ReceiverTranformer(
     private val identityTransformer: IdentityTransformer,
     private val typeTranformer: TypeTypedTransformer)
-    : TypedTransformer<ReceiverTag, ReceiverRepresentation>(ReceiverTag::class) {
+    : TagTypedSerializer<ReceiverTag, ReceiverRepresentation>(ReceiverTag::class) {
 
     override fun transform(logData: ReceiverTag): ReceiverRepresentation {
         return ReceiverRepresentation(

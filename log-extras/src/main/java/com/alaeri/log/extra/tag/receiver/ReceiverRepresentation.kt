@@ -3,6 +3,7 @@ package com.alaeri.log.extra.tag.receiver
 import com.alaeri.log.extra.identity.IdOwner
 import com.alaeri.log.extra.identity.IdentityRepresentation
 import com.alaeri.log.extra.type.TypeRepresentation
+import com.alaeri.log.serialize.serialize.Identity
 import com.alaeri.log.serialize.serialize.SerializedTag
 
 /**
@@ -11,4 +12,4 @@ import com.alaeri.log.serialize.serialize.SerializedTag
 data class ReceiverRepresentation(
     val type: TypeRepresentation,
     override val identity: IdentityRepresentation
-): IdOwner, SerializedTag<ReceiverTag>
+): IdOwner, SerializedTag
