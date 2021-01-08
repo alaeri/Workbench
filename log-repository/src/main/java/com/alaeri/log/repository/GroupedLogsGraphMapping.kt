@@ -19,7 +19,7 @@ object GroupedLogsGraphMapper {
                 val receiver = listTag.representations.filterIsInstance<ReceiverRepresentation>().first()
                 val name = listTag.representations.filterIsInstance<NameRepresentation>().first()
                 val parent = listTag.representations.filterIsInstance<FiliationRepresentation>().firstOrNull()
-                val commandGroupIdentifier = LogGroupId(name, receiver)
+                val commandGroupIdentifier = LogGroupId(name.name, receiver.identity, receiver.type.clazz)
                 commandGroupIdentifier to CommandInvokation(listTag.identity, listOfNotNull<IdentityRepresentation>(
                     if(parent != null){
                         parent.parentRepresentation.identity
@@ -78,7 +78,7 @@ object GroupedLogsGraphMapper {
                 GraphNode(
                     keys.indexOf(it.node).toString(),
                     it.parents.map { keys.indexOf(it).toString() },
-                    "${it.node.receiver.type.clazz.simpleName} - ${it.node.name} - (${it.invokationCount})"
+                    "${it.node.receiverClass.simpleName} - ${it.node.name} - (${it.invokationCount})"
                 )
             }
         })

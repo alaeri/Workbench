@@ -5,7 +5,8 @@ import com.alaeri.log.extra.tag.name.NameRepresentation
 import com.alaeri.log.extra.tag.receiver.ReceiverRepresentation
 
 data class LogGroupId(
-    val name: NameRepresentation,
-    val receiver: ReceiverRepresentation,
+    val name: String,
+    val receiver: IdentityRepresentation,
+    val receiverClass: Class<*>
 )
 

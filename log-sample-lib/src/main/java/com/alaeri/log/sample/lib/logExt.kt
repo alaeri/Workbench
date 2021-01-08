@@ -11,6 +11,8 @@ import com.alaeri.log.extra.tag.name.NamedTag
 import com.alaeri.log.extra.tag.receiver.ReceiverTag
 import com.alaeri.log.extra.tag.thread.ThreadTag
 import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.onEach
 
 /**
  * To use the logger copy this class in your project and extend modify as needed
@@ -49,5 +51,18 @@ internal inline fun <reified T> Any.logBlockingLib(name: String,
             ThreadTag()
     return LogConfig.logBlocking(logContext, collector, *params){
         body.invoke()
+    }
+}
+internal inline fun <reified T> Any.logFlow(name: String,
+                                            vararg params: Any? = arrayOf(),
+                                            flowBuilder: ()-> Flow<T>
+) : Flow<T> {
+    val logTag =  CallSiteTag() +
+            ReceiverTag(this) +
+            ThreadTag() +
+            NamedTag(name)
+    val receiver  = this
+    return LogConfig.logBlocking (logTag, collector, *params){
+        flowBuilder.invoke().onEach { receiver.logLib("$name:emit", it){} }
     }
 }

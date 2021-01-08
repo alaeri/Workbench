@@ -28,6 +28,9 @@ import com.alaeri.log.serialize.serialize.representation.EntityRepresentation
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.supervisorScope
 import java.util.*
 
 /**
@@ -113,15 +116,30 @@ internal suspend inline fun <reified T> Any.logCollect(name: String,
             ReceiverTag(this) +
             ThreadTag() +
             NamedTag(name)
+    val receiver = this
 
     return LogConfig.log(logTag, collector, flow, *params){
-       flow.collect {
-           val emitLogTag =
-               ReceiverTag(this) + CallSiteTag() +
-               ThreadTag() + NamedTag("$name:emission")
-           LogConfig.log(emitLogTag, collector, it){
-               action(it)
-           }
-       }
+        supervisorScope {
+            flow.collect {
+                val emitLogTag =
+                    ReceiverTag(receiver) + CallSiteTag() +
+                            ThreadTag() + NamedTag("$name:emission")
+                LogConfig.log(emitLogTag, collector, it){
+                    action(it)
+                }
+            }
+        }
+    }
+}
+internal inline fun <reified T> Any.logFlow(name: String,
+                                               vararg params: Any? = arrayOf(),
+                                               flowBuilder: ()->Flow<T>) : Flow<T> {
+    val logTag =  CallSiteTag() +
+            ReceiverTag(this) +
+            ThreadTag() +
+            NamedTag(name)
+    val receiver  = this
+    return LogConfig.logBlocking (logTag, collector, *params){
+        flowBuilder.invoke().onEach { receiver.log("name:emit", it){} }
     }
 }

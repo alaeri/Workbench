@@ -2,6 +2,7 @@ package com.alaeri.log.sample.lib.wiki.wiki
 
 
 import com.alaeri.domain.wiki.*
+import com.alaeri.log.sample.lib.logFlow
 import com.alaeri.log.sample.lib.logLib
 import com.beust.klaxon.JsonReader
 import com.beust.klaxon.Klaxon
@@ -27,8 +28,8 @@ import java.io.StringReader
  * The project builds even these warnings appear.
  */
 class WikiRepositoryImpl : WikiRepository {
-
-    override suspend fun loadWikiArticle(searchTerm: String?): Flow<LoadingStatus> = logLib("load article") {
+    val instance = this
+    override suspend fun loadWikiArticle(searchTerm: String?): Flow<LoadingStatus> = logFlow("load article", searchTerm) {
         flow {
             supervisorScope {
                 if (searchTerm != null) {
@@ -45,7 +46,7 @@ class WikiRepositoryImpl : WikiRepository {
                     emit(LoadingStatus.Parsing(responseBody.length.toLong()))
 
                     val apiWikiArticle = withContext(Dispatchers.Default) {
-                        logLib("httpResponse:","http") { responseBody }
+                        instance.logLib("httpResponse:","http") { responseBody }
                         async {
                             Klaxon().parse<ApiWikiArticle>(JsonReader(StringReader(responseBody)))
                                 ?: throw RuntimeException("pas de bol")
@@ -127,7 +128,7 @@ class WikiRepositoryImpl : WikiRepository {
                 }
             }
         }.catch { it ->
-            logLib("error wiki") { it }; emit(
+            instance.logLib("error wiki") { it }; emit(
             LoadingStatus.Error(
                 "could not load data",
                 it

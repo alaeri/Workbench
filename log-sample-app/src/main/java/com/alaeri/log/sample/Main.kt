@@ -36,9 +36,8 @@ object Main {
 
     }
 
-    private suspend fun CoroutineScope.loadWikiArticleSuspend() {
-        log("coroutine", 1) {
-            println("fun")
+    private suspend fun loadWikiArticleSuspend() {
+        this@Main.log("coroutine", 1) {
             val wikiRepository = this@Main.log("initialize Wiki Repo") { WikiRepositoryImpl() }
             val flow = wikiRepository.loadWikiArticle("fun")
             this@Main.logCollect("collect wiki flow", flow) { it ->
