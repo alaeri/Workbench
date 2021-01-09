@@ -2,19 +2,19 @@ package com.alaeri.log.sample.lib.wiki.wiki
 
 
 import com.alaeri.domain.wiki.*
+import com.alaeri.log.core.LogConfig
+import com.alaeri.log.core.child.ChildLogEnvironmentFactory
+import com.alaeri.log.core.child.CoroutineLogKey
 import com.alaeri.log.sample.lib.logFlow
 import com.alaeri.log.sample.lib.logLib
 import com.beust.klaxon.JsonReader
 import com.beust.klaxon.Klaxon
 import com.github.kittinunf.fuel.Fuel
 import com.github.kittinunf.fuel.coroutines.awaitString
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.supervisorScope
-import kotlinx.coroutines.withContext
 import org.sweble.wikitext.parser.WikitextParser
 import org.sweble.wikitext.parser.WtEntityMap
 import org.sweble.wikitext.parser.nodes.*
@@ -28,10 +28,15 @@ import java.io.StringReader
  * The project builds even these warnings appear.
  */
 class WikiRepositoryImpl : WikiRepository {
+    init {
+//        LogConfig.logEnvironmentFactory = ChildLogEnvironmentFactory
+    }
+
     val instance = this
-    override suspend fun loadWikiArticle(searchTerm: String?): Flow<LoadingStatus> = logFlow("load article", searchTerm) {
-        flow {
+    override suspend fun loadWikiArticle(searchTerm: String?): Flow<LoadingStatus> = logFlow<LoadingStatus>("load article", searchTerm) {
+//        flow {
             supervisorScope {
+                val coroutineLogEnvironment = currentCoroutineContext()[CoroutineLogKey]
                 if (searchTerm != null) {
                     emit(LoadingStatus.Loading(searchTerm))
                     val responseBody = run {
@@ -135,6 +140,6 @@ class WikiRepositoryImpl : WikiRepository {
             )
         )
         }
-    }
-
+//    }
+//
 }

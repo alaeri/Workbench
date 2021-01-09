@@ -37,7 +37,7 @@ object Main {
     }
 
     private suspend fun loadWikiArticleSuspend() {
-        this@Main.log("coroutine", 1) {
+        this@Main.log("load wiki article", 1) {
             val wikiRepository = this@Main.log("initialize Wiki Repo") { WikiRepositoryImpl() }
             val flow = wikiRepository.loadWikiArticle("fun")
             this@Main.logCollect("collect wiki flow", flow) { it ->

@@ -18,15 +18,12 @@ object GroupedLogsGraphMapper {
                 val listTag = log.tag as ListRepresentation
                 val receiver = listTag.representations.filterIsInstance<ReceiverRepresentation>().first()
                 val name = listTag.representations.filterIsInstance<NameRepresentation>().first()
-                val parent = listTag.representations.filterIsInstance<FiliationRepresentation>().firstOrNull()
+                val parents = listTag.representations.filterIsInstance<FiliationRepresentation>()
+                if(parents.isEmpty()){
+                    println("empty parents: $log")
+                }
                 val commandGroupIdentifier = LogGroupId(name.name, receiver.identity, receiver.type.clazz)
-                commandGroupIdentifier to CommandInvokation(listTag.identity, listOfNotNull<IdentityRepresentation>(
-                    if(parent != null){
-                        parent.parentRepresentation.identity
-                    }else{
-                        null
-                    })
-                )
+                commandGroupIdentifier to CommandInvokation(listTag.identity, parents.map { it.parentRepresentation.identity })
             }
         val map: Map<LogGroupId, List<Pair<LogGroupId, CommandInvokation>>> = entries.groupBy {
             it.first
@@ -51,6 +48,10 @@ object GroupedLogsGraphMapper {
                 }
                 InvokationGroup(it.tagId, groupRelations)
             }
+        }
+        println("groupedMap")
+        groupedMap.entries.forEach {
+            println("key: ${it.key} - value: ${it.value}")
         }
 
         var remainingItemsMap = groupedMap.mapValues { it.value.flatMap { it.relations } }

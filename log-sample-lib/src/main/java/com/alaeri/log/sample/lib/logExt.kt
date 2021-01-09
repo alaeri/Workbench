@@ -2,17 +2,21 @@ package com.alaeri.log.sample.lib
 
 import com.alaeri.log.core.Log
 import com.alaeri.log.core.LogConfig
+import com.alaeri.log.core.child.ChildTag
+import com.alaeri.log.core.child.CoroutineLogKey
 import com.alaeri.log.core.collector.LogCollector
 import com.alaeri.log.core.collector.LogPrinter
 import com.alaeri.log.core.collector.NoopCollector
+import com.alaeri.log.core.context.EmptyTag
 import com.alaeri.log.extra.tag.callsite.CallSiteTag
 import com.alaeri.log.extra.tag.coroutine.CoroutineContextTag
 import com.alaeri.log.extra.tag.name.NamedTag
 import com.alaeri.log.extra.tag.receiver.ReceiverTag
 import com.alaeri.log.extra.tag.thread.ThreadTag
+import kotlinx.coroutines.channels.ProducerScope
 import kotlinx.coroutines.currentCoroutineContext
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.withContext
 
 /**
  * To use the logger copy this class in your project and extend modify as needed
@@ -27,6 +31,7 @@ val collector = object: LogCollector{
         "HERE GOES NOTHING"
     }
 }
+
 internal suspend inline fun <reified T> Any.logLib(name: String,
                                    vararg params: Any? = arrayOf(),
                                    crossinline body :suspend ()->T) : T {
@@ -40,6 +45,7 @@ internal suspend inline fun <reified T> Any.logLib(name: String,
     return LogConfig.log(logContext, collector, *params){
         body.invoke()
     }
+
 }
 
 internal inline fun <reified T> Any.logBlockingLib(name: String,
@@ -53,16 +59,36 @@ internal inline fun <reified T> Any.logBlockingLib(name: String,
         body.invoke()
     }
 }
-internal inline fun <reified T> Any.logFlow(name: String,
+internal inline suspend fun <reified T> Any.logFlow(name: String,
                                             vararg params: Any? = arrayOf(),
-                                            flowBuilder: ()-> Flow<T>
+                                            crossinline flowBuilder: suspend FlowCollector<T>.()-> Unit
 ) : Flow<T> {
-    val logTag =  CallSiteTag() +
-            ReceiverTag(this) +
-            ThreadTag() +
-            NamedTag(name)
+//    val logTag =
+//        CallSiteTag() +
+//        ReceiverTag(this) +
+//        ThreadTag() +
+//        NamedTag(name)
     val receiver  = this
-    return LogConfig.logBlocking (logTag, collector, *params){
-        flowBuilder.invoke().onEach { receiver.logLib("$name:emit", it){} }
+    val retFlow: Flow<T> = receiver.logLib("$name", *params) {
+         flow<T> {
+            val emissionContext = currentCoroutineContext()
+            val flowCollector = this
+            receiver.logLib("$name:flow",flowCollector) {
+                val proxyFlowCollector = object: FlowCollector<T>{
+                    override suspend fun emit(value: T) {
+                        receiver.logLib("$name:emit", value){
+
+                        }
+                        withContext(emissionContext){
+                            flowCollector.emit(value)
+                        }
+                    }
+                }
+                //withContext(emissionContext) {
+                    flowBuilder.invoke(proxyFlowCollector)
+                //}
+            }
+        }
     }
+    return retFlow
 }

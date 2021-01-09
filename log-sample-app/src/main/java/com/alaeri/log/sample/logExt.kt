@@ -2,8 +2,10 @@ package com.alaeri.log.sample
 
 import com.alaeri.log.server.LogServer
 import com.alaeri.log.core.LogConfig
+import com.alaeri.log.core.child.*
 import com.alaeri.log.core.collector.LogCollector
-import com.alaeri.log.core.collector.LogPrinter
+import com.alaeri.log.core.collector.NoopCollector
+import com.alaeri.log.core.context.EmptyTag
 import com.alaeri.log.extra.identity.IdentityRepresentation
 import com.alaeri.log.extra.identity.IdentityTransformer
 import com.alaeri.log.extra.identity.utils.IdBank
@@ -25,13 +27,12 @@ import com.alaeri.log.serialize.serialize.mapping.CombinedTagTransformer
 import com.alaeri.log.serialize.serialize.mapping.EntityTransformer
 import com.alaeri.log.serialize.serialize.mapping.TagTypedSerializer
 import com.alaeri.log.serialize.serialize.representation.EntityRepresentation
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.currentCoroutineContext
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.supervisorScope
 import java.util.*
+import kotlin.coroutines.CoroutineContext
 
 /**
  * To use the logger copy this class in your project and extend modify as needed
@@ -112,34 +113,36 @@ internal suspend inline fun <reified T> Any.logCollect(name: String,
                                                        flow: Flow<T>,
                                                         vararg params: Any? = arrayOf(),
                                                         crossinline action: suspend (T)->Unit) {
-    val logTag =  CallSiteTag() +
-            ReceiverTag(this) +
-            ThreadTag() +
-            NamedTag(name)
+//    val receiver = this
+//    val currentCoroutineContext = currentCoroutineContext()
+//    val parentLogEnvironment = currentCoroutineContext[CoroutineLogKey]
+
+
+//    val childCoroutineContextTag = if(parentLogEnvironment != null){
+//        ChildTag(parentLogEnvironment.logEnvironment.tag)
+//    } else null
+//
+//    val logTag =  CallSiteTag() +
+//            ReceiverTag(this) +
+//            ThreadTag() +
+//            NamedTag(name) +
+//            (childCoroutineContextTag ?: EmptyTag())
     val receiver = this
 
-    return LogConfig.log(logTag, collector, flow, *params){
+//    val combinedChildTag = ChildTag(logTag) +
+//                ReceiverTag(receiver) + CallSiteTag() +
+//                ThreadTag() + NamedTag("$name:receive")
+//    val logEnvironment = ChildLogEnvironment(combinedChildTag, parentLogEnvironment?.logEnvironment?.collector?:NoopCollector,prepare = {},dispose = {})
+//    val flowLogContext = CoroutineLogEnvironment(logEnvironment)
+    return receiver.log(name, flow, *params){
         supervisorScope {
-            flow.collect {
-                val emitLogTag =
-                    ReceiverTag(receiver) + CallSiteTag() +
-                            ThreadTag() + NamedTag("$name:emission")
-                LogConfig.log(emitLogTag, collector, it){
+            flow
+//            .flowOn(flowLogContext)
+            .collect {
+                receiver.log("$name:receive", it){
                     action(it)
                 }
             }
         }
-    }
-}
-internal inline fun <reified T> Any.logFlow(name: String,
-                                               vararg params: Any? = arrayOf(),
-                                               flowBuilder: ()->Flow<T>) : Flow<T> {
-    val logTag =  CallSiteTag() +
-            ReceiverTag(this) +
-            ThreadTag() +
-            NamedTag(name)
-    val receiver  = this
-    return LogConfig.logBlocking (logTag, collector, *params){
-        flowBuilder.invoke().onEach { receiver.log("name:emit", it){} }
     }
 }
