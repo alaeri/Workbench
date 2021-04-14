@@ -28,6 +28,7 @@ import com.alaeri.log.serialize.serialize.mapping.EntityTransformer
 import com.alaeri.log.serialize.serialize.mapping.TagTypedSerializer
 import com.alaeri.log.serialize.serialize.representation.EntityRepresentation
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CompletableJob
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.supervisorScope
@@ -79,7 +80,7 @@ object SampleLogServer {
     fun quit() {
         logServer.stop()
     }
-    fun start(){
+    fun start(): Unit {
         logServer.start()
     }
     private val logServer =  LogServer(graphRepository, logRepository)
@@ -114,8 +115,6 @@ internal suspend inline fun <reified T> Any.logCollect(name: String,
                                                         vararg params: Any? = arrayOf(),
                                                         crossinline action: suspend (T)->Unit) {
 //    val receiver = this
-//    val currentCoroutineContext = currentCoroutineContext()
-//    val parentLogEnvironment = currentCoroutineContext[CoroutineLogKey]
 
 
 //    val childCoroutineContextTag = if(parentLogEnvironment != null){
@@ -132,17 +131,24 @@ internal suspend inline fun <reified T> Any.logCollect(name: String,
 //    val combinedChildTag = ChildTag(logTag) +
 //                ReceiverTag(receiver) + CallSiteTag() +
 //                ThreadTag() + NamedTag("$name:receive")
-//    val logEnvironment = ChildLogEnvironment(combinedChildTag, parentLogEnvironment?.logEnvironment?.collector?:NoopCollector,prepare = {},dispose = {})
-//    val flowLogContext = CoroutineLogEnvironment(logEnvironment)
+
     return receiver.log(name, flow, *params){
+        val currentCoroutineContext = currentCoroutineContext()
+        val parentLogEnvironment = currentCoroutineContext[CoroutineLogKey]
+        val parentTag = parentLogEnvironment!!.logEnvironment.tag
+        //supervisorScope {
+        val logEnvironment = ChildLogEnvironment(parentTag, parentLogEnvironment?.logEnvironment?.collector?:NoopCollector,prepare = {},dispose = {})
+        val flowLogContext = CoroutineLogEnvironment(logEnvironment)
         supervisorScope {
             flow
-//            .flowOn(flowLogContext)
-            .collect {
-                receiver.log("$name:receive", it){
-                    action(it)
+                //.flowOn(flowLogContext)
+                .collect {
+
+                    receiver.log("$name:receive", it){
+                        action(it)
+                    }
                 }
-            }
         }
+        //}
     }
 }

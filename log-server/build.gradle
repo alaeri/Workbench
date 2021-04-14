@@ -22,7 +22,7 @@ dependencies {
     implementation project(path: ':log-serialize')
     implementation project(path: ':log-repository')
 
-    def ktor_version = "1.5.0"
+    def ktor_version = "1.5.3"
     implementation "io.ktor:ktor:$ktor_version"
     implementation "io.ktor:ktor-server-netty:$ktor_version"
     implementation "io.ktor:ktor-gson:$ktor_version"
@@ -30,7 +30,7 @@ dependencies {
     implementation "io.ktor:ktor-serialization:$ktor_version"
 
     //Flow
-    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.1'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.3'
     testImplementation 'org.jetbrains.kotlinx:kotlinx-coroutines-test:1.3.5'
-    testImplementation 'junit:junit:4.13.1'
+    testImplementation 'junit:junit:4.13.2'
 }

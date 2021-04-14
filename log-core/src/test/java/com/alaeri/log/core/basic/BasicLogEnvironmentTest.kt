@@ -1,10 +1,8 @@
 package com.alaeri.log.core.basic
 
 import com.alaeri.log.core.collector.LogCollector
-import com.alaeri.log.core.Tag
-import com.nhaarman.mockitokotlin2.mock
-import com.nhaarman.mockitokotlin2.verify
-import com.nhaarman.mockitokotlin2.verifyNoMoreInteractions
+import com.alaeri.log.core.Log.Tag
+import com.nhaarman.mockitokotlin2.*
 import kotlinx.coroutines.test.*
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -38,10 +36,10 @@ class BasicLogEnvironmentTest {
     @Test
     fun testBlockingUnit(){
        val unit: Unit = basicLogEnvironment.logBlocking(arrayOf("param1")){
-           verify(logCollector).emit()
+           verify(logCollector).emit(any())
        }
        assertEquals(Unit, unit)
-       verify(logCollector).emit()
+       verify(logCollector, times(2)).emit(any())
     }
 
     @Test
@@ -52,8 +50,7 @@ class BasicLogEnvironmentTest {
                 throw exception
             }
         }
-        verify(logCollector).emit()
-        verify(logCollector).emit()
+        verify(logCollector, times(2)).emit(any())
         assertEquals(exception, result.exceptionOrNull())
     }
 
@@ -64,18 +61,17 @@ class BasicLogEnvironmentTest {
                 "result"
             }
         }
-        verify(logCollector).emit()
-        verify(logCollector).emit()
+        verify(logCollector, times(2)).emit(any())
         assertEquals("result", result.getOrNull())
     }
 
     @Test
     fun testSuspendingUnit() = testCoroutineScope.runBlockingTest{
         val unit: Unit = basicLogEnvironment.logSuspending("param1"){
-            verify(logCollector).emit()
+            verify(logCollector).emit(any())
         }
         assertEquals(Unit, unit)
-        verify(logCollector).emit()
+        verify(logCollector, times(2)).emit(any())
     }
 
     @Test
@@ -86,8 +82,7 @@ class BasicLogEnvironmentTest {
                 throw exception
             }
         }
-        verify(logCollector).emit()
-        verify(logCollector).emit()
+        verify(logCollector, times(2)).emit(any())
         verifyNoMoreInteractions(logCollector)
         //Here we need to compare message as exceptions do not match assertEquals?
         //TODO investigate
@@ -101,8 +96,7 @@ class BasicLogEnvironmentTest {
                 "result"
             }
         }
-        verify(logCollector).emit()
-        verify(logCollector).emit()
+        verify(logCollector, times(2)).emit(any())
         verifyNoMoreInteractions(logCollector)
         assertEquals("result", result.getOrNull())
     }

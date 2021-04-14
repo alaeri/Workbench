@@ -14,6 +14,7 @@ import io.ktor.routing.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import io.ktor.websocket.*
+import kotlinx.coroutines.CompletableJob
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
 import java.util.concurrent.TimeUnit
@@ -44,7 +45,7 @@ class LogServer(
         }
 
         routing {
-            trace { application.log.trace(it.buildText()) }
+            //trace { application.log.trace(it.buildText()) }
             webSocket("/ws/") {
                 graphRepository.graph.collect {
                     outgoing.offer(Frame.Text(Gson().toJson(it)))
@@ -70,6 +71,7 @@ class LogServer(
         }
     }
 
+    @EngineAPI
     fun start() : Unit = server.start(false).let {}
 
     fun stop() =  server.stop(0, 0, TimeUnit.SECONDS)

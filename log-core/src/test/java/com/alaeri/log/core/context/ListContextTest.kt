@@ -1,7 +1,7 @@
 package com.alaeri.log.core
 
 import com.alaeri.log.core.context.ListTag
-import com.alaeri.log.core.Tag
+import com.alaeri.log.core.Log.Tag
 import com.nhaarman.mockitokotlin2.mock
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue

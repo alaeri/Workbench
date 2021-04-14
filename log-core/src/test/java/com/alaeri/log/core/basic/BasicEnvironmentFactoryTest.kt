@@ -1,7 +1,7 @@
 package com.alaeri.log.core.basic
 
 import com.alaeri.log.core.collector.LogCollector
-import com.alaeri.log.core.Tag
+import com.alaeri.log.core.Log.Tag
 import com.nhaarman.mockitokotlin2.*
 import junit.framework.Assert.assertEquals
 import kotlinx.coroutines.test.TestCoroutineDispatcher
@@ -41,41 +41,41 @@ class BasicEnvironmentFactoryTest {
     @Test
     fun testBlockingLog(){
         basicLogEnvironmentFactory.logBlocking(tag, logCollector) {
-            verify(logCollector).emit()
+            verify(logCollector).emit(any())
         }
-        verify(logCollector).emit()
+        verify(logCollector, times(2)).emit(any())
     }
 
     @Test
     fun testBlockingException(){
         kotlin.runCatching {
             basicLogEnvironmentFactory.logBlocking(tag, logCollector) {
-                verify(logCollector).emit()
+                verify(logCollector).emit(any())
                 throw RuntimeException("Piou")
                 @Suppress("UNREACHABLE_CODE")
                 Unit
             }
         }
-        verify(logCollector).emit()
+        verify(logCollector, times(2)).emit(any())
     }
 
     @Test
     fun testSuspendingLog()= testCoroutineScope.runBlockingTest {
         val log = basicLogEnvironmentFactory.log(tag, logCollector, "params") {
-            verify(logCollector).emit()
+            verify(logCollector).emit(any())
             "PIOU"
         }
-        verify(logCollector).emit()
+        verify(logCollector, times(2)).emit(any())
         assertEquals("PIOU", log)
     }
 
     @Test
     fun testSuspendingLog2()= testCoroutineScope.runBlockingTest {
         val log = basicLogEnvironmentFactory.log(tag, logCollector) {
-            verify(logCollector).emit()
+            verify(logCollector).emit(any())
             "ABC"
         }
-        verify(logCollector).emit()
+        verify(logCollector, times(2)).emit(any())
         assertEquals("ABC", log)
     }
 

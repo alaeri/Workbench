@@ -21,6 +21,7 @@ import org.sweble.wikitext.parser.nodes.*
 import org.sweble.wikitext.parser.preprocessor.PreprocessedWikitext
 import org.sweble.wikitext.parser.utils.SimpleParserConfig
 import java.io.StringReader
+import java.lang.Exception
 
 /**
  * TODO find why IDE displays warnings about "wtParsedWikitextPage.propertyIterator()"
@@ -33,25 +34,40 @@ class WikiRepositoryImpl : WikiRepository {
     }
 
     val instance = this
-    override suspend fun loadWikiArticle(searchTerm: String?): Flow<LoadingStatus> = logFlow<LoadingStatus>("load article", searchTerm) {
-//        flow {
-            supervisorScope {
-                val coroutineLogEnvironment = currentCoroutineContext()[CoroutineLogKey]
+    override suspend fun loadWikiArticle(searchTerm: String?): Flow<LoadingStatus> = flow{//logFlow<LoadingStatus>("load article", searchTerm) {
+        supervisorScope {
+            try {
+
                 if (searchTerm != null) {
                     emit(LoadingStatus.Loading(searchTerm))
-                    val responseBody = run {
-                        val deferredString = async {
-                            withContext(Dispatchers.IO) {
-                                Fuel.get("https://en.wikipedia.org/w/api.php?action=query&prop=revisions&titles=$searchTerm&rvslots=*&rvprop=content&formatversion=2&format=json")
-                                    .awaitString()
+                    val result1 = //run {
+                        supervisorScope {
+                            println("context01: ${currentCoroutineContext()}")
+                            val result001 = kotlin.runCatching {
+                                //withContext(Dispatchers.IO) {
+                                val deferredString = async {
+//                                    supervisorScope {
+//                                        Fuel.get("https://en.wikipedia.org/w/api.php?action=query&prop=revisions&titles=$searchTerm&rvslots=*&rvprop=content&formatversion=2&format=json")
+//                                            .awaitString(scope = SupervisorJob())
+//
+//                                    }
+                                    delay(100)
+                                    throw RuntimeException("bouh")
+                                    "TEST"
+                                }
+                                deferredString.await()
+                                //}
                             }
-                        }
-                        deferredString.await()
+                            println("context01: ${currentCoroutineContext()}")
+                            result001
+                       // }
                     }
+                    println("context1: ${currentCoroutineContext()}")
+                    val responseBody = result1.getOrThrow()
                     emit(LoadingStatus.Parsing(responseBody.length.toLong()))
 
                     val apiWikiArticle = withContext(Dispatchers.Default) {
-                        instance.logLib("httpResponse:","http") { responseBody }
+                        instance.logLib("httpResponse:", "http") { responseBody }
                         async {
                             Klaxon().parse<ApiWikiArticle>(JsonReader(StringReader(responseBody)))
                                 ?: throw RuntimeException("pas de bol")
@@ -83,20 +99,24 @@ class WikiRepositoryImpl : WikiRepository {
                         ) { acc, wtNode ->
                             when (wtNode) {
                                 is WtText -> when {
-                                    wtNode.content?.startsWith("{{About|") == true -> acc.copy(about = wtNode.content)
+                                    wtNode.content?.startsWith("{{About|") == true -> acc.copy(
+                                        about = wtNode.content
+                                    )
                                     wtNode.content?.startsWith("{{short description|") == true -> acc.copy(
                                         shortDescription = wtNode.content
                                     )
                                     wtNode.content?.trim()?.startsWith("{{") == true -> acc
                                     wtNode.content?.trim()?.startsWith("|") == true -> acc
                                     else -> {
-                                        acc.lines.last().add(WikiText.NormalText(wtNode.content))
+                                        acc.lines.last()
+                                            .add(WikiText.NormalText(wtNode.content))
                                         acc
                                     }
                                 }
                                 is WtInternalLink -> {
                                     val wtPageName: WtPageName =
-                                        wtNode.mapNotNull { node -> node as? WtPageName }.first()
+                                        wtNode.mapNotNull { node -> node as? WtPageName }
+                                            .first()
                                     val wtText: WtText = wtPageName
                                         .mapNotNull { node -> node as? WtText }.first()
                                     acc.lines.last().add(
@@ -131,15 +151,13 @@ class WikiRepositoryImpl : WikiRepository {
                         )
                     )
                 }
+            }catch (e: Exception) {
+                println("error: $e")
+                println("context2: ${currentCoroutineContext()}")
+                instance.logLib("error wiki") { e };
+                emit(LoadingStatus.Error("could not load data", e))
             }
-        }.catch { it ->
-            instance.logLib("error wiki") { it }; emit(
-            LoadingStatus.Error(
-                "could not load data",
-                it
-            )
-        )
         }
-//    }
-//
+
+    }
 }

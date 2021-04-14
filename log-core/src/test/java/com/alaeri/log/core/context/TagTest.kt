@@ -1,6 +1,6 @@
 package com.alaeri.log.core.context
 
-import com.alaeri.log.core.Tag
+import com.alaeri.log.core.Log.Tag
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.spy

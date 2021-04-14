@@ -1,5 +1,8 @@
 package com.alaeri.log.core.collector
 
+import com.alaeri.log.core.Log
+import com.alaeri.log.core.context.EmptyTag
+import com.nhaarman.mockitokotlin2.any
 import org.junit.Test
 
 /**
@@ -10,7 +13,7 @@ class LogPrinterTest {
     @Test
     fun testPrint(){
         val logPrinter = LogPrinter()
-        logPrinter.emit()
+        logPrinter.emit(Log(EmptyTag(), Log.Message.Starting(emptyList())))
     }
 
 }

@@ -6,22 +6,26 @@ import com.alaeri.log.sample.lib.wiki.wiki.WikiRepositoryImpl
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.flow
+import java.util.concurrent.Executors
 
+/**
+ * Using logBlocking rather than log as
+ * This code may throw an exception
+ * @see SuspendInlineErrorRepro
+ *
+ */
 object Main {
 
     init {
         LogConfig.logEnvironmentFactory = ChildLogEnvironmentFactory
     }
 
-
     @JvmStatic
     fun main(args: Array<String>) {
-        logBlocking("print args", args.joinToString(",")){}
-
 
         logBlocking("await Job") {
             runBlocking {
-                SampleLogServer.start()
+                val job = SampleLogServer.start()
                 println("type enter to continue: server should be up at http://localhost:8080/")
                 readLine()
                 withContext(Dispatchers.IO){
@@ -30,6 +34,8 @@ object Main {
                 println("type enter to quit")
                 readLine()
                 SampleLogServer.quit()
+                println("grace period for server")
+                delay(1000)
 
             }
         }
@@ -37,12 +43,17 @@ object Main {
     }
 
     private suspend fun loadWikiArticleSuspend() {
-        this@Main.log("load wiki article", 1) {
-            val wikiRepository = this@Main.log("initialize Wiki Repo") { WikiRepositoryImpl() }
-            val flow = wikiRepository.loadWikiArticle("fun")
-            this@Main.logCollect("collect wiki flow", flow) { it ->
-                println(it)
+        this@Main.logBlocking("load wiki article", 1) {
+            val wikiRepository = this@Main.logBlocking("initialize Wiki Repo") { WikiRepositoryImpl() }
+            //val flow =
+            wikiRepository.loadWikiArticle("fun").collect {
+                    it -> println(it)
             }
+            println("done")
+//            this@Main.logCollect("collect wiki flow", flow) { it ->
+//                println(it)
+//            }
         }
     }
+
 }

@@ -59,7 +59,7 @@ internal inline fun <reified T> Any.logBlockingLib(name: String,
         body.invoke()
     }
 }
-internal inline suspend fun <reified T> Any.logFlow(name: String,
+internal suspend inline fun <reified T> Any.logFlow(name: String,
                                             vararg params: Any? = arrayOf(),
                                             crossinline flowBuilder: suspend FlowCollector<T>.()-> Unit
 ) : Flow<T> {
@@ -73,20 +73,17 @@ internal inline suspend fun <reified T> Any.logFlow(name: String,
          flow<T> {
             val emissionContext = currentCoroutineContext()
             val flowCollector = this
-            receiver.logLib("$name:flow",flowCollector) {
-                val proxyFlowCollector = object: FlowCollector<T>{
-                    override suspend fun emit(value: T) {
-                        receiver.logLib("$name:emit", value){
-
-                        }
-                        withContext(emissionContext){
-                            flowCollector.emit(value)
-                        }
-                    }
-                }
-                //withContext(emissionContext) {
-                    flowBuilder.invoke(proxyFlowCollector)
-                //}
+             val proxyFlowCollector = object: FlowCollector<T>{
+                 override suspend fun emit(value: T) {
+                     receiver.logLib("$name:emit", flowCollector, value){
+                         withContext(emissionContext){
+                             flowCollector.emit(value)
+                         }
+                     }
+                 }
+             }
+            receiver.logLib("$name:buildFlow",flowCollector) {
+                flowBuilder.invoke(proxyFlowCollector)
             }
         }
     }

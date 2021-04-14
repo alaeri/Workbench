@@ -42,11 +42,13 @@ abstract class LogEnvironment{
         val coroutineLogEnvironment = CoroutineLogEnvironment(this)
         return withContext(currentCoroutineContext() + coroutineLogEnvironment + SupervisorJob()){
             collector.emit(Log(tag, Log.Message.Starting(params.toList())))
-            val result = supervisorScope {
-                runCatching {
-                    body.invoke()
+            val result =
+                supervisorScope {
+                    runCatching {
+                        body.invoke()
+                    }
                 }
-            }
+
             val message = if(result.isSuccess){
                 Log.Message.Done(result.getOrNull())
             }else{

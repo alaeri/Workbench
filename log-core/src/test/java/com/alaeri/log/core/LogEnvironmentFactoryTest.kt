@@ -1,7 +1,6 @@
 package com.alaeri.log.core
 
 import com.alaeri.log.core.collector.LogCollector
-import com.alaeri.log.core.Tag
 import com.nhaarman.mockitokotlin2.*
 import kotlinx.coroutines.test.TestCoroutineDispatcher
 import kotlinx.coroutines.test.TestCoroutineScope
@@ -21,17 +20,17 @@ class LogEnvironmentFactoryTest {
 
 
     val collector: LogCollector = mock {  }
-    val context: Tag = mock {  }
+    val context: Log.Tag = mock {  }
     val logEnvironment: LogEnvironment = mock { }
 
     val logEnvironmentFactory = object : LogEnvironmentFactory(){
         override suspend fun suspendingLogEnvironment(
-            tag: Tag,
+            tag: Log.Tag,
             collector: LogCollector?
         ): LogEnvironment = logEnvironment
 
         override fun blockingLogEnvironment(
-            tag: Tag,
+            tag: Log.Tag,
             collector: LogCollector?
         ): LogEnvironment = logEnvironment
     }
@@ -63,7 +62,7 @@ class LogEnvironmentFactoryTest {
         verify(logEnvironment).dispose()
         verify(logEnvironment, times(2)).tag
         verify(logEnvironment, times(2)).collector
-        verify(collector, times(2)).emit()
+        verify(collector, times(2)).emit(any())
         verifyNoMoreInteractions(logEnvironment)
     }
 

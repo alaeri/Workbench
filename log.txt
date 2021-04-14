@@ -1,0 +1,92 @@
+
+> Configure project :app
+WARNING: DSL element 'android.viewBinding.enabled' is obsolete and has been replaced with 'android.buildFeatures.viewBinding'.
+It will be removed in version 7.0 of the Android Gradle plugin.
+WARNING: API 'BaseVariant.getApplicationIdTextResource' is obsolete and has been replaced with 'VariantProperties.applicationId'.
+It will be removed in version 7.0 of the Android Gradle plugin.
+For more information, see TBD.
+To determine what is calling BaseVariant.getApplicationIdTextResource, use -Pandroid.debug.obsoleteApi=true on the command line to display more information.
+
+> Configure project :command-android-visualizer
+WARNING: DSL element 'android.viewBinding.enabled' is obsolete and has been replaced with 'android.buildFeatures.viewBinding'.
+It will be removed in version 7.0 of the Android Gradle plugin.
+
+> Configure project :recyclerview-extras
+WARNING: DSL element 'android.viewBinding.enabled' is obsolete and has been replaced with 'android.buildFeatures.viewBinding'.
+It will be removed in version 7.0 of the Android Gradle plugin.
+
+> Task :log-core:compileKotlin UP-TO-DATE
+> Task :log-core:compileJava NO-SOURCE
+> Task :log-core:processResources NO-SOURCE
+> Task :log-core:classes UP-TO-DATE
+> Task :log-core:inspectClassesForKotlinIC UP-TO-DATE
+> Task :log-core:jar UP-TO-DATE
+> Task :log-serialize:compileKotlin UP-TO-DATE
+> Task :log-serialize:compileJava NO-SOURCE
+> Task :log-extras:compileKotlin UP-TO-DATE
+> Task :log-extras:compileJava UP-TO-DATE
+> Task :log-extras:processResources NO-SOURCE
+> Task :log-extras:classes UP-TO-DATE
+> Task :log-extras:inspectClassesForKotlinIC UP-TO-DATE
+> Task :log-extras:jar UP-TO-DATE
+> Task :log-repository:compileKotlin UP-TO-DATE
+> Task :log-repository:compileJava NO-SOURCE
+> Task :log-repository:processResources NO-SOURCE
+> Task :log-repository:classes UP-TO-DATE
+> Task :log-repository:inspectClassesForKotlinIC UP-TO-DATE
+> Task :log-repository:jar UP-TO-DATE
+> Task :log-sample-lib:compileKotlin UP-TO-DATE
+> Task :log-sample-lib:compileJava NO-SOURCE
+> Task :log-server:compileKotlin UP-TO-DATE
+> Task :log-server:compileJava NO-SOURCE
+> Task :log-sample-app:compileKotlin UP-TO-DATE
+> Task :log-sample-app:compileJava NO-SOURCE
+> Task :log-sample-app:processResources NO-SOURCE
+> Task :log-sample-app:classes UP-TO-DATE
+> Task :log-sample-app:inspectClassesForKotlinIC UP-TO-DATE
+> Task :log-sample-app:jar UP-TO-DATE
+> Task :log-sample-lib:processResources NO-SOURCE
+> Task :log-sample-lib:classes UP-TO-DATE
+> Task :log-sample-lib:inspectClassesForKotlinIC UP-TO-DATE
+> Task :log-sample-lib:jar UP-TO-DATE
+> Task :log-serialize:processResources NO-SOURCE
+> Task :log-serialize:classes UP-TO-DATE
+> Task :log-serialize:inspectClassesForKotlinIC UP-TO-DATE
+> Task :log-serialize:jar UP-TO-DATE
+> Task :log-server:processResources UP-TO-DATE
+> Task :log-server:classes UP-TO-DATE
+> Task :log-server:inspectClassesForKotlinIC UP-TO-DATE
+> Task :log-server:jar UP-TO-DATE
+> Task :log-sample-app:startScripts UP-TO-DATE
+> Task :log-sample-app:distTar UP-TO-DATE
+> Task :log-sample-app:distZip UP-TO-DATE
+> Task :log-sample-app:shadowJar UP-TO-DATE
+> Task :log-sample-app:startShadowScripts UP-TO-DATE
+> Task :log-sample-app:shadowDistTar UP-TO-DATE
+> Task :log-sample-app:shadowDistZip UP-TO-DATE
+> Task :log-sample-app:assemble UP-TO-DATE
+> Task :log-sample-app:compileTestKotlin NO-SOURCE
+> Task :log-sample-app:compileTestJava NO-SOURCE
+> Task :log-sample-app:processTestResources NO-SOURCE
+> Task :log-sample-app:testClasses UP-TO-DATE
+> Task :log-sample-app:test NO-SOURCE
+> Task :log-sample-app:jacocoTestReport SKIPPED
+> Task :log-sample-app:check UP-TO-DATE
+> Task :log-sample-app:build UP-TO-DATE
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 7.0.
+Use '--warning-mode all' to show the individual deprecation warnings.
+See https://docs.gradle.org/6.7/userguide/command_line_interface.html#sec:command_line_warnings
+
+BUILD SUCCESSFUL in 19s
+30 actionable tasks: 30 up-to-date
+type enter to continue: server should be up at http://localhost:8080/
+Loading(searchTerm=fun)
+context01: [com.alaeri.log.core.child.CoroutineLogEnvironment@4fbe2d4c, SupervisorCoroutine{Active}@575a1c38, Dispatchers.IO]
+done
+context01: [com.alaeri.log.core.child.CoroutineLogEnvironment@4fbe2d4c, SupervisorCoroutine{Active}@575a1c38, Dispatchers.IO]
+context1: [com.alaeri.log.core.child.CoroutineLogEnvironment@4fbe2d4c, SupervisorCoroutine{Active}@49793337, Dispatchers.IO]
+error: java.lang.RuntimeException: bouh
+context2: [com.alaeri.log.core.child.CoroutineLogEnvironment@4fbe2d4c, SupervisorCoroutine{Active}@49793337, Dispatchers.IO]
+Error(message=could not load data, e=java.lang.RuntimeException: bouh)
+type enter to quit

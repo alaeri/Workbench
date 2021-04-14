@@ -57,8 +57,7 @@ class IntegrationTest {
             val greeting = log(collector = logCollector,  params = *arrayOf("bump")) {
                 salut
             }
-            verify(logCollector).emit()
-            verify(logCollector).emit()
+            verify(logCollector, times(2)).emit(any())
             verifyNoMoreInteractions(logCollector)
         }
     }
