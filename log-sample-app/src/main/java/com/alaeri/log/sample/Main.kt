@@ -5,8 +5,6 @@ import com.alaeri.log.core.child.ChildLogEnvironmentFactory
 import com.alaeri.log.sample.lib.wiki.wiki.WikiRepositoryImpl
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.flow
-import java.util.concurrent.Executors
 
 /**
  * Using logBlocking rather than log as
@@ -15,6 +13,7 @@ import java.util.concurrent.Executors
  *
  */
 object Main {
+    const val defaultSearchTerm = "Coroutine"
 
     init {
         LogConfig.logEnvironmentFactory = ChildLogEnvironmentFactory
@@ -22,37 +21,35 @@ object Main {
 
     @JvmStatic
     fun main(args: Array<String>) {
-
-        logBlocking("await Job") {
+        logBlocking("Application") {
+            logBlocking("printArgs"){
+                args.forEach{
+                    println(it)
+                }
+            }
             runBlocking {
-                val job = SampleLogServer.start()
-                println("type enter to continue: server should be up at http://localhost:8080/")
-                readLine()
+                SampleLogServer.start()
+                println("Server should be up at http://localhost:8080/")
+                print("Enter a search term to continue [$defaultSearchTerm]:")
+                val searchTerm = readLine() ?: defaultSearchTerm
                 withContext(Dispatchers.IO){
-                    loadWikiArticleSuspend()
+                    loadWikiArticleSuspend(searchTerm)
                 }
                 println("type enter to quit")
                 readLine()
                 SampleLogServer.quit()
-                println("grace period for server")
                 delay(1000)
-
             }
         }
 
     }
 
-    private suspend fun loadWikiArticleSuspend() {
-        this@Main.logBlocking("load wiki article", 1) {
-            val wikiRepository = this@Main.logBlocking("initialize Wiki Repo") { WikiRepositoryImpl() }
-            //val flow =
-            wikiRepository.loadWikiArticle("fun").collect {
+    private suspend fun loadWikiArticleSuspend(searchTerm: String) {
+        this@Main.log("load wiki article", 1) {
+            val wikiRepository = this@Main.log("initialize Wiki Repo") { WikiRepositoryImpl() }
+            wikiRepository.loadWikiArticle(searchTerm).collect {
                     it -> println(it)
             }
-            println("done")
-//            this@Main.logCollect("collect wiki flow", flow) { it ->
-//                println(it)
-//            }
         }
     }
 

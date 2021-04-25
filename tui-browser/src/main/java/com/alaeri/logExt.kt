@@ -1,4 +1,4 @@
-package com.alaeri.log.sample
+package com.alaeri
 
 import com.alaeri.log.server.LogServer
 import com.alaeri.log.core.LogConfig
@@ -83,8 +83,8 @@ object SampleLogServer {
     private val logServer =  LogServer(graphRepository, logRepository)
 }
 internal suspend fun <T> Any.log(name: String,
-                                   vararg params: Any? = arrayOf(),
-                                   body :suspend ()->T) : T {
+                                 vararg params: Any? = arrayOf(),
+                                 body :suspend ()->T) : T {
     val currentCoroutineContext = currentCoroutineContext()
     val logContext = ReceiverTag(
         this) +
@@ -98,8 +98,8 @@ internal suspend fun <T> Any.log(name: String,
 }
 
 internal inline fun <reified T> Any.logBlocking(name: String,
-                                   vararg params: Any? = arrayOf(),
-                                   body :()->T): T {
+                                                vararg params: Any? = arrayOf(),
+                                                body :()->T): T {
     val logContext =  ReceiverTag(this) +
             CallSiteTag() +
             ThreadTag() +
@@ -110,8 +110,8 @@ internal inline fun <reified T> Any.logBlocking(name: String,
 }
 internal suspend inline fun <reified T> Any.logCollect(name: String,
                                                        flow: Flow<T>,
-                                                        vararg params: Any? = arrayOf(),
-                                                        crossinline action: suspend (T)->Unit) {
+                                                       vararg params: Any? = arrayOf(),
+                                                       crossinline action: suspend (T)->Unit) {
 //    val receiver = this
 
 

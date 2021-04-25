@@ -8,20 +8,22 @@ import kotlinx.coroutines.*
 object SuspendInlineErrorWorkAround {
 
 
-    private suspend fun suspendInlineFunction(body: suspend CoroutineScope.()->Unit){
-        supervisorScope {
-            body.invoke(this)
+    private suspend fun <T> suspendInlineFunction(body: suspend ()->T): T{
+        return supervisorScope {
+            body.invoke()
         }
     }
 
     @JvmStatic
     fun main(args: Array<String>) {
         runBlocking {
-            suspendInlineFunction {
+            val res = suspendInlineFunction {
                 withContext(Dispatchers.IO) {
                     println("Apres moi, le deluge")
+                    "ggggg"
                 }
             }
+            println(res)
         }
     }
 }

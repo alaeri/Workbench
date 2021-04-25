@@ -19,13 +19,13 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
 import java.util.concurrent.TimeUnit
 
+@OptIn(EngineAPI::class)
 class LogServer(
     private val graphRepository: GraphRepository,
     private val logRepository: LogRepository) {
 
 
     private val server = embeddedServer(Netty, 8080) {
-
         install(ContentNegotiation) {
             gson {
                 setPrettyPrinting()
@@ -71,7 +71,6 @@ class LogServer(
         }
     }
 
-    @EngineAPI
     fun start() : Unit = server.start(false).let {}
 
     fun stop() =  server.stop(0, 0, TimeUnit.SECONDS)

@@ -1,11 +1,7 @@
 package com.alaeri.data
 
-import com.alaeri.command.CommandState
-import com.alaeri.command.core.flow.FlowCommand
-import com.alaeri.command.core.flow.IFlowCommand
-import com.alaeri.command.core.flow.flowCommand
-import com.alaeri.domain.wiki.*
 import com.alaeri.domain.ILogger
+import com.alaeri.domain.wiki.*
 import com.beust.klaxon.JsonReader
 import com.beust.klaxon.Klaxon
 import com.github.kittinunf.fuel.Fuel
@@ -13,7 +9,6 @@ import com.github.kittinunf.fuel.coroutines.awaitString
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.supervisorScope
@@ -21,7 +16,6 @@ import kotlinx.coroutines.withContext
 import org.sweble.wikitext.parser.WikitextParser
 import org.sweble.wikitext.parser.WtEntityMap
 import org.sweble.wikitext.parser.nodes.*
-
 import org.sweble.wikitext.parser.preprocessor.PreprocessedWikitext
 import org.sweble.wikitext.parser.utils.SimpleParserConfig
 import java.io.StringReader
@@ -131,8 +125,4 @@ class WikiRepositoryImpl(val logger: ILogger? = null) : WikiRepository {
                 }
             }
         }.catch { it -> logger?.println(it); emit(LoadingStatus.Error("could not load data", it)) }
-
-    override fun loadWikiArticleCommand(searchTerm: String): IFlowCommand<LoadingStatus> = flowCommand(name = "load article flow") {
-        loadWikiArticle(searchTerm)
-    }
 }

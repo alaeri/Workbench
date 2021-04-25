@@ -30,7 +30,7 @@ import java.lang.Exception
  */
 class WikiRepositoryImpl : WikiRepository {
     init {
-//        LogConfig.logEnvironmentFactory = ChildLogEnvironmentFactory
+        LogConfig.logEnvironmentFactory = ChildLogEnvironmentFactory
     }
 
     val instance = this
@@ -42,27 +42,15 @@ class WikiRepositoryImpl : WikiRepository {
                     emit(LoadingStatus.Loading(searchTerm))
                     val result1 = //run {
                         supervisorScope {
-                            println("context01: ${currentCoroutineContext()}")
                             val result001 = kotlin.runCatching {
-                                //withContext(Dispatchers.IO) {
-                                val deferredString = async {
-//                                    supervisorScope {
-//                                        Fuel.get("https://en.wikipedia.org/w/api.php?action=query&prop=revisions&titles=$searchTerm&rvslots=*&rvprop=content&formatversion=2&format=json")
-//                                            .awaitString(scope = SupervisorJob())
-//
-//                                    }
-                                    delay(100)
-                                    throw RuntimeException("bouh")
-                                    "TEST"
+                                supervisorScope {
+                                    Fuel.get("https://en.wikipedia.org/w/api.php?action=query&prop=revisions&titles=$searchTerm&rvslots=*&rvprop=content&formatversion=2&format=json")
+                                        .awaitString(scope = SupervisorJob())
+
                                 }
-                                deferredString.await()
-                                //}
                             }
-                            println("context01: ${currentCoroutineContext()}")
                             result001
-                       // }
                     }
-                    println("context1: ${currentCoroutineContext()}")
                     val responseBody = result1.getOrThrow()
                     emit(LoadingStatus.Parsing(responseBody.length.toLong()))
 
@@ -153,7 +141,6 @@ class WikiRepositoryImpl : WikiRepository {
                 }
             }catch (e: Exception) {
                 println("error: $e")
-                println("context2: ${currentCoroutineContext()}")
                 instance.logLib("error wiki") { e };
                 emit(LoadingStatus.Error("could not load data", e))
             }

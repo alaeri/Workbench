@@ -70,7 +70,7 @@ class ChildLogEnvironmentFactoryTest {
 
     @Test
     fun testSuspendingLog()= testCoroutineScope.runBlockingTest {
-        val log = childLogEnvironmentFactory.log(tag, logCollector, "params") {
+        val log = childLogEnvironmentFactory.inlineSuspendLog(tag, logCollector, "params") {
             verify(logCollector).emit(any())
             "PIOU"
         }
@@ -80,7 +80,7 @@ class ChildLogEnvironmentFactoryTest {
 
     @Test
     fun testSuspendingLog2()= testCoroutineScope.runBlockingTest {
-        val log = childLogEnvironmentFactory.log(tag, logCollector) {
+        val log = childLogEnvironmentFactory.inlineSuspendLog(tag, logCollector) {
             verify(logCollector).emit(any())
             "ABC"
         }
@@ -96,7 +96,7 @@ class ChildLogEnvironmentFactoryTest {
             verify(noopCollector).emit(any())
             var result: String? = null
             testCoroutineScope.runBlockingTest {
-                result = childLogEnvironmentFactory.log {
+                result = childLogEnvironmentFactory.inlineSuspendLog {
                     verify(noopCollector, times(2)).emit(any())
                     val suspendLambda : suspend () -> String = suspend { "ABC" }
                     withContext(testCoroutineDispatcher) { suspendLambda() }
@@ -131,7 +131,7 @@ class ChildLogEnvironmentFactoryTest {
 
     @Test
     fun testSuspendingThenBlockingLog() = runBlockingTest{
-        val abc = childLogEnvironmentFactory.log(tag, noopCollector) {
+        val abc = childLogEnvironmentFactory.inlineSuspendLog(tag, noopCollector) {
             verify(noopCollector).emit(any())
             val blockingLambda : () -> String = { "ABC" }
             childLogEnvironmentFactory.logBlocking {
@@ -143,10 +143,10 @@ class ChildLogEnvironmentFactoryTest {
 
     @Test
     fun testSuspendingThenSuspendingLog() = runBlockingTest{
-        val abc = childLogEnvironmentFactory.log(tag, noopCollector) {
+        val abc = childLogEnvironmentFactory.inlineSuspendLog(tag, noopCollector) {
             verify(noopCollector).emit(any())
             val suspendingLambda : suspend () -> String = suspend { "ABC" }
-            childLogEnvironmentFactory.log {
+            childLogEnvironmentFactory.inlineSuspendLog {
                 suspendingLambda()
             }
         }

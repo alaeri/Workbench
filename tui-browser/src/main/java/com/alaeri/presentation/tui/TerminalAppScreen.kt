@@ -1,14 +1,12 @@
 package com.alaeri.presentation.tui
 
-import com.alaeri.command.core.flow.syncInvokeFlow
-import com.alaeri.command.core.suspend.*
-import com.alaeri.command.core.suspendInvoke
-import com.alaeri.domain.ILogger
-import com.alaeri.presentation.tui.wrap.LineWrapper
-import com.alaeri.presentation.PresentationState
 import com.alaeri.domain.wiki.LoadingStatus
 import com.alaeri.domain.wiki.WikiArticle
 import com.alaeri.domain.wiki.WikiText
+import com.alaeri.log
+import com.alaeri.presentation.PresentationState
+import com.alaeri.presentation.tui.wrap.LineWrapper
+import com.alaeri.presentation.wiki.SelectionRepository
 import com.googlecode.lanterna.SGR
 import com.googlecode.lanterna.TerminalPosition
 import com.googlecode.lanterna.TerminalSize
@@ -23,7 +21,6 @@ import kotlin.coroutines.CoroutineContext
 
 class TerminalAppScreen(private val terminal: Terminal,
                         private val screen: Screen,
-                        private val logger: ILogger,
                         private val viewModelFactory: IViewModelFactory,
                         private val drawCoroutineContext : CoroutineContext = Executors.newSingleThreadExecutor().asCoroutineDispatcher(),
                         private val readKeyCoroutineContext : CoroutineContext = Executors.newSingleThreadExecutor().asCoroutineDispatcher()) {
@@ -31,6 +28,7 @@ class TerminalAppScreen(private val terminal: Terminal,
     private var rootWindow: MultiWindowTextGUI
     private val textBox: TextBox
     private val mainContentPanelLeft: Panel
+    private val previewPanel: Panel
     private val lineWrapper = LineWrapper()
 
     init {
@@ -61,10 +59,14 @@ class TerminalAppScreen(private val terminal: Terminal,
             addTo(mainContentPanel)
             preferredSize = parent.preferredSize.withColumns(parent.preferredSize.columns / 2)
         }
-        mainContentPanel.addComponent(Label("TEST2").apply {
+        previewPanel = Panel(AbsoluteLayout()).apply {
             addTo(mainContentPanel)
             preferredSize = parent.preferredSize.withColumns(parent.preferredSize.columns / 2)
-        })
+        }
+//        mainContentPanel.addComponent(Label("TEST2").apply {
+//            addTo(mainContentPanel)
+//            preferredSize = parent.preferredSize.withColumns(parent.preferredSize.columns / 2)
+//        })
         val lastRowLayout = LinearLayout(Direction.HORIZONTAL)
         val lastRowPanel = Panel(lastRowLayout).apply {
             addTo(windowPanel)
@@ -84,11 +86,12 @@ class TerminalAppScreen(private val terminal: Terminal,
         rootWindow.updateScreen()
     }
 
-    suspend fun updateScreen(combined: PresentationState.Presentation) : SuspendingCommand<Unit> = suspendingCommand("update screen"){
+    suspend fun updateScreen(combined: PresentationState.Presentation) = log("update screen"){
 
         val inputState = combined.inputState
         val contentStatus = combined.contentStatus
         val selectedWikiText = combined.selectedWikiText
+        val previewStatus = combined.previewStatus
 //        logger.println("combined")
 
         textBox.text = inputState.text
@@ -96,7 +99,7 @@ class TerminalAppScreen(private val terminal: Terminal,
         when (contentStatus) {
             is LoadingStatus.Done -> {
                 //data class CursorPosStart(val x: Int, val y: Int)
-                contentStatus.result.lines.forEach { logger?.println(it) }
+                //contentStatus.result.lines.forEach { logger?.println(it) }
                 //val textGraphics = screen.newTextGraphics()
                 printPage(mainContentPanelLeft, contentStatus, selectedWikiText)
             }
@@ -113,6 +116,28 @@ class TerminalAppScreen(private val terminal: Terminal,
                     )
                 )
                 printPage(mainContentPanelLeft, LoadingStatus.Done(fakePage))
+            }
+        }
+        when (previewStatus) {
+            is LoadingStatus.Done -> {
+                //data class CursorPosStart(val x: Int, val y: Int)
+                //previewStatus.result.lines.forEach { logger?.println(it) }
+                //val textGraphics = screen.newTextGraphics()
+                printPage(previewPanel, previewStatus, selectedWikiText)
+            }
+            else -> {
+                val fakePage = WikiArticle(
+                    "",
+                    "",
+                    mutableListOf(
+                        mutableListOf<WikiText>(
+                            WikiText.NormalText(
+                                previewStatus.toString()
+                            )
+                        )
+                    )
+                )
+                printPage(previewPanel, LoadingStatus.Done(fakePage))
             }
         }
         rootWindow.updateScreen()
@@ -141,7 +166,7 @@ class TerminalAppScreen(private val terminal: Terminal,
     private fun printPage(
         mainContentPanelLeft: Panel,
         contentStatus: LoadingStatus.Done,
-        selectedPosition: WikiText.InternalLink? = null
+        selectedPosition: SelectionRepository.Selection? = null
     ) {
         mainContentPanelLeft.removeAllComponents()
         val maxColumns = mainContentPanelLeft.size.columns
@@ -162,7 +187,7 @@ class TerminalAppScreen(private val terminal: Terminal,
         maxColumns: Int,
         maxHeight: Int,
         mainContentPanelLeft: Panel,
-        selectedWikiText: WikiText.InternalLink?
+        selectedWikiText: SelectionRepository.Selection?
     ) {
         val startPos = TerminalPosition(0, 0)
         val endPos = TerminalPosition(maxColumns, maxHeight)
@@ -180,7 +205,7 @@ class TerminalAppScreen(private val terminal: Terminal,
                         size = TerminalSize(it.text.text.length, 1)
                         if (it.text is WikiText.InternalLink) {
                             addStyle(SGR.BOLD)
-                            if (it.text.target == selectedWikiText?.target) {
+                            if (it.text.target == selectedWikiText?.content?.target) {
                                 addStyle(SGR.REVERSE)
                             }
                         }
@@ -194,7 +219,7 @@ class TerminalAppScreen(private val terminal: Terminal,
         }
     }
 
-    suspend fun runAppAndWait() : SuspendingCommand<Unit> = suspendingCommand(name = "run and wait"){
+    suspend fun runAppAndWait()  = log(name = "run and wait"){
         var executionJob: Job? = null
         supervisorScope {
             try{
@@ -205,29 +230,22 @@ class TerminalAppScreen(private val terminal: Terminal,
                         this@TerminalAppScreen.sizeFlow,
                         instantiationScope)
 
-                    val viewModel = suspendInvoke {
-                        viewModelFactory.provideViewModel(
-                            sharedTerminalScreen,
-                            instantiationScope
-                        )
-                    }
-                    val screenStateFlow = syncInvokeFlow { viewModel.screenStateCommand }
+                    val viewModel = viewModelFactory.provideViewModel(
+                        sharedTerminalScreen,
+                        instantiationScope
+                    )
+                    val screenStateFlow = viewModel.screenState
                     screenStateFlow.flowOn(drawCoroutineContext).collect {
                         when(it){
-                            is PresentationState.Presentation -> suspendInvoke {
-                                this@TerminalAppScreen.updateScreen(it)
-                            }
-                            else -> suspendInvokeCommand {
-                                executionJob?.cancelAndJoin()
-                            }
+                            is PresentationState.Presentation -> this@TerminalAppScreen.updateScreen(it)
+                            else -> executionJob?.cancelAndJoin()
                         }
                     }
 
                 }
                 executionJob?.join()
             }catch (e: Exception){
-                logger.println("screen will stop after exception")
-                logger.println(e)
+                println("screen will stop after this")
             }
             finally {
                 screen.stopScreen()

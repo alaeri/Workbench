@@ -1,16 +1,11 @@
 package com.alaeri.presentation.wiki
 
-import com.alaeri.command.CommandState
-import com.alaeri.command.core.suspend.suspendingCommand
-import com.alaeri.command.core.suspendInvoke
+import com.alaeri.log
 
 class EditUseCase(private val queryRepository: QueryRepository){
 
-    suspend fun edit(intent: Intent.Edit) = suspendingCommand<Unit>(name = "edit query") {
-        emit(CommandState.Update(intent))
-        suspendInvoke {
-            queryRepository.updateQuery(intent.newQuery)
-        }
+    suspend fun edit(intent: Intent.Edit) = log(name = "edit query") {
+        queryRepository.updateQuery(intent.newQuery)
 
     }
 }

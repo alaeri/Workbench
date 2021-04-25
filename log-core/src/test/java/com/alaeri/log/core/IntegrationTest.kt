@@ -21,7 +21,7 @@ suspend inline fun <reified T> log(tag: Log.Tag = EmptyTag(),
                                    collector: LogCollector? = null,
                                    vararg params: Any? = arrayOf(),
                                    crossinline body :suspend ()->T) : T  =
-    LogConfig.log(tag, collector, *params){
+    LogConfig.inlinedSuspendLog(tag, collector, *params){
         body.invoke()
     }
 

@@ -61,7 +61,7 @@ class BasicEnvironmentFactoryTest {
 
     @Test
     fun testSuspendingLog()= testCoroutineScope.runBlockingTest {
-        val log = basicLogEnvironmentFactory.log(tag, logCollector, "params") {
+        val log = basicLogEnvironmentFactory.inlineSuspendLog(tag, logCollector, "params") {
             verify(logCollector).emit(any())
             "PIOU"
         }
@@ -71,7 +71,7 @@ class BasicEnvironmentFactoryTest {
 
     @Test
     fun testSuspendingLog2()= testCoroutineScope.runBlockingTest {
-        val log = basicLogEnvironmentFactory.log(tag, logCollector) {
+        val log = basicLogEnvironmentFactory.inlineSuspendLog(tag, logCollector) {
             verify(logCollector).emit(any())
             "ABC"
         }

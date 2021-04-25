@@ -36,7 +36,31 @@ abstract class LogEnvironment{
         return result.getOrThrow()
     }
 
-    suspend inline fun <reified T> logSuspending(
+    suspend fun <T> logSuspending(
+        vararg params: Any? = arrayOf(),
+        body : suspend ()->T): T {
+        val coroutineLogEnvironment = CoroutineLogEnvironment(this)
+        return withContext(currentCoroutineContext() + coroutineLogEnvironment + SupervisorJob()){
+            collector.emit(Log(tag, Log.Message.Starting(params?.toList() ?: emptyList())))
+            val result =
+                supervisorScope {
+                    runCatching {
+                        body.invoke()
+                    }
+                }
+
+            val message = if(result.isSuccess){
+                Log.Message.Done(result.getOrNull())
+            }else{
+                Log.Message.Failed(result.exceptionOrNull())
+            }
+            collector.emit(Log(tag, message))
+            result.getOrThrow()
+        }
+    }
+
+    @Deprecated(level = DeprecationLevel.WARNING, message = "@see InlineSuspendErrorRepro.kt", replaceWith = ReplaceWith("suspendLog"))
+    suspend inline fun <reified T> logInlineSuspending(
         vararg params: Any? = arrayOf(),
         crossinline body : suspend ()->T): T {
         val coroutineLogEnvironment = CoroutineLogEnvironment(this)

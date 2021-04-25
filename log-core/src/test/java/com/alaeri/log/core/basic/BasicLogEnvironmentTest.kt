@@ -67,7 +67,7 @@ class BasicLogEnvironmentTest {
 
     @Test
     fun testSuspendingUnit() = testCoroutineScope.runBlockingTest{
-        val unit: Unit = basicLogEnvironment.logSuspending("param1"){
+        val unit: Unit = basicLogEnvironment.logInlineSuspending("param1"){
             verify(logCollector).emit(any())
         }
         assertEquals(Unit, unit)
@@ -78,7 +78,7 @@ class BasicLogEnvironmentTest {
     fun testSuspendingException() = testCoroutineScope.runBlockingTest{
         val exception = RuntimeException("error")
         val result = kotlin.runCatching {
-            basicLogEnvironment.logSuspending<Unit>("param1"){
+            basicLogEnvironment.logInlineSuspending<Unit>("param1"){
                 throw exception
             }
         }
@@ -92,7 +92,7 @@ class BasicLogEnvironmentTest {
     @Test
     fun testSuspendingValue() = testCoroutineScope.runBlockingTest {
         val result = kotlin.runCatching {
-            basicLogEnvironment.logSuspending("param1"){
+            basicLogEnvironment.logInlineSuspending("param1"){
                 "result"
             }
         }

@@ -1,50 +1,44 @@
 package com.alaeri.presentation.wiki
 
-import com.alaeri.command.CommandState
-import com.alaeri.command.core.*
-import com.alaeri.command.core.flow.syncInvokeFlow
-import com.alaeri.command.core.suspend.SuspendingCommand
-import com.alaeri.command.core.suspend.suspendingCommand
+import com.alaeri.log
+import com.alaeri.logBlocking
 import com.alaeri.presentation.PresentationState
 import com.googlecode.lanterna.input.KeyStroke
 import com.googlecode.lanterna.input.KeyType
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class KeyStrokeToIntentUseCase(private val keyFlow: SharedFlow<KeyStroke>,
                                private val browsingService: BrowsingService,
                                private val coroutineScope: CoroutineScope
 ){
 
-    fun start() : Command<Unit> = command(name ="start processing keystrokes") {
+    fun start() : Unit = logBlocking(name ="start processing keystrokes") {
         coroutineScope.launch {
             withContext(Dispatchers.Unconfined){
                 keyFlow.collect { keyStroke ->
-                    //println("test $keyStroke")
-                    suspendInvoke {
-                        processKeyStroke(keyStroke)
-                    }
+                    processKeyStroke(keyStroke)
 
                 }
             }
         }
     }
 
-    private suspend fun processKeyStroke(keyStroke: KeyStroke) : SuspendingCommand<Unit> = suspendingCommand(name = "process keystroke") {
-        val presentationState = syncInvokeFlow { browsingService.presentationStateCommand }.first()
-        emit(CommandState.Update(presentationState))
-        emit(CommandState.Update(keyStroke))
-        //println("test2: $presentationState")
-        val intent: Intent = invoke { findIntentForKeyStroke(keyStroke, presentationState) }
-        suspendInvoke { browsingService.processIntent(intent) }
+    private suspend fun processKeyStroke(keyStroke: KeyStroke) : Unit = log(name = "process keystroke") {
+        val presentationState =  browsingService.presentationState.first()
+        val intent: Intent = findIntentForKeyStroke(keyStroke, presentationState)
+        browsingService.processIntent(intent)
     }
 
     private fun findIntentForKeyStroke(
         keyStroke: KeyStroke,
         presentationState: PresentationState
-    ): Command<Intent> = command("findintent") {
+    ): Intent = logBlocking("findintent") {
         val char = keyStroke.character
         val keyType = keyStroke.keyType
         when {
@@ -56,7 +50,8 @@ class KeyStrokeToIntentUseCase(private val keyFlow: SharedFlow<KeyStroke>,
                         val acc = presentationState.inputState
                         val currentQueryLength = acc.text.length
                         when {
-                            keyType == KeyType.Tab -> Intent.SelectNextLink
+                            keyType == KeyType.ArrowLeft -> Intent.SelectNextLink(forward = false)
+                            keyType == KeyType.ArrowRight -> Intent.SelectNextLink()
                             keyType == KeyType.Backspace -> if (currentQueryLength > 0) {
                                 val slicedText =
                                     acc.text.slice(0 until currentQueryLength - 1)
@@ -67,13 +62,14 @@ class KeyStrokeToIntentUseCase(private val keyFlow: SharedFlow<KeyStroke>,
                             keyType == KeyType.Enter -> if (currentQueryLength > 0) {
                                 Intent.NavigateToQuery
                             } else {
-                                Intent.Edit(acc.text)
+                                Intent.NavigateToSelection
                             }
-                            keyType == KeyType.ArrowRight -> Intent.NavigateToSelection
+                            keyType == KeyType.ArrowDown -> Intent.NavigateToSelection
+                            keyType == KeyType.Escape -> Intent.ClearSelection
+                            keyType == KeyType.Tab -> Intent.ChangeSelectedTab
                             char != null && !char.isWhitespace() -> Intent.Edit(acc.text + char)
                             else -> Intent.Edit(acc.text)
                         }
-
                     }
                 }
             }

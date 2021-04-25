@@ -3,6 +3,7 @@ package com.alaeri.log.core
 import com.alaeri.log.core.basic.BasicEnvironmentFactory
 import com.alaeri.log.core.collector.LogCollector
 import com.alaeri.log.core.context.EmptyTag
+import kotlinx.coroutines.delay
 
 /**
  * This object is the singleton that should be manipulated by apps to change
@@ -19,11 +20,22 @@ object LogConfig{
      */
     var logEnvironmentFactory : LogEnvironmentFactory = BasicEnvironmentFactory
 
-    suspend inline fun <reified T> log(tag: Log.Tag = EmptyTag(),
-                                       collector: LogCollector? = null,
-                                       vararg params: Any? = arrayOf(),
-                                       crossinline body :suspend ()->T) : T {
-        return logEnvironmentFactory.log(tag, collector, *params){
+    suspend fun <T> log(tag: Log.Tag = EmptyTag(),
+                               collector: LogCollector? = null,
+                               vararg params: Any? = arrayOf(),
+                               body :suspend ()->T) : T {
+        delay(100)
+        return logEnvironmentFactory.log(tag, collector, *params) {
+            body.invoke()
+        }
+    }
+
+    @Deprecated(level = DeprecationLevel.WARNING, message = "@see InlineSuspendErrorRepro.kt", replaceWith = ReplaceWith("log"))
+    suspend inline fun <reified T> inlinedSuspendLog(tag: Log.Tag = EmptyTag(),
+                                                     collector: LogCollector? = null,
+                                                     vararg params: Any? = arrayOf(),
+                                                     crossinline body :suspend ()->T) : T {
+        return logEnvironmentFactory.inlineSuspendLog(tag, collector, *params){
             body.invoke()
         }
     }

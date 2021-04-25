@@ -19,14 +19,30 @@ abstract class LogEnvironmentFactory {
         collector: LogCollector?
     ): LogEnvironment
 
-    suspend inline fun <reified T> log(tag: Tag = EmptyTag(),
-                                       collector: LogCollector? = null,
-                                       vararg params: Any? = arrayOf(),
-                                       crossinline body :suspend ()->T) : T {
+    suspend fun <T> log(tag: Tag = EmptyTag(),
+                        collector: LogCollector? = null,
+                        vararg params: Any? = arrayOf(),
+                        body :suspend ()->T) : T {
         val logEnvironment = suspendingLogEnvironment(tag, collector)
         logEnvironment.prepare()
         val result = kotlin.runCatching {
-            logEnvironment.logSuspending<T>(*params){
+            logEnvironment.logSuspending(*params){
+                body.invoke()
+            }
+        }
+        logEnvironment.dispose()
+        return result.getOrThrow()
+    }
+
+    @Deprecated(level = DeprecationLevel.WARNING, message = "@see SuspendInlineErrorRepro", replaceWith = ReplaceWith("log"))
+    suspend inline fun <reified T> inlineSuspendLog(tag: Tag = EmptyTag(),
+                                                    collector: LogCollector? = null,
+                                                    vararg params: Any? = arrayOf(),
+                                                    crossinline body :suspend ()->T) : T {
+        val logEnvironment = suspendingLogEnvironment(tag, collector)
+        logEnvironment.prepare()
+        val result = kotlin.runCatching {
+            logEnvironment.logInlineSuspending<T>(*params){
                 body.invoke()
             }
         }

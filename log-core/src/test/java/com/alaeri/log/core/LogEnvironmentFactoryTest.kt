@@ -54,7 +54,7 @@ class LogEnvironmentFactoryTest {
     fun testSuspend() = testCoroutineScope.runBlockingTest{
         whenever(logEnvironment.collector).doReturn(collector)
         whenever(logEnvironment.tag).doReturn(context)
-        val temp = logEnvironmentFactory.log{
+        val temp = logEnvironmentFactory.inlineSuspendLog{
             verify(logEnvironment).prepare()
             verify(logEnvironment).collector
             "HOT"

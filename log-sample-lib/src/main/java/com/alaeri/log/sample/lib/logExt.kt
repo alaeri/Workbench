@@ -2,18 +2,12 @@ package com.alaeri.log.sample.lib
 
 import com.alaeri.log.core.Log
 import com.alaeri.log.core.LogConfig
-import com.alaeri.log.core.child.ChildTag
-import com.alaeri.log.core.child.CoroutineLogKey
 import com.alaeri.log.core.collector.LogCollector
-import com.alaeri.log.core.collector.LogPrinter
-import com.alaeri.log.core.collector.NoopCollector
-import com.alaeri.log.core.context.EmptyTag
 import com.alaeri.log.extra.tag.callsite.CallSiteTag
 import com.alaeri.log.extra.tag.coroutine.CoroutineContextTag
 import com.alaeri.log.extra.tag.name.NamedTag
 import com.alaeri.log.extra.tag.receiver.ReceiverTag
 import com.alaeri.log.extra.tag.thread.ThreadTag
-import kotlinx.coroutines.channels.ProducerScope
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.withContext
@@ -32,9 +26,9 @@ val collector = object: LogCollector{
     }
 }
 
-internal suspend inline fun <reified T> Any.logLib(name: String,
+internal suspend fun <T> Any.logLib(name: String,
                                    vararg params: Any? = arrayOf(),
-                                   crossinline body :suspend ()->T) : T {
+                                   body :suspend ()->T) : T {
     val currentCoroutineContext = currentCoroutineContext()
     val logContext = CoroutineContextTag(currentCoroutineContext) +
             CallSiteTag() +

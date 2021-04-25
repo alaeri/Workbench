@@ -1,21 +1,14 @@
 package com.alaeri.presentation.wiki
 
-import com.alaeri.command.CommandState
-import com.alaeri.command.core.flow.syncInvokeFlow
-import com.alaeri.command.core.suspend.SuspendingCommand
-import com.alaeri.command.core.suspend.invoke
-import com.alaeri.command.core.suspend.suspendingCommand
+import com.alaeri.log
 import kotlinx.coroutines.flow.firstOrNull
 
 class NavigateToSelectionUseCase(private val selectionRepository: SelectionRepository, private val pathRepository: PathRepository){
 
-    suspend fun navigateToCurrentSelection(intent: Intent.NavigateToSelection): SuspendingCommand<Unit> = suspendingCommand(name = "navigate to selection") {
-        emit(CommandState.Update(intent))
-        val selection = syncInvokeFlow { selectionRepository.selectionFlowCommand }.firstOrNull()
+    suspend fun navigateToCurrentSelection(intent: Intent.NavigateToSelection) = log(name = "navigate to selection") {
+        val selection = selectionRepository.selectionFlowCommand.firstOrNull()
         if(selection != null){
-            invoke {
-                pathRepository.select(selection.target)
-            }
+            pathRepository.select(selection.content.target)
         }
     }
 }
