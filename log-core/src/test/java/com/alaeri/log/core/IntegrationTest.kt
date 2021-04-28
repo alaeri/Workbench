@@ -1,27 +1,39 @@
 package com.alaeri.log.core
 
 import com.alaeri.log.core.child.ChildLogEnvironmentFactory
+import com.alaeri.log.core.child.CoroutineLogEnvironment
 import com.alaeri.log.core.collector.LogCollector
 import com.alaeri.log.core.collector.LogPrinter
 import com.alaeri.log.core.context.EmptyTag
 import com.nhaarman.mockitokotlin2.*
 import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runBlockingTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
+import kotlin.coroutines.CoroutineContext
 
 /**
  * Created by Emmanuel Requier on 12/12/2020.
  */
 
-suspend inline fun <reified T> log(tag: Log.Tag = EmptyTag(),
+suspend inline fun <reified T> logBuggy(tag: Log.Tag = EmptyTag(),
                                    collector: LogCollector? = null,
                                    vararg params: Any? = arrayOf(),
                                    crossinline body :suspend ()->T) : T  =
     LogConfig.inlinedSuspendLog(tag, collector, *params){
+        body.invoke()
+    }
+
+suspend fun <T> log(tag: Log.Tag = EmptyTag(),
+                                   collector: LogCollector? = null,
+                                   vararg params: Any? = arrayOf(),
+                                   body :suspend ()->T) : T  =
+    LogConfig.log(tag, collector, *params){
         body.invoke()
     }
 
@@ -106,5 +118,73 @@ class IntegrationTest {
             assertEquals("pi", result)
         }
     }
+
+    @Test
+    fun `check that suspending function works`()= runBlockingTest{
+        val testParent = TestParent()
+        log(collector = LogPrinter()) {
+            // Will be launched in the mainThreadSurrogate dispatcher
+            val result = testParent.piou()
+            assertEquals("pi", result)
+        }
+    }
+
+    val flowParent = flow<String>{
+        val coroutineContext = currentCoroutineContext()
+        println("currentCoroutineContext flow: ${currentCoroutineContext()}")
+        (0..100).forEach {
+            delay(100)
+            log {
+                withContext(coroutineContext){
+                    emit("pi: $it")
+                }
+            }
+        }
+
+    }
+
+    val childFlow : Flow<String> = flowParent.log().map {
+        println("currentCoroutineContext map: ${currentCoroutineContext()}")
+        val result = log{
+            "piou $it"
+        }
+        result
+    }
+
+    @Test
+    fun `check that flows work`()= runBlockingTest{
+        println("currentCoroutineContext start: ${currentCoroutineContext()}")
+        log(collector = LogPrinter()) {
+            println("currentCoroutineContext first log: ${currentCoroutineContext()}")
+            // Will be launched in the mainThreadSurrogate dispatcher
+            val result = childFlow.log().first()
+            assertEquals("piou pi: 0", result)
+        }
+    }
+
+    fun <T> Flow<T>.log(): Flow<T>{
+        val originalFlow = this
+        return flow<T> {
+            val childLogEnvironment = ChildLogEnvironmentFactory.suspendingLogEnvironment(EmptyTag(), null)
+            val childCoroutineContext = CoroutineLogEnvironment(childLogEnvironment)
+            originalFlow
+                .onStart { log(EmptyTag(),null,"onStart"){} }
+                .onEach { log(EmptyTag(),null,"onEach", it){} }
+                .onCompletion { log(EmptyTag(),null,"onCompletion"){} }
+                .flowOn(childCoroutineContext).collect {
+                    emit(it)
+                }
+        }
+    }
+
+//    @Test
+//    fun `check that suspending inline function is bugged`()= runBlockingTest{
+//        val testParent = TestParent()
+//        logBuggy(collector = LogPrinter()) {
+//            // Will be launched in the mainThreadSurrogate dispatcher
+//            val result = testParent.piou()
+//            assertEquals("pi", result)
+//        }
+//    }
 
 }

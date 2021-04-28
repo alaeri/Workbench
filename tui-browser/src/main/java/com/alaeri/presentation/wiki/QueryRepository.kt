@@ -2,6 +2,7 @@ package com.alaeri.presentation.wiki
 
 import com.alaeri.log
 import com.alaeri.logBlocking
+import com.alaeri.logBlockingFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.Flow
@@ -13,5 +14,5 @@ class QueryRepository{
     }
     val queryFlow: SharedFlow<String> = mutableQuery
     val queryFlowCommand: Flow<String>
-        get() = logBlocking(name = "query flow") { queryFlow }
+        get() = logBlockingFlow(name = "query flow") { queryFlow }
 }

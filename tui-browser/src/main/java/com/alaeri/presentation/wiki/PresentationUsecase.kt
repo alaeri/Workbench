@@ -1,9 +1,12 @@
 package com.alaeri.presentation.wiki
 
+import com.alaeri.log
 import com.alaeri.logBlocking
+import com.alaeri.logFlow
 import com.alaeri.presentation.InputState
 import com.alaeri.presentation.PresentationState
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 
 class PresentationUsecase(
@@ -15,36 +18,20 @@ class PresentationUsecase(
     val pathRepository: PathRepository,
     onSelectionFetchPreviewUC: OnSelectionFetchPreviewUC
 ){
-//    val presentationState = exitFlow.flatMapLatest {
-//        if(it){
-//            println("exit.....")
-//            flowOf(PresentationState.Exit(listOf()))
-//        }else{
-//            combine(
-//                loadWikiOnPathUseCase.loadingStatusFlow,
-//                selectionRepository.selectionFlow,
-//                queryRepository.queryFlow,
-//                pathRepository.pathFlow
-//            ) { loadingStatus, internalLink, query, path ->
-//                //println("combine.....")
-//                PresentationState.Presentation(InputState(query, path), loadingStatus, internalLink)
-//            }
-//        }
-//    }.shareIn(sharingScope, replay = 1, started = SharingStarted.Lazily).onSubscription {
-//        //println("subscribed: $this")
-//    }.onEach {  }
 
-    val presentationStateInCommand : Flow<PresentationState> by lazy { logBlocking(name = "presentation state flow") {
-            exitFlow.flatMapLatest {
+    val presentationStateFlow : Flow<PresentationState> by lazy { logBlocking(name = "presentation state flow") {
+            exitFlow
+                .log("exitFlow")
+                .flatMapLatest {
                 if (it) {
                     flowOf(PresentationState.Exit(listOf()))
                 } else {
-                    combine(
-                        loadWikiOnPathUseCase.loadingStatus,
-                        selectionRepository.selectionFlowCommand,
-                        queryRepository.queryFlowCommand,
-                        pathRepository.pathFlow,
-                        onSelectionFetchPreviewUC.selectionPreview
+                   combine(
+                        loadWikiOnPathUseCase.loadingStatus.log("loadWiki"),
+                        selectionRepository.selectionFlowCommand.log("selection"),
+                        queryRepository.queryFlowCommand.log("query"),
+                        pathRepository.pathFlow.log("path"),
+                        onSelectionFetchPreviewUC.selectionPreview.log("selection")
                     ) { loadingStatus, internalLink, query, path, previewStatus ->
                         //println("combine.....")
                         PresentationState.Presentation(
@@ -55,9 +42,8 @@ class PresentationUsecase(
                         )
                     }
                 }
-            }.shareIn(sharingScope, replay = 1, started = SharingStarted.Lazily).onSubscription {
-                //println("subscribed: $this")
-            }.onEach { }
+                .log("combine")
+            }.shareIn(sharingScope, replay = 1, started = SharingStarted.Lazily)
         }
     }
 

@@ -4,6 +4,6 @@ import com.alaeri.presentation.PresentationState
 import kotlinx.coroutines.flow.Flow
 
 interface ITerminalViewModel{
-    //val screenState: Flow<PresentationState>
+    suspend fun startProcessingKeyStrokes()
     val screenState: Flow<PresentationState>
 }

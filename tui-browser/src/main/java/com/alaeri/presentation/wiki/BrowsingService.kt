@@ -3,13 +3,12 @@ package com.alaeri.presentation.wiki
 import com.alaeri.domain.wiki.WikiRepository
 import com.alaeri.log
 import com.alaeri.logBlocking
-import com.alaeri.presentation.PresentationState
+import com.alaeri.logBlockingFlow
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.plus
 
@@ -24,7 +23,7 @@ class BrowsingService(
 
     private val shouldExitMutableStateFlow = MutableStateFlow(false)
     private val pathRepository = PathRepository()
-    private val queryRepository = QueryRepository()
+    val queryRepository = QueryRepository()
     private val selectionRepository = SelectionRepository()
 
     private val loadWikiOnPathUseCase = LoadWikiOnPathUseCase(pathRepository, innerScope, wikiRepository)
@@ -57,7 +56,7 @@ class BrowsingService(
     }
 
 
-    suspend fun processIntent(intent: Intent) : Unit = log(name = "process intent") {
+    suspend fun processIntent(intent: Intent) : Unit = logBlocking(name = "process intent") {
         when(intent){
             is Intent.Edit -> editUseCase.edit(intent)
             is Intent.Exit -> log(name = "exit") {
@@ -71,8 +70,8 @@ class BrowsingService(
             is Intent.ChangeSelectedTab -> {}
         }
     }
-    val presentationState = logBlocking(name = "presentation state flow"){
-        presentationUsecase.presentationStateInCommand.shareIn(
+    val presentationState = logBlockingFlow(name = "presentation state flow"){
+        presentationUsecase.presentationStateFlow.shareIn(
             innerScope,
             SharingStarted.Lazily,
             1)

@@ -235,6 +235,9 @@ class TerminalAppScreen(private val terminal: Terminal,
                         instantiationScope
                     )
                     val screenStateFlow = viewModel.screenState
+                    instantiationScope.launch {
+                        viewModel.startProcessingKeyStrokes()
+                    }
                     screenStateFlow.flowOn(drawCoroutineContext).collect {
                         when(it){
                             is PresentationState.Presentation -> this@TerminalAppScreen.updateScreen(it)

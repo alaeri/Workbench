@@ -1,6 +1,7 @@
 package com.alaeri.presentation.wiki
 
 import com.alaeri.domain.wiki.WikiText
+import com.alaeri.log
 import com.alaeri.logBlocking
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -16,5 +17,5 @@ class SelectionRepository() {
     }
     val selectionFlow: SharedFlow<Selection?> = mutableSelectedWikiText
     val selectionFlowCommand : Flow<Selection?>
-        get()= logBlocking(name = "selection flow") { mutableSelectedWikiText }
+        get()= mutableSelectedWikiText.log("selection flow")
 }

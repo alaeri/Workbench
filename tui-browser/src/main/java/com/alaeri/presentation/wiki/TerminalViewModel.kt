@@ -1,6 +1,7 @@
 package com.alaeri.presentation.wiki
 
 import com.alaeri.domain.wiki.WikiRepository
+import com.alaeri.log
 import com.alaeri.logBlocking
 import com.alaeri.presentation.PresentationState
 import com.alaeri.presentation.tui.ITerminalScreen
@@ -16,16 +17,13 @@ class TerminalViewModel(
     wikiRepository: WikiRepository,
 ): ITerminalViewModel {
 
-
     private val browsingService = BrowsingService(wikiRepository, initializationScope)
-    override val screenState: Flow<PresentationState> = browsingService.presentationState
-    private val keyStrokeToIntentUseCase = KeyStrokeToIntentUseCase(terminalScreen.keyFlow, browsingService, initializationScope)
-
-    init {
-        logBlocking("process key strokes"){
-            keyStrokeToIntentUseCase.start()
-        }
+    override suspend fun startProcessingKeyStrokes() = log("start processing key strokes"){
+        keyStrokeToIntentUseCase.start()
     }
+
+    override val screenState: Flow<PresentationState> = browsingService.presentationState
+    private val keyStrokeToIntentUseCase = KeyStrokeToIntentUseCase(terminalScreen.keyFlow, browsingService, browsingService.queryRepository)
 
 
 }
