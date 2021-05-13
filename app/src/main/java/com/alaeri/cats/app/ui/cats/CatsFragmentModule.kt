@@ -8,19 +8,20 @@ import androidx.lifecycle.ViewModelStore
 import androidx.recyclerview.widget.AsyncDifferConfig
 import com.alaeri.cats.app.cats.Cat
 import com.alaeri.cats.app.databinding.CatItemBinding
-import com.alaeri.command.core.Command
-import com.alaeri.command.koin.commandModule
+import com.alaeri.log.glide.FlowImageLoader
 import com.alaeri.recyclerview.extras.viewholder.ViewHolderProvider
 import com.alaeri.recyclerview.extras.viewholder.factory.IViewHolderFactory
 import com.alaeri.recyclerview.extras.viewholder.factory.ViewHolderFactory
+import org.koin.android.viewmodel.dsl.viewModel
 import org.koin.core.module.Module
+import org.koin.dsl.module
 
 /**
  * Created by Emmanuel Requier on 22/04/2020.
  */
 object CatsFragmentModule
-val catsFragmentModule : Command<Module> = CatsFragmentModule.commandModule {
-    commandScope<CatsFragment> {
+val catsFragmentModule = module {
+    scope<CatsFragment> {
         scoped { (fragment : CatsFragment) ->  fragment  }
         factory { get<Fragment>().lifecycle }
         factory <ViewModelStore> {
@@ -29,7 +30,7 @@ val catsFragmentModule : Command<Module> = CatsFragmentModule.commandModule {
         factory<Factory> {
             object: Factory{
                 override fun <T : ViewModel?> create(modelClass: Class<T>): T {
-                    return CatItemViewModel(get<com.alaeri.command.glide.FlowImageLoader>(), get()) as T
+                    return CatItemViewModel(get<FlowImageLoader>()) as T
                 }
             }
         }
@@ -65,7 +66,7 @@ val catsFragmentModule : Command<Module> = CatsFragmentModule.commandModule {
             Log.d("COMMAND","CREATING CATS ADAPTER VHP")
             CatsAdapter(viewHolderProvider, diffCallback, asyncDifferConfig )
         }
-        viewmodel { CatsViewModel(get(), get(), get()) } }
+        viewModel { CatsViewModel(get(), get()) } }
 
 }
 

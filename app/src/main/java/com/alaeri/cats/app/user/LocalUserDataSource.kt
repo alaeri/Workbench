@@ -3,12 +3,10 @@ package com.alaeri.cats.app.user
 import com.alaeri.cats.app.user.db.UserDao
 import com.alaeri.cats.app.user.db.toDBUser
 import com.alaeri.cats.app.user.db.toUser
-import com.alaeri.command.core.flow.FlowCommand
-import com.alaeri.command.core.flow.IFlowCommand
-import com.alaeri.command.core.flow.flowCommand
-import com.alaeri.command.core.flow.syncInvokeFlow
-import com.alaeri.command.core.suspend.SuspendingCommand
-import com.alaeri.command.core.suspend.suspendingCommand
+import com.alaeri.cats.app.log
+import com.alaeri.cats.app.logBlockingFlow
+import com.alaeri.cats.app.logFlow
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.take
@@ -18,9 +16,9 @@ import kotlinx.coroutines.flow.take
  */
 class LocalUserDataSource(private val userDao: UserDao) {
 
-    suspend fun store(remoteUser: User) : SuspendingCommand<Unit> = suspendingCommand{
+    suspend fun store(remoteUser: User) : Unit = log("store user"){
         val dbUser = remoteUser.toDBUser()
-        val user = syncInvokeFlow { currentUser }.take(1).first()
+        val user = logFlow<User?>("user") { currentUser }.take(1).first()
         if(user != null){
             userDao.update(dbUser)
         }else{
@@ -28,10 +26,10 @@ class LocalUserDataSource(private val userDao: UserDao) {
         }
     }
 
-    suspend fun remove(user: User): SuspendingCommand<Unit> = suspendingCommand{
+    suspend fun remove(user: User): Unit = log("remove user"){
         userDao.delete(user.toDBUser())
     }
 
-    val currentUser: IFlowCommand<User?> = flowCommand{ userDao.currentUser.map { it?.toUser() } }
+    val currentUser: Flow<User?> = logBlockingFlow<User?>("current user"){ userDao.currentUser.map { it?.toUser() } }
 
 }

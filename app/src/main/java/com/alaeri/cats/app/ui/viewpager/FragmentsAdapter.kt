@@ -25,9 +25,10 @@ class FragmentsAdapter(parentFragment: Fragment) : FragmentStateAdapter(parentFr
         return when(page.id){
             PageId.Login -> LoginFragment()
             PageId.Cats -> CatsFragment()
-            PageId.CommandsList -> com.alaeri.command.android.visualizer.CommandListFragment()
-            PageId.CommandsWebview -> com.alaeri.command.android.visualizer.graph.GraphFragment()
-            PageId.CommandsLifecycle -> com.alaeri.command.android.visualizer.option.VisualizationOptionsFragment()
+            else -> CatsFragment()
+            //PageId.CommandsList -> com.alaeri.command.android.visualizer.CommandListFragment()
+            //PageId.CommandsWebview -> com.alaeri.command.android.visualizer.graph.GraphFragment()
+            //PageId.CommandsLifecycle -> com.alaeri.command.android.visualizer.option.VisualizationOptionsFragment()
         }
     }
 

@@ -22,7 +22,7 @@ import kotlinx.coroutines.withContext
  */
 val collector = object: LogCollector{
     override fun emit(log: Log) {
-        "HERE GOES NOTHING"
+        //"HERE GOES NOTHING"
     }
 }
 

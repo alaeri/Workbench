@@ -2,24 +2,26 @@ package com.alaeri.cats.app
 
 import androidx.room.Room
 import com.alaeri.cats.app.db.AppDatabase
-import com.alaeri.command.koin.commandModule
+import com.alaeri.log.glide.FlowImageLoader
+import org.koin.android.ext.koin.androidContext
+import org.koin.dsl.module
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 
 val appModule = AppModule().appModule
 class AppModule {
-    val appModule = commandModule {
-        commandSingle<AppDatabase> {
+    val appModule = module {
+        single<AppDatabase> {
             Room.databaseBuilder(
                 androidContext(),
                 AppDatabase::class.java,
                 "database-name"
             ).fallbackToDestructiveMigration().build()
         }
-        commandSingle<com.alaeri.command.glide.FlowImageLoader> {
-            com.alaeri.command.glide.FlowImageLoader(get())
+        single {
+            FlowImageLoader(get())
         }
-        commandSingle<Retrofit> {
+        single<Retrofit> {
             Retrofit.Builder().addConverterFactory(MoshiConverterFactory.create())
                 .baseUrl("https://api.thecatapi.com/v1/")
                 .build()

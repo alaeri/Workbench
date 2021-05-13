@@ -1,13 +1,9 @@
 package com.alaeri.cats.app.ui.cats
 
 import androidx.lifecycle.*
-import com.alaeri.command.CommandNomenclature
-import com.alaeri.command.ICommandLogger
-import com.alaeri.command.core.root.ICommandScopeOwner
-import com.alaeri.command.core.root.buildRootCommandScope
-import com.alaeri.command.core.root.invokeRootCommand
-import com.alaeri.command.core.suspend.suspendInvokeAsFlow
-import com.alaeri.command.core.suspendInvokeAndFold
+import com.alaeri.cats.app.logBlocking
+import com.alaeri.cats.app.logBlockingFlow
+import com.alaeri.cats.app.logFlow
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 
@@ -18,9 +14,8 @@ import kotlinx.coroutines.launch
 data class CatFragmentState(val refreshState: NetworkState, val pagedListState: PagedListState)
 
 class CatsViewModel(private val refreshUseCase: RefreshUseCase,
-                    private val fetchMoreUserCase: PagedListUseCase,
-                    private val defaultSerializer: ICommandLogger
-) : ViewModel(), ICommandScopeOwner{
+                    private val fetchMoreUserCase: PagedListUseCase
+) : ViewModel(){
 
     private val initialState = CatFragmentState(refreshState = NetworkState.Idle(), pagedListState = PagedListState.Empty.AwaitingUser)
     private val mutableLiveDataExecutionContext = MutableLiveData<LiveData<NetworkState>>()
@@ -28,17 +23,14 @@ class CatsViewModel(private val refreshUseCase: RefreshUseCase,
         it
     }
 
-    override val commandScope = buildRootCommandScope(this, null, CommandNomenclature.Root, defaultSerializer)
+    private val mediatorLiveData = logBlocking<MediatorLiveData<CatFragmentState>>(
+        name= "build Cat list mediator live data"){
 
-    private val mediatorLiveData = invokeRootCommand<MediatorLiveData<CatFragmentState>>(
-        name= "build Cat list mediator live data",
-        commandNomenclature = CommandNomenclature.Application.Cats.BuildCatListMediatorLiveData) {
-
-        return@invokeRootCommand MediatorLiveData<CatFragmentState>().apply {
+        MediatorLiveData<CatFragmentState>().apply {
             this.value = initialState
             viewModelScope.launch {
 
-                val source = suspendInvokeAndFold { fetchMoreUserCase(viewModelScope) }
+                val source = logFlow<PagedListState>("fetchMore") { fetchMoreUserCase(viewModelScope) }
                 addSource(source.asLiveData()) {
                     value = value!!.copy(pagedListState = it)
                 }
@@ -52,12 +44,11 @@ class CatsViewModel(private val refreshUseCase: RefreshUseCase,
     val currentState: LiveData<CatFragmentState> = mediatorLiveData
 
 
-    fun onRefreshTriggered() : Any = invokeRootCommand<Any>(
-        name = "onRefresh",
-        commandNomenclature = CommandNomenclature.Application.Cats.RefreshList
+    fun onRefreshTriggered() : Any = logBlocking<Any>(
+        name = "onRefresh"
     ){
         viewModelScope.launch {
-            val flow: Flow<NetworkState> = suspendInvokeAsFlow<Any, NetworkState, NetworkState>{ refreshUseCase() }
+            val flow: Flow<NetworkState> = logBlockingFlow("refreshFlow"){ refreshUseCase() }
             val liveData = flow.asLiveData()
             mutableLiveDataExecutionContext.value = liveData
         }

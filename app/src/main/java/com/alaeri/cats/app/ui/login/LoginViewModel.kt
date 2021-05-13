@@ -2,28 +2,22 @@ package com.alaeri.cats.app.ui.login
 
 import androidx.lifecycle.*
 import com.alaeri.cats.app.user.UserRepository
-import com.alaeri.command.CommandNomenclature
-import com.alaeri.command.ICommandLogger
-import com.alaeri.command.core.flow.syncInvokeFlow
-import com.alaeri.command.core.root.ICommandScopeOwner
-import com.alaeri.command.core.root.buildRootCommandScope
-import com.alaeri.command.core.root.invokeRootCommand
-import com.alaeri.command.core.suspendInvokeAndFold
+import com.alaeri.cats.app.log
+import com.alaeri.cats.app.logBlocking
+import com.alaeri.cats.app.logBlockingFlow
 import kotlinx.coroutines.launch
 
 /**
  * TODO this would be more legible with a switchMap maybe?
  *
  */
-class LoginViewModel(private val userRepository: UserRepository,
-                     private val defaultSerializer: ICommandLogger
-) : ICommandScopeOwner, ViewModel() {
+class LoginViewModel(private val userRepository: UserRepository
+) : ViewModel() {
 
-    override val commandScope = buildRootCommandScope(this, null, CommandNomenclature.Root, defaultSerializer)
 
     private val mediatorLiveData = MediatorLiveData<LoginState>().apply {
-        invokeRootCommand("init login live data", CommandNomenclature.Application.Cats.InitLoginMediator){
-            val source = syncInvokeFlow { userRepository.currentUser }.asLiveData()
+        logBlocking("init login live data"){
+            val source = logBlockingFlow("currentUser") { userRepository.currentUser }.asLiveData()
             addSource(source) {
                 if (it == null) {
                     if (value !is LoginState.Loading) {
@@ -38,12 +32,13 @@ class LoginViewModel(private val userRepository: UserRepository,
     val currentState : LiveData<LoginState> = mediatorLiveData
 
     fun onSubmitClicked(firstName: String) {
-        invokeRootCommand<Unit>(name = "onSubmitClicked",
-            commandNomenclature = CommandNomenclature.Application.Cats.FirstNameSubmitted){
+        logBlocking<Unit>(name = "onSubmitClicked")
+//            commandNomenclature = CommandNomenclature.Application.Cats.FirstNameSubmitted)
+        {
             viewModelScope.launch {
                 mediatorLiveData.value = LoginState.Loading(firstName)
                 try{
-                    suspendInvokeAndFold{ userRepository.login(firstName) }
+                    log("login"){ userRepository.login(firstName) }
                 }catch (e: Exception){
                     mediatorLiveData.value = LoginState.LoggedOut(e)
                 }

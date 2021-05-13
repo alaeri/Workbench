@@ -9,6 +9,9 @@ import com.alaeri.cats.app.ui.cats.CatsFragment
 import com.alaeri.cats.app.ui.login.LoginFragment
 import com.alaeri.cats.app.ui.login.LoginState
 import com.alaeri.cats.app.ui.login.LoginViewModel
+import com.alaeri.log.core.LogConfig
+import com.alaeri.log.core.child.ChildLogEnvironmentFactory
+import com.alaeri.log.core.context.EmptyTag
 import org.koin.android.viewmodel.ext.android.viewModel
 
 class MainActivity : AppCompatActivity() {
@@ -17,6 +20,9 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        LogConfig.logEnvironmentFactory = ChildLogEnvironmentFactory
+        val env = LogConfig.logEnvironmentFactory.blockingLogEnvironment(EmptyTag(), collector)
+        env.prepare()
         setContentView(R.layout.main_activity)
     }
 

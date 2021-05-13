@@ -1,12 +1,11 @@
 package com.alaeri.cats.app.user
 
 import com.alaeri.cats.app.user.net.UserApi
-import com.alaeri.command.core.suspend.SuspendingCommand
-import com.alaeri.command.core.suspend.suspendingCommand
+import com.alaeri.cats.app.log
 
 class RemoteUserDataSource(private val userApi: UserApi){
 
-    suspend fun login(firstName: String, apiKey: String = ""): SuspendingCommand<User> = suspendingCommand {
+    suspend fun login(firstName: String, apiKey: String = ""): User = log("login") {
         val response = userApi.getFavorites(
             apiKey = apiKey,
             limit = 1,
@@ -19,6 +18,6 @@ class RemoteUserDataSource(private val userApi: UserApi){
             favoritesCount = favoritesCount)
     }
 
-    suspend fun fetch(localUser: User): SuspendingCommand<User> = login(localUser.firstName, localUser.apiKey)
+    suspend fun fetch(localUser: User): User = log("fetch", localUser){ login(localUser.firstName, localUser.apiKey) }
 
 }

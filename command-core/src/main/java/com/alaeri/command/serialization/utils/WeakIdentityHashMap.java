@@ -49,6 +49,7 @@ import java.util.*;
  * @see		java.util.IdentityHashMap
  * @see		java.util.WeakHashMap
  */
+@SuppressWarnings({"unused", "rawtypes", "unchecked"})
 public class WeakIdentityHashMap<K,V> implements Map<K,V> {
 
     /**

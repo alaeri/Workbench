@@ -27,7 +27,7 @@ import kotlinx.coroutines.flow.map
 class LogRepository(private val logSerializer: LogSerializer) : LogCollector {
 
     val listAsFlow = MutableStateFlow<List<SerializedLog<IdentityRepresentation>>>(listOf())
-    val mapAsFlow: Flow<Map<SerializedTag, LogState>> = listAsFlow.map { it.fold(mapOf()){ acc, serializedLog ->
+    val mapAsFlow: Flow<Map<SerializedTag, LogState>> = listAsFlow.map { it.fold(mapOf()){ acc, _ ->
             acc
         }
     }

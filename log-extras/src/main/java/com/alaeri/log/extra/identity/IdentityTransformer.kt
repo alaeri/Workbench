@@ -10,6 +10,7 @@ import com.alaeri.log.serialize.serialize.mapping.TypedTransformer
  */
 class IdentityTransformer(private val idBank: IdBank<IdentityRepresentation>): TypedTransformer<Any, IdentityRepresentation>(Any::class), IIdentityTransformer<IdentityRepresentation> {
 
+    @Suppress("PARAMETER_NAME_CHANGED_ON_OVERRIDE")
     override fun transform(logData: Any): IdentityRepresentation {
          return idBank.keyOf(logData)
     }

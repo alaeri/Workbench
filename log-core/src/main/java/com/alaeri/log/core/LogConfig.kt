@@ -30,6 +30,7 @@ object LogConfig{
         }
     }
 
+    @Suppress("DEPRECATION")
     @Deprecated(level = DeprecationLevel.WARNING, message = "@see InlineSuspendErrorRepro.kt", replaceWith = ReplaceWith("log"))
     suspend inline fun <reified T> inlinedSuspendLog(tag: Log.Tag = EmptyTag(),
                                                      collector: LogCollector? = null,

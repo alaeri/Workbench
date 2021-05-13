@@ -5,13 +5,10 @@ import androidx.paging.PagedList
 import androidx.paging.toLiveData
 import com.alaeri.cats.app.cats.Cat
 import com.alaeri.cats.app.cats.CatRepository
-import com.alaeri.cats.app.user.User
 import com.alaeri.cats.app.user.UserRepository
-import com.alaeri.command.CommandState
-import com.alaeri.command.core.flow.syncInvokeFlow
-import com.alaeri.command.core.suspend.SuspendingCommand
-import com.alaeri.command.core.suspend.suspendingCommand
-import com.alaeri.command.core.suspendInvokeAndFold
+import com.alaeri.cats.app.log
+import com.alaeri.cats.app.logBlockingFlow
+import com.alaeri.cats.app.logFlow
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.ConflatedBroadcastChannel
 import kotlinx.coroutines.flow.*
@@ -33,7 +30,7 @@ class PagedListUseCase(private val userRepository: UserRepository, private val c
             .combine(flowV){ (t, u), v -> transform(t, u, v) }
 
     //We need the coroutine scope argument in order to cancel all jobs when viewmodel is cleared
-    suspend operator fun invoke(coroutineScope: CoroutineScope) : SuspendingCommand<Flow<PagedListState>> = suspendingCommand{
+    suspend operator fun invoke(coroutineScope: CoroutineScope) : Flow<PagedListState> = log("invokePagedListUseCase"){
         val paginatedCatsLiveData = catRepository.paginatedCatDataSource.toLiveData(
             pageSize = 20,
             initialLoadKey = 0,
@@ -45,7 +42,7 @@ class PagedListUseCase(private val userRepository: UserRepository, private val c
                     }
                 }
             }).asFlow()
-        val userFlow = syncInvokeFlow{ userRepository.currentUser }
+        val userFlow = logBlockingFlow("userFlow"){ userRepository.currentUser }
         userFlow.combine(paginatedCatsLiveData, operationsChannel.asFlow()){ user, page, operation ->
             when{
                 user == null -> PagedListState.Empty.AwaitingUser
@@ -55,13 +52,10 @@ class PagedListUseCase(private val userRepository: UserRepository, private val c
         }
     }
 
-    private suspend fun fetchMoreCats(): SuspendingCommand<NetworkState> = suspendingCommand{
+    private suspend fun fetchMoreCats(): NetworkState = log("fetchMoreCats"){
         try {
-            emit(CommandState.Update(NetworkState.Loading))
-            val user = this.suspendInvokeAndFold {
-                this@PagedListUseCase.suspendingCommand<User?> {
-                    syncInvokeFlow{ userRepository.currentUser }.take(1).first()
-                }
+            val user = log("getUser") {
+                logFlow("userFlow"){ userRepository.currentUser }.take(1).first()
             }
 
             if (user != null) {
