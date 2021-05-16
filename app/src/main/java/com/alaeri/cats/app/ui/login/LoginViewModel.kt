@@ -5,6 +5,7 @@ import com.alaeri.cats.app.user.UserRepository
 import com.alaeri.cats.app.log
 import com.alaeri.cats.app.logBlocking
 import com.alaeri.cats.app.logBlockingFlow
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.launch
 
 /**
@@ -17,14 +18,19 @@ class LoginViewModel(private val userRepository: UserRepository
 
     private val mediatorLiveData = MediatorLiveData<LoginState>().apply {
         logBlocking("init login live data"){
-            val source = logBlockingFlow("currentUser") { userRepository.currentUser }.asLiveData()
-            addSource(source) {
-                if (it == null) {
-                    if (value !is LoginState.Loading) {
-                        value = LoginState.LoggedOut()
+            viewModelScope.launch {
+                log("init login live data coroutine"){
+                    val source = logBlockingFlow("currentUser") { userRepository.currentUser }.asLiveData(
+                        currentCoroutineContext())
+                    addSource(source) {
+                        if (it == null) {
+                            if (value !is LoginState.Loading) {
+                                value = LoginState.LoggedOut()
+                            }
+                        } else {
+                            value = LoginState.LoggedIn(it)
+                        }
                     }
-                } else {
-                    value = LoginState.LoggedIn(it)
                 }
             }
         }

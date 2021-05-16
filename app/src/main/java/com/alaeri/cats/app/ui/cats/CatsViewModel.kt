@@ -1,9 +1,11 @@
 package com.alaeri.cats.app.ui.cats
 
 import androidx.lifecycle.*
+import com.alaeri.cats.app.log
 import com.alaeri.cats.app.logBlocking
 import com.alaeri.cats.app.logBlockingFlow
 import com.alaeri.cats.app.logFlow
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 
@@ -18,8 +20,8 @@ class CatsViewModel(private val refreshUseCase: RefreshUseCase,
 ) : ViewModel(){
 
     private val initialState = CatFragmentState(refreshState = NetworkState.Idle(), pagedListState = PagedListState.Empty.AwaitingUser)
-    private val mutableLiveDataExecutionContext = MutableLiveData<LiveData<NetworkState>>()
-    private val switchMap = mutableLiveDataExecutionContext.switchMap{
+    private val mutableLiveData= MutableLiveData<LiveData<NetworkState>>()
+    private val switchMap = mutableLiveData.switchMap{
         it
     }
 
@@ -29,13 +31,14 @@ class CatsViewModel(private val refreshUseCase: RefreshUseCase,
         MediatorLiveData<CatFragmentState>().apply {
             this.value = initialState
             viewModelScope.launch {
-
-                val source = logFlow<PagedListState>("fetchMore") { fetchMoreUserCase(viewModelScope) }
-                addSource(source.asLiveData()) {
-                    value = value!!.copy(pagedListState = it)
-                }
-                addSource(switchMap){
-                    value = value!!.copy(refreshState = it)
+                this@CatsViewModel.log("loadCatsFragmentState"){
+                    val source = logFlow<PagedListState>("fetchMore") { fetchMoreUserCase(viewModelScope) }
+                    addSource(source.asLiveData(currentCoroutineContext())) {
+                        value = value!!.copy(pagedListState = it)
+                    }
+                    addSource(switchMap){
+                        value = value?.copy(refreshState = it) ?: CatFragmentState(refreshState = NetworkState.Idle(), pagedListState = PagedListState.Empty())
+                    }
                 }
             }
         }
@@ -48,9 +51,11 @@ class CatsViewModel(private val refreshUseCase: RefreshUseCase,
         name = "onRefresh"
     ){
         viewModelScope.launch {
-            val flow: Flow<NetworkState> = logBlockingFlow("refreshFlow"){ refreshUseCase() }
-            val liveData = flow.asLiveData()
-            mutableLiveDataExecutionContext.value = liveData
+            log("onRefreshTriggeredCoroutine"){
+                val flow: Flow<NetworkState> = logBlockingFlow("refreshFlow"){ refreshUseCase() }
+                val liveData = flow.asLiveData(currentCoroutineContext())
+                mutableLiveData.value = liveData
+            }
         }
         this
     }

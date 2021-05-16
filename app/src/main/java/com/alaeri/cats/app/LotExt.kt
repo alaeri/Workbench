@@ -147,6 +147,7 @@ fun <T> Flow<T>.log(name: String,
                 .onEach { log("onEach", it){} }
 //                .onCompletion { log("onCompletion"){} }
                 .flowOn(childCoroutineContext).collect {
+                    println("named: $name")
                     withContext(originalContext){
                         emit(it)
                     }
@@ -172,6 +173,9 @@ internal fun <T> Any.logBlockingFlow(name: String,
         suspend fun startFlowLogging(){
             val currentCoroutineContext = currentCoroutineContext()
             val parentLogEnvironment = currentCoroutineContext[CoroutineLogKey]
+            if(parentLogEnvironment == null){
+                println("receiver: $receiver - $name")
+            }
             val parentTag = parentLogEnvironment!!.logEnvironment.tag
             //supervisorScope {
             val logEnvironment = ChildLogEnvironment(parentTag, parentLogEnvironment?.logEnvironment?.collector?:NoopCollector,prepare = {},dispose = {})

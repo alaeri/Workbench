@@ -1,6 +1,7 @@
 package com.alaeri.cats.app.ui.cats
 
 import com.alaeri.cats.app.cats.CatRepository
+import com.alaeri.cats.app.log
 import com.alaeri.cats.app.user.UserRepository
 import com.alaeri.cats.app.logBlockingFlow
 import com.alaeri.cats.app.logFlow
@@ -15,7 +16,9 @@ class RefreshUseCase(private val userRepository: UserRepository, private val cat
         flow{
             emit(NetworkState.Loading)
             try {
-                val user = logFlow("userFlow"){ userRepository.currentUser } .take(1).first()
+                val user = this@RefreshUseCase.log("getUser"){
+                    logFlow("userFlow"){ userRepository.currentUser } .take(1).first()
+                }
                 if (user != null) {
                     catRepository.refresh(user)
                 } else {
