@@ -52,6 +52,7 @@ sealed class CatItemVH(view: View, parentLifecycle: Lifecycle, vmStore: ViewMode
 
         override fun setItem(item: Cat) {
             Log.d("CATS","setItem")
+            Log.d("CATS","$this")
             cat = item
             Log.d("CATS","$this $catItemViewModel ${cat.url}")
             viewBinding.apply {
@@ -72,11 +73,20 @@ sealed class CatItemVH(view: View, parentLifecycle: Lifecycle, vmStore: ViewMode
         }
 
         override fun onCreate() {
+            Log.d("CATS","$this")
             Log.d("CATS","onCreate")
             super.onCreate()
+            viewBinding.apply {
+                retryButton.visibility = View.GONE
+                progressCircular.visibility = View.VISIBLE
+                progressCircular.max = 1
+                progressCircular.progress = 0
+                catsLoadingTextView.visibility = View.VISIBLE
+                catsLoadingTextView.text = "initializing"
+            }
             catItemViewModel = viewModelProvider(vmFactory).get(viewBinding.toString(), CatItemViewModel::class.java)
             catItemViewModel.catLoadingState.map { it.imageLoadingState }.observe(this@CatVH, Observer {
-                Log.d("CATS","$this $catItemViewModel $it")
+                Log.d("CATS","$this $catItemViewModel received: $it")
                 viewBinding.apply {
                     when(it){
                         is ImageLoadingState.Loading -> {

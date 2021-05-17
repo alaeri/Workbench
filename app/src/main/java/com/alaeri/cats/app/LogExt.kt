@@ -1,5 +1,6 @@
 package com.alaeri.cats.app
 
+import android.util.Log
 import com.alaeri.log.server.LogServer
 import com.alaeri.log.core.LogConfig
 import com.alaeri.log.core.child.*
@@ -156,6 +157,7 @@ fun <T> Flow<T>.log(name: String,
 
     }
 }
+//TODO: make this work even when there is no parent coroutineContext available but only a blocking context in ThreadLocal
 internal fun <T> Any.logBlockingFlow(name: String,
                                      vararg params: Any? = arrayOf(),
                                      body : ()->Flow<T>) : Flow<T>{
@@ -172,20 +174,23 @@ internal fun <T> Any.logBlockingFlow(name: String,
         val logEnvContext = CoroutineLogEnvironment(childLogEnvironment)
         suspend fun startFlowLogging(){
             val currentCoroutineContext = currentCoroutineContext()
-            val parentLogEnvironment = currentCoroutineContext[CoroutineLogKey]
-            if(parentLogEnvironment == null){
+            val parentCoroutineLogEnvironment = currentCoroutineContext[CoroutineLogKey]
+            val parentBlockingLogEnvironment = ChildLogEnvironmentFactory.threadLocal.get()
+            val parentEnvironment = parentCoroutineLogEnvironment?.logEnvironment ?: parentBlockingLogEnvironment
+            if(parentEnvironment == null ){
                 println("receiver: $receiver - $name")
             }
-            val parentTag = parentLogEnvironment!!.logEnvironment.tag
+            val parentTag = parentEnvironment.tag
             //supervisorScope {
-            val logEnvironment = ChildLogEnvironment(parentTag, parentLogEnvironment?.logEnvironment?.collector?:NoopCollector,prepare = {},dispose = {})
+            val logEnvironment = ChildLogEnvironment(parentTag, parentCoroutineLogEnvironment?.logEnvironment?.collector?:NoopCollector,prepare = {},dispose = {})
             logEnvContext.logEnvironment = logEnvironment
         }
         floww.onEach {
             //println("i");
+            Log.d("CATS", "onEach: $it")
             receiver.log("onEach", it){}
         }.flowOn(logEnvContext).onStart {
-            //println("startFlowLogging")
+            Log.d("CATS", "startFlowLogging")
             startFlowLogging()
         }
     }

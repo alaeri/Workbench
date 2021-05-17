@@ -19,6 +19,7 @@ object LogConfig{
      *
      */
     var logEnvironmentFactory : LogEnvironmentFactory = BasicEnvironmentFactory
+    var defaultCollector: LogCollector? = null
 
     suspend fun <T> log(tag: Log.Tag = EmptyTag(),
                                collector: LogCollector? = null,

@@ -1,5 +1,7 @@
 package com.alaeri.log.glide
 
+import android.util.Log.d
+import com.alaeri.log.core.Log
 import com.alaeri.log.core.LogConfig
 import com.alaeri.log.core.child.ChildLogEnvironment
 import com.alaeri.log.core.child.ChildLogEnvironmentFactory
@@ -27,6 +29,7 @@ import kotlinx.coroutines.withContext
 internal suspend fun <T> Any.log(name: String,
                                  vararg params: Any? = arrayOf(),
                                  body :suspend ()->T) : T {
+    d("CATS-IMAGE-LOADER", "log: $name")
     val currentCoroutineContext = currentCoroutineContext()
     val logContext = ReceiverTag(
         this) +
@@ -115,9 +118,10 @@ internal fun <T> Any.logBlockingFlow(name: String,
         }
         floww.onEach {
             //println("i");
+            d("CATS-IMAGE-LOADER", "onEach: $it")
             receiver.log("onEach", it){}
         }.flowOn(logEnvContext).onStart {
-            //println("startFlowLogging")
+            d("CATS-IMAGE-LOADER", "onEach: ${startFlowLogging()}")
             startFlowLogging()
         }
     }

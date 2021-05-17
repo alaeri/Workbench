@@ -1,5 +1,6 @@
 package com.alaeri.recyclerview.extras.lifecycle
 
+import android.util.Log
 import android.view.View
 import androidx.annotation.CallSuper
 import androidx.lifecycle.*
@@ -62,7 +63,8 @@ abstract class LifecycleVH(itemView: View, private val parentLifecycle: Lifecycl
         } else {
             Lifecycle.State.DESTROYED
         }
-        if(currentState != newState && (currentState >= Lifecycle.State.INITIALIZED || newState >= Lifecycle.State.INITIALIZED) ){
+        Log.d("CATS-LIFECYCLE", "current: $currentState newState: $newState")
+        if(currentState != newState && !(currentState == Lifecycle.State.INITIALIZED && newState == Lifecycle.State.DESTROYED) ){
             lifecycleRegistry.currentState = newState
             if(newState == Lifecycle.State.DESTROYED){
                 lifecycleRegistry = instantiateNewLifecycleRegistry()

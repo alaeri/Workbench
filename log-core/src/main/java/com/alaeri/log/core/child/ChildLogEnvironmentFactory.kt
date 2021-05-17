@@ -8,7 +8,8 @@ import kotlinx.coroutines.currentCoroutineContext
 
 object ChildLogEnvironmentFactory : LogEnvironmentFactory() {
 
-    internal val threadLocal =  ThreadLocal<LogEnvironment>()
+    //internal
+    val threadLocal =  ThreadLocal<LogEnvironment>()
 
     override suspend fun suspendingLogEnvironment(
         tag: Tag,
@@ -38,7 +39,7 @@ object ChildLogEnvironmentFactory : LogEnvironmentFactory() {
         } else {
             collector
             //If no collector throw
-        } ?: throw MissingCollectorException()
+        } ?: throw MissingCollectorException(childLogData)
         return ChildLogEnvironment(childLogData,
             localCollector,
             { threadLocal.set(this) },
@@ -59,7 +60,7 @@ object ChildLogEnvironmentFactory : LogEnvironmentFactory() {
             threadLogEnvironment.collector + collector
         } else {
             collector
-        } ?: throw MissingCollectorException()
+        } ?: throw MissingCollectorException(logData)
         return ChildLogEnvironment(logData,
             logCollector,
             { threadLocal.set(this) },
