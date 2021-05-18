@@ -16,7 +16,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             xmlns:tools="http://schemas.android.com/tools"
-            tools:listitem="@layout/command_item"
+            tools:listitem="@layout/log_item"
             android:id="@+id/recyclerView"/>
     </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
     <TextView

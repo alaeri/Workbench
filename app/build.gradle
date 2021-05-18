@@ -55,11 +55,7 @@ android {
 }
 
 dependencies {
-//    implementation project(path: ':command-glide')
-//    implementation project(path: ':command-core')
-//    implementation project(path: ':command-android-visualizer')
-//    implementation project(path: ':command-android')
-//    implementation project(path: ':command-koin')
+
     implementation project(path: ':log-serialize')
     implementation project(path: ':log-extras')
     implementation project(path: ':log-core')
@@ -70,6 +66,7 @@ dependencies {
     implementation project(path: ':log-server')
     implementation project(path: ':log-repository')
     implementation project(path: ':recyclerview-extras')
+    implementation project(path: ':log-android-ui')
     //Multidex
     def multidex_version = "2.0.1"
     implementation "androidx.multidex:multidex:$multidex_version"

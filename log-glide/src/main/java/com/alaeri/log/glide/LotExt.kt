@@ -1,7 +1,6 @@
 package com.alaeri.log.glide
 
 import android.util.Log.d
-import com.alaeri.log.core.Log
 import com.alaeri.log.core.LogConfig
 import com.alaeri.log.core.child.ChildLogEnvironment
 import com.alaeri.log.core.child.ChildLogEnvironmentFactory

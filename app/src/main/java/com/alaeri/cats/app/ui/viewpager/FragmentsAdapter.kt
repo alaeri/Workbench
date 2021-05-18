@@ -5,6 +5,7 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.viewpager2.adapter.FragmentStateAdapter
 import com.alaeri.cats.app.ui.cats.CatsFragment
 import com.alaeri.cats.app.ui.login.LoginFragment
+import com.alaeri.log.android.ui.list.LogListFragment
 
 class FragmentsAdapter(parentFragment: Fragment) : FragmentStateAdapter(parentFragment){
 
@@ -25,8 +26,8 @@ class FragmentsAdapter(parentFragment: Fragment) : FragmentStateAdapter(parentFr
         return when(page.id){
             PageId.Login -> LoginFragment()
             PageId.Cats -> CatsFragment()
+            PageId.LogList -> LogListFragment()
             else -> CatsFragment()
-            //PageId.CommandsList -> com.alaeri.command.android.visualizer.CommandListFragment()
             //PageId.CommandsWebview -> com.alaeri.command.android.visualizer.graph.GraphFragment()
             //PageId.CommandsLifecycle -> com.alaeri.command.android.visualizer.option.VisualizationOptionsFragment()
         }

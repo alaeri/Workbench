@@ -12,6 +12,7 @@ import com.alaeri.log.core.child.ChildLogEnvironmentFactory
 import com.alaeri.log.core.context.EmptyTag
 import com.alaeri.cats.app.collector
 import com.alaeri.cats.app.logBlocking
+import com.alaeri.log.android.ui.LogAndroidUiModule
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -45,7 +46,8 @@ class CatsApplication : MultiDexApplication() {
                     viewPagerFragmentModule,
                     userModule,
                     catsModule,
-                    catsFragmentModule
+                    catsFragmentModule,
+                    LogAndroidUiModule.logAndroidUiModule(logRepository)
                 )
 
 

@@ -18,7 +18,7 @@ class ViewPagerFragmentModule{
         scope<ViewPagerFragment> {
             scoped<Fragment> { (fragment: Fragment) -> fragment  }
             factory<Lifecycle> { get<Fragment>().lifecycle  }
-            viewModel<ViewPagerViewModel> { ViewPagerViewModel() }
+            viewModel<ViewPagerViewModel> { ViewPagerViewModel(get()) }
         }
     }
 }
