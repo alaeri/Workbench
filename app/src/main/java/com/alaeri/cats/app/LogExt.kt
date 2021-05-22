@@ -41,7 +41,7 @@ import java.util.*
  * Created by Emmanuel Requier on 20/12/2020.
  */
 val idBank = IdBank<IdentityRepresentation>(null){ prev ->
-    IdentityRepresentation(prev?.index ?: 0, UUID.randomUUID().toString())
+    IdentityRepresentation((prev?.index ?: 0) +1, UUID.randomUUID().toString())
 }
 val identityTranformer = IdentityTransformer(idBank)
 val callSiteTransformer = CallSiteTransformer(identityTranformer)

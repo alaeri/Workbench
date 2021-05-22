@@ -9,6 +9,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.sample
 import kotlinx.coroutines.launch
 
 @ExperimentalCoroutinesApi
@@ -20,7 +21,7 @@ class LogFocusViewModel constructor(private val focusCommandRepository: FocusLog
             onClearFocus = { viewModelScope.launch { focusCommandRepository.setFocus(null) } },
             onItemWithIdClicked = { viewModelScope.launch { focusCommandRepository.setFocus(it) } }
         ) ?: listOf())
-    }.asLiveData(context = viewModelScope.coroutineContext)
+    }.sample(1000).asLiveData(context = viewModelScope.coroutineContext)
 }
 
 private fun FocusedAndZoomLogHistory.toVM(
