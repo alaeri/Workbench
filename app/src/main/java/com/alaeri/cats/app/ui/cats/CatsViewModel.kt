@@ -1,12 +1,15 @@
 package com.alaeri.cats.app.ui.cats
 
 import androidx.lifecycle.*
+import com.alaeri.cats.app.*
 import com.alaeri.cats.app.log
 import com.alaeri.cats.app.logBlocking
 import com.alaeri.cats.app.logBlockingFlow
 import com.alaeri.cats.app.logFlow
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.launch
 
 /**
@@ -17,7 +20,7 @@ data class CatFragmentState(val refreshState: NetworkState, val pagedListState: 
 
 class CatsViewModel(private val refreshUseCase: RefreshUseCase,
                     private val fetchMoreUserCase: PagedListUseCase
-) : ViewModel(){
+) : ViewModel(), LogOwner {
 
     private val initialState = CatFragmentState(refreshState = NetworkState.Idle(), pagedListState = PagedListState.Empty.AwaitingUser)
     private val mutableLiveData= MutableLiveData<LiveData<NetworkState>>()
@@ -32,8 +35,10 @@ class CatsViewModel(private val refreshUseCase: RefreshUseCase,
             this.value = initialState
             viewModelScope.launch {
                 this@CatsViewModel.log("loadCatsFragmentState"){
-                    val source = logFlow<PagedListState>("fetchMore") { fetchMoreUserCase(viewModelScope) }
-                    addSource(source.asLiveData(currentCoroutineContext())) {
+                    val source = logFlow<PagedListState>("fetchMore") { fetchMoreUserCase(viewModelScope) }.flowOn(
+                        Dispatchers.IO
+                    )
+                    addSource(source.asLiveData(currentCoroutineContext()+ Dispatchers.IO)) {
                         value = value!!.copy(pagedListState = it)
                     }
                     addSource(switchMap){

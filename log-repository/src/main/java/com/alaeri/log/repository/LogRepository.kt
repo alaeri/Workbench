@@ -10,8 +10,13 @@ import com.alaeri.log.serialize.serialize.LogSerializer
 import com.alaeri.log.serialize.serialize.SerializedLog
 import com.alaeri.log.serialize.serialize.SerializedTag
 import com.alaeri.log.serialize.serialize.representation.EntityRepresentation
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.newSingleThreadContext
+import kotlin.coroutines.CoroutineContext
 
 
 //Maybe use GumTree to diff the trees
@@ -24,7 +29,10 @@ import kotlinx.coroutines.flow.map
  *
  *
  */
-class LogRepository(private val logSerializer: LogSerializer) : LogCollector {
+class LogRepository(private val logSerializer: LogSerializer,
+                    private val context: CoroutineContext = newSingleThreadContext("repository"),
+                    private val logScope : CoroutineScope = CoroutineScope(context)
+) : LogCollector {
 
     val listAsFlow = MutableStateFlow<List<SerializedLog<IdentityRepresentation>>>(listOf())
     val mapAsFlow: Flow<Map<SerializedTag, LogState>> = listAsFlow.map { it.fold(mapOf()){ acc, _ ->
@@ -77,9 +85,11 @@ class LogRepository(private val logSerializer: LogSerializer) : LogCollector {
 //
 //
     override fun emit(log: Log) {
-        val serializedLog = logSerializer.serialize(log)
-        val newList = listAsFlow.value.toMutableList() + serializedLog
-        listAsFlow.value = newList
+        logScope.launch{
+            val serializedLog = logSerializer.serialize(log)
+            val newList = listAsFlow.value.toMutableList() + serializedLog
+            listAsFlow.value = newList
+        }
     }
 //
 //

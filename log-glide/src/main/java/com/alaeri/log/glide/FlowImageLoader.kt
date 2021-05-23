@@ -3,10 +3,7 @@ package com.alaeri.log.glide
 import android.content.Context
 import com.bumptech.glide.Glide
 import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.*
 import okhttp3.HttpUrl
 import java.util.concurrent.Executors
 import kotlin.coroutines.CoroutineContext
@@ -73,8 +70,7 @@ class FlowImageLoader(private val applicationContext: Context,
                 }
             }
             emit(channel)
-        }.flatMapLatest { logBlockingFlow("imageLoadingChannel"){ it } }
-
+        }.flatMapLatest { logBlockingFlow("imageLoadingChannel"){ it }.flowOn(Dispatchers.IO) }
     }
 
     override fun onProgress(url: HttpUrl, bytesRead: Long, expectedLength: Long) {

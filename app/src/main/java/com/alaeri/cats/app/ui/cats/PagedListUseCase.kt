@@ -3,6 +3,7 @@ package com.alaeri.cats.app.ui.cats
 import androidx.lifecycle.asFlow
 import androidx.paging.PagedList
 import androidx.paging.toLiveData
+import com.alaeri.cats.app.LogOwner
 import com.alaeri.cats.app.cats.Cat
 import com.alaeri.cats.app.cats.CatRepository
 import com.alaeri.cats.app.user.UserRepository
@@ -14,7 +15,7 @@ import kotlinx.coroutines.channels.ConflatedBroadcastChannel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
-class PagedListUseCase(private val userRepository: UserRepository, private val catRepository: CatRepository){
+class PagedListUseCase(private val userRepository: UserRepository, private val catRepository: CatRepository): LogOwner{
 
     private val operationsChannel =
         ConflatedBroadcastChannel<NetworkState>(

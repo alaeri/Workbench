@@ -31,8 +31,8 @@ class ViewPagerViewModel(
             Page(id = PageId.Cats),
             Page(id = PageId.Login),
             Page(id = PageId.LogList),
-            Page(id = PageId.CommandsLifecycle),
-            Page(id = PageId.CommandsWebview)
+            Page(id = PageId.LogOptions),
+            Page(id = PageId.LogsWebview)
         ))
     val pages : LiveData<List<Page>> = mutablePages
     val focused : LiveData<FocusViewState> = focusLogRepository.state.map {

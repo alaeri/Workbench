@@ -1,6 +1,7 @@
 package com.alaeri.cats.app.ui.cats
 
 import androidx.lifecycle.*
+import com.alaeri.cats.app.LogOwner
 import com.alaeri.cats.app.cats.Cat
 import com.alaeri.cats.app.log
 import com.alaeri.cats.app.logBlocking
@@ -10,7 +11,7 @@ import com.alaeri.log.glide.ImageLoadingState
 import com.alaeri.log.glide.Size
 import kotlinx.coroutines.flow.*
 
-class CatItemViewModel(private val flowImageLoader: FlowImageLoader): ViewModel(){
+class CatItemViewModel(private val flowImageLoader: FlowImageLoader): ViewModel(), LogOwner {
 
     data class CatLoadingState(val imageLoadingState: ImageLoadingState)
 
@@ -46,8 +47,4 @@ class CatItemViewModel(private val flowImageLoader: FlowImageLoader): ViewModel(
         super.onCleared()
         logBlocking("onCleared()"){}
     }
-
-
-
-
 }

@@ -13,6 +13,7 @@ import com.alaeri.log.core.context.EmptyTag
 import com.alaeri.cats.app.collector
 import com.alaeri.cats.app.logBlocking
 import com.alaeri.log.android.ui.LogAndroidUiModule
+import com.alaeri.log.server.LogServer
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -23,7 +24,7 @@ import org.koin.core.context.startKoin
  * Created by Emmanuel Requier on 18/04/2020.
  */
 @ExperimentalCoroutinesApi
-class CatsApplication : MultiDexApplication() {
+class CatsApplication : MultiDexApplication(), LogOwner {
 
     init {
 
@@ -56,6 +57,7 @@ class CatsApplication : MultiDexApplication() {
             }
             Unit
         }
+        SampleLogServer.start()
     }
 }
 

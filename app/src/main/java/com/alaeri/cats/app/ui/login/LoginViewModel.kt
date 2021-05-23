@@ -1,6 +1,7 @@
 package com.alaeri.cats.app.ui.login
 
 import androidx.lifecycle.*
+import com.alaeri.cats.app.LogOwner
 import com.alaeri.cats.app.user.UserRepository
 import com.alaeri.cats.app.log
 import com.alaeri.cats.app.logBlocking
@@ -13,7 +14,7 @@ import kotlinx.coroutines.launch
  *
  */
 class LoginViewModel(private val userRepository: UserRepository
-) : ViewModel() {
+) : ViewModel(), LogOwner {
 
 
     private val mediatorLiveData = MediatorLiveData<LoginState>().apply {

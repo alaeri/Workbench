@@ -32,14 +32,6 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.withContext
 import java.util.*
 
-/**
- * To use the logger copy this class in your project and extend modify as needed
- *
- * In debug you can set LogConfig.LogEnvironmentFactory = ChildLogEnvironmentFactory
- * To silence logs in prod you can use NoopLogCollector.
- *
- * Created by Emmanuel Requier on 20/12/2020.
- */
 val idBank = IdBank<IdentityRepresentation>(null){ prev ->
     IdentityRepresentation((prev?.index ?: 0) +1, UUID.randomUUID().toString())
 }
@@ -102,7 +94,7 @@ internal suspend fun <T> Any.log(name: String,
     }
 }
 
-internal inline fun <reified T> Any.logBlocking(name: String,
+internal inline fun <reified T> LogOwner.logBlocking(name: String,
                                                 vararg params: Any? = arrayOf(),
                                                 body :()->T): T {
     val logContext =  ReceiverTag(this) +
@@ -113,7 +105,7 @@ internal inline fun <reified T> Any.logBlocking(name: String,
         body.invoke()
     }
 }
-internal suspend fun <T> Any.logFlow(name: String,
+internal suspend fun <T> LogOwner.logFlow(name: String,
                                      vararg params: Any? = arrayOf(),
                                      body :suspend ()->Flow<T>) : Flow<T> {
     val receiver = this
@@ -158,7 +150,7 @@ fun <T> Flow<T>.log(name: String,
     }
 }
 //TODO: make this work even when there is no parent coroutineContext available but only a blocking context in ThreadLocal
-internal fun <T> Any.logBlockingFlow(name: String,
+internal fun <T> LogOwner.logBlockingFlow(name: String,
                                      vararg params: Any? = arrayOf(),
                                      body : ()->Flow<T>) : Flow<T>{
     val receiver = this

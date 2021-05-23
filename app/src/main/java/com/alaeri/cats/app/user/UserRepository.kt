@@ -1,5 +1,6 @@
 package com.alaeri.cats.app.user
 
+import com.alaeri.cats.app.LogOwner
 import com.alaeri.cats.app.log
 import com.alaeri.cats.app.logBlockingFlow
 import com.alaeri.cats.app.logFlow
@@ -15,7 +16,7 @@ import kotlin.coroutines.CoroutineContext
  */
 class UserRepository(private val remoteUserDataSource: RemoteUserDataSource,
                      private val localUserDataSource: LocalUserDataSource,
-                     private val defaultContext: CoroutineContext){
+                     private val defaultContext: CoroutineContext) : LogOwner{
 
     suspend fun login(firstName: String) : Unit = log("login"){
         withContext(defaultContext){

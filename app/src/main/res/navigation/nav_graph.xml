@@ -18,7 +18,7 @@
         android:label="CommandListFragment" />
     <fragment
         android:id="@+id/graphFragment"
-        android:name="com.alaeri.command.android.visualizer.graph.GraphFragment"
+        android:name="com.alaeri.log.android.ui.graph.LogGraphFragment"
         android:label="GraphFragment" />
     <fragment
         android:id="@+id/loginFragment"
