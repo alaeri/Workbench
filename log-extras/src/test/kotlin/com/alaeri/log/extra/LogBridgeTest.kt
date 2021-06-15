@@ -40,7 +40,7 @@ class LogBridgeTest {
         val collectionJob = launch {
             logBridge.logs.collect { collector.emit(it) }
         }
-        logBridge.emit(any())
+        logBridge.emit(Log(EmptyTag(), Log.Message.Starting(listOf())))
         delay(100)
         verify(collector).emit(any())
         collectionJob.cancel()
@@ -54,7 +54,7 @@ class LogBridgeTest {
         }
         testCoroutineScope.pauseDispatcher()
         (0..99).forEach { _ ->
-            logBridge.emit(any())
+            logBridge.emit(Log(EmptyTag(), Log.Message.Starting(listOf())))
         }
         verifyNoMoreInteractions(collector)
         testCoroutineScope.resumeDispatcher()
