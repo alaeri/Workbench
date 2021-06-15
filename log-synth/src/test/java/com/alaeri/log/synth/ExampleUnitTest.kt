@@ -1,4 +1,4 @@
-package com.alaeri.command.koin
+package com.alaeri.log.synth
 
 import org.junit.Test
 
