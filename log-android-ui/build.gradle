@@ -41,6 +41,7 @@ dependencies {
     implementation project(":log-core")
     implementation project(":log-extras")
     implementation project(":log-serialize")
+    implementation project(":log-synth")
     implementation project(":recyclerview-extras")
 
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
