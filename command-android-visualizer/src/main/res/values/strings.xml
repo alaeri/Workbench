@@ -1,5 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <string name="injection_switch">Display injection commands</string>
-    <string name="lifecycle_switch">Display lifecycle commands</string>
-</resources>
