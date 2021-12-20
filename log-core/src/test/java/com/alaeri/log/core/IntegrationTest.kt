@@ -29,10 +29,10 @@ suspend inline fun <reified T> logBuggy(tag: Log.Tag = EmptyTag(),
         body.invoke()
     }
 
-suspend fun <T> log(tag: Log.Tag = EmptyTag(),
+suspend inline fun <reified T> log(tag: Log.Tag = EmptyTag(),
                                    collector: LogCollector? = null,
                                    vararg params: Any? = arrayOf(),
-                                   body :suspend ()->T) : T  =
+                                   crossinline body :suspend ()->T) : T  =
     LogConfig.log(tag, collector, *params){
         body.invoke()
     }
@@ -177,14 +177,14 @@ class IntegrationTest {
         }
     }
 
-//    @Test
-//    fun `check that suspending inline function is bugged`()= runBlockingTest{
-//        val testParent = TestParent()
-//        logBuggy(collector = LogPrinter()) {
-//            // Will be launched in the mainThreadSurrogate dispatcher
-//            val result = testParent.piou()
-//            assertEquals("pi", result)
-//        }
-//    }
+    @Test
+    fun `check that suspending inline function is bugged`()= runBlockingTest{
+        val testParent = TestParent()
+        logBuggy(collector = LogPrinter()) {
+            // Will be launched in the mainThreadSurrogate dispatcher
+            val result = testParent.piou()
+            assertEquals("pi", result)
+        }
+    }
 
 }

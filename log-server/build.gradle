@@ -9,11 +9,11 @@ java {
     targetCompatibility = JavaVersion.VERSION_1_7
 }
 sourceSets {
-    main {
-        resources {
-            srcDirs "src/main/resources"
-        }
-    }
+//    main {
+//        resources {
+//            srcDirs "src/main/resources"
+//        }
+//    }
 }
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"

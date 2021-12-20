@@ -26,9 +26,9 @@ val collector = object: LogCollector{
     }
 }
 
-internal suspend fun <T> Any.logLib(name: String,
+internal suspend inline fun <reified T> Any.logLib(name: String,
                                    vararg params: Any? = arrayOf(),
-                                   body :suspend ()->T) : T {
+                                   crossinline body :suspend ()->T) : T {
     val currentCoroutineContext = currentCoroutineContext()
     val logContext = CoroutineContextTag(currentCoroutineContext) +
             CallSiteTag() +

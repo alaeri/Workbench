@@ -83,9 +83,9 @@ object SampleLogServer {
     }
     private val logServer =  LogServer(graphRepository, logRepository)
 }
-internal suspend fun <T> Any.log(name: String,
+internal suspend inline fun <reified T> Any.log(name: String,
                                    vararg params: Any? = arrayOf(),
-                                   body :suspend ()->T) : T {
+                                   crossinline body :suspend ()->T) : T {
     val currentCoroutineContext = currentCoroutineContext()
     val logContext = ReceiverTag(
         this) +

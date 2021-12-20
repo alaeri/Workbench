@@ -21,12 +21,12 @@ object LogConfig{
     var logEnvironmentFactory : LogEnvironmentFactory = BasicEnvironmentFactory
     var defaultCollector: LogCollector? = null
 
-    suspend fun <T> log(tag: Log.Tag = EmptyTag(),
+    suspend inline fun <reified T> log(tag: Log.Tag = EmptyTag(),
                                collector: LogCollector? = null,
                                vararg params: Any? = arrayOf(),
-                               body :suspend ()->T) : T {
+                               crossinline body :suspend ()->T) : T {
         delay(100)
-        return logEnvironmentFactory.log(tag, collector, *params) {
+        return logEnvironmentFactory.inlineSuspendLog(tag, collector, *params) {
             body.invoke()
         }
     }

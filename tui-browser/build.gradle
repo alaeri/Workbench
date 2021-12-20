@@ -31,8 +31,8 @@ task runWithJavaExec(type: JavaExec) {
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
-    implementation "com.googlecode.lanterna:lanterna:3.0.4"
-    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.2'
+    implementation "com.googlecode.lanterna:lanterna:3.1.1"
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.2'
     //Fuel
     def fuel_version = "2.3.0"
     implementation "com.github.kittinunf.fuel:fuel:$fuel_version"
