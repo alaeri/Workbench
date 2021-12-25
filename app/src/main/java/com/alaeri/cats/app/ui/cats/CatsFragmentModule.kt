@@ -29,7 +29,7 @@ val catsFragmentModule = module {
         }
         factory<Factory> {
             object: Factory{
-                override fun <T : ViewModel?> create(modelClass: Class<T>): T {
+                override fun <T : ViewModel> create(modelClass: Class<T>): T {
                     return CatItemViewModel(get<FlowImageLoader>()) as T
                 }
             }

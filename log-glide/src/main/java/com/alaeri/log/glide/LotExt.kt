@@ -25,9 +25,9 @@ import kotlinx.coroutines.withContext
  * Created by Emmanuel Requier on 20/12/2020.
  */
 
-internal suspend fun <T> Any.log(name: String,
+internal suspend inline fun <reified T> Any.log(name: String,
                                  vararg params: Any? = arrayOf(),
-                                 body :suspend ()->T) : T {
+                                 crossinline body : suspend ()->T) : T {
     d("CATS-IMAGE-LOADER", "log: $name")
     val currentCoroutineContext = currentCoroutineContext()
     val logContext = ReceiverTag(

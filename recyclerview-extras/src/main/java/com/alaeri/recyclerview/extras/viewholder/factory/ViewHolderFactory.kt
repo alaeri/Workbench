@@ -1,5 +1,6 @@
 package com.alaeri.recyclerview.extras.viewholder.factory
 
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
@@ -17,8 +18,7 @@ class ViewHolderFactory<T: Any, VH: RecyclerView.ViewHolder, VB : ViewBinding>(
         return builder(viewbinding, parent)
     }
 
-    override fun matches(value: Any?): Boolean = matcher(value)
-
+    override fun matches(value: Any?): Boolean = value != null && matcher(value)
     companion object {
         inline fun <reified T> buildMatcher(): (Any?)-> Boolean{
             return { any ->

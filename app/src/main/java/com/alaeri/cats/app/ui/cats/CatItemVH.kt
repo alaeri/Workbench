@@ -1,5 +1,6 @@
 package com.alaeri.cats.app.ui.cats
 
+import android.graphics.drawable.ColorDrawable
 import android.util.Log
 import android.view.View
 import androidx.lifecycle.*
@@ -51,8 +52,6 @@ sealed class CatItemVH(view: View, parentLifecycle: Lifecycle, vmStore: ViewMode
 
 
         override fun setItem(item: Cat) {
-            Log.d("CATS","setItem")
-            Log.d("CATS","$this")
             cat = item
             Log.d("CATS","$this $catItemViewModel ${cat.url}")
             viewBinding.apply {
@@ -60,7 +59,8 @@ sealed class CatItemVH(view: View, parentLifecycle: Lifecycle, vmStore: ViewMode
                 imageView.ratio = ratio
                 imageView.requestLayout()
                 imageView.setBackgroundResource(R.drawable.bg_cat_placeholder)
-                imageView.setImageDrawable(null)
+                imageView.setImageResource(android.R.color.transparent)
+                Log.d("CATS","$imageView set to null (setItem) $cat")
                 val width = imageView.width
                 val height = (imageView.width.toFloat() * ratio).toInt()
                 if(width == 0){
@@ -73,8 +73,6 @@ sealed class CatItemVH(view: View, parentLifecycle: Lifecycle, vmStore: ViewMode
         }
 
         override fun onCreate() {
-            Log.d("CATS","$this")
-            Log.d("CATS","onCreate")
             super.onCreate()
             viewBinding.apply {
                 retryButton.visibility = View.GONE
@@ -84,7 +82,7 @@ sealed class CatItemVH(view: View, parentLifecycle: Lifecycle, vmStore: ViewMode
                 catsLoadingTextView.visibility = View.VISIBLE
                 catsLoadingTextView.text = "initializing"
             }
-            catItemViewModel = viewModelProvider(vmFactory).get(viewBinding.toString(), CatItemViewModel::class.java)
+            catItemViewModel = vmFactory.create(CatItemViewModel::class.java)//viewModelProvider(vmFactory).get(viewBinding.toString(), CatItemViewModel::class.java)
             catItemViewModel.catLoadingState.map { it.imageLoadingState }.observe(this@CatVH, Observer {
                 Log.d("CATS","$this $catItemViewModel received: $it")
                 viewBinding.apply {
@@ -96,6 +94,7 @@ sealed class CatItemVH(view: View, parentLifecycle: Lifecycle, vmStore: ViewMode
                             progressCircular.progress = it.readCount.toInt()
                             catsLoadingTextView.visibility = View.VISIBLE
                             catsLoadingTextView.text = "loading"
+                            imageView.setImageResource(android.R.color.transparent)
                         }
                         is ImageLoadingState.AwaitingLoad -> {
                             retryButton.visibility = View.GONE
@@ -104,8 +103,10 @@ sealed class CatItemVH(view: View, parentLifecycle: Lifecycle, vmStore: ViewMode
                             progressCircular.progress = 0
                             catsLoadingTextView.text = "queued"
                             catsLoadingTextView.visibility = View.VISIBLE
+                            imageView.setImageResource(android.R.color.transparent)
                         }
                         is ImageLoadingState.Failed -> {
+                            imageView.setImageResource(android.R.color.transparent)
                             retryButton.visibility = View.VISIBLE
                             progressCircular.visibility = View.GONE
                             catsLoadingTextView.visibility = View.VISIBLE
@@ -113,9 +114,11 @@ sealed class CatItemVH(view: View, parentLifecycle: Lifecycle, vmStore: ViewMode
                             catsLoadingTextView.visibility = View.VISIBLE
                         }
                         is ImageLoadingState.Completed -> {
+                            Log.d("CATS","$imageView set to ${it.bitmap} $cat")
                             progressCircular.visibility = View.GONE
                             retryButton.visibility = View.GONE
                             catsLoadingTextView.visibility = View.GONE
+                            //imageView.setImageDrawable(ColorDrawable(cat.hashCode()).apply { alpha = 255 })
                             imageView.setImageDrawable(it.bitmap)
                         }
                     }
@@ -126,11 +129,10 @@ sealed class CatItemVH(view: View, parentLifecycle: Lifecycle, vmStore: ViewMode
         override fun onDestroy() {
             super.onDestroy()
             viewBinding.apply {
-                imageView.setImageDrawable(null)
+                imageView.setImageResource(android.R.color.transparent)
                 imageView.removeOnLayoutChangeListener(lcl)
             }
             Log.d("CATS","$catItemViewModel clearViewModel")
         }
     }
-
 }

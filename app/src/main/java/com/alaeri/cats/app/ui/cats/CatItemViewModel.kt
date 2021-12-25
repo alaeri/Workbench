@@ -18,7 +18,7 @@ class CatItemViewModel(private val flowImageLoader: FlowImageLoader): ViewModel(
     private val mutableLiveDataCat =  MutableStateFlow<Triple<Cat, Int, Int>?>(null)
 
     val catLoadingState = logBlockingFlow("catLoadingState") {
-        mutableLiveDataCat.flatMapLatest {
+        mutableLiveDataCat.filterNotNull().flatMapLatest {
             return@flatMapLatest log("cat source object changed", it) {
                 it?.let {
                     val cat = it.first
