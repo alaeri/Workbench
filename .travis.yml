@@ -37,6 +37,9 @@ android:
     - 'android-sdk-preview-license-.+'
     - 'android-sdk-license-.+'
     - 'google-gdk-license-.+'
+    - 'build-tools'
+    - 'platforms'
+    - 'android-31'
 
 ## Emulator Management: Create, Start and Wait
 #install:
