@@ -29,9 +29,9 @@ class ViewPagerViewModel(
     private val mutablePages =
         MutableLiveData<List<Page>>(listOf(
             Page(id = PageId.Cats),
+            Page(id = PageId.LogOptions),
             Page(id = PageId.Login),
             Page(id = PageId.LogList),
-            Page(id = PageId.LogOptions),
             Page(id = PageId.LogsWebview)
         ))
     val pages : LiveData<List<Page>> = mutablePages

@@ -1,6 +1,7 @@
 package com.alaeri.cats.app
 
 import android.util.Log
+import com.alaeri.log.android.ui.option.DefaultSerializedEntity
 import com.alaeri.log.server.LogServer
 import com.alaeri.log.core.LogConfig
 import com.alaeri.log.core.child.*
@@ -58,7 +59,7 @@ val logSerializer = LogSerializer(
     combinedLogDataTransformer,
     object : EntityTransformer<Any, EntityRepresentation<Any>>(Any::class){
         override fun transform(logData: Any): EntityRepresentation<Any> {
-            return object : EntityRepresentation<Any>{}
+            return DefaultSerializedEntity(logData.javaClass.name)
         }
 
     },

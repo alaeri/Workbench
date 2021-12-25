@@ -3,7 +3,7 @@ package com.alaeri.log.synth
 import android.media.AudioFormat
 import android.media.AudioManager
 import android.media.AudioTrack
-import kotlin.math.sin
+import android.util.Log
 
 
 /**
@@ -25,29 +25,57 @@ import kotlin.math.sin
 class Player {
 
 
+    val duration = 0.1f // duration of sound
+    val sampleRate : Int = 22050// Hz (maximum frequency is 7902.13Hz (B8))
+    val bSize = AudioTrack.getMinBufferSize(sampleRate,AudioFormat.CHANNEL_OUT_MONO, AudioFormat.ENCODING_PCM_16BIT)
+    val numSamples = (duration * sampleRate.toFloat()).toInt()
+    val samples = DoubleArray(numSamples)
+    val buffer = ShortArray(numSamples)
+    val phases = DoubleArray(16)
 
-    fun play(note: Double){
-        val duration = 10 // duration of sound
-        val sampleRate : Int = 22050// Hz (maximum frequency is 7902.13Hz (B8))
-        val numSamples = duration * sampleRate
-        val samples = DoubleArray(numSamples)
-        val buffer = ShortArray(numSamples)
+    val audioTrack = AudioTrack(
+        AudioManager.STREAM_MUSIC,
+        sampleRate, AudioFormat.CHANNEL_OUT_MONO,
+        AudioFormat.ENCODING_PCM_16BIT, bSize,
+        AudioTrack.MODE_STREAM
+    ).apply {
+        play()
+    }
 
+
+
+
+    fun play(notes: List<Double>){
+        Log.d("PLAYER", "bsize: $bSize: duration: ${bSize.toFloat() / sampleRate}")
+        val increments = calculateIncrements(notes)
+        calculateSineWave(phases, increments)
         val range = 0 until numSamples
         range.forEach { i ->
-            samples[i] = sin(2 * Math.PI * i / (sampleRate / note)) // Sine wave
             buffer[i] = (samples[i] * Short.MAX_VALUE).toInt().toShort()  // Higher amplitude increases volume
         }
-
-        val audioTrack = AudioTrack(
-            AudioManager.STREAM_MUSIC,
-            sampleRate, AudioFormat.CHANNEL_OUT_MONO,
-            AudioFormat.ENCODING_PCM_16BIT, buffer.size,
-            AudioTrack.MODE_STATIC
-        )
-
         audioTrack.write(buffer, 0, buffer.size)
-        audioTrack.play()
+    }
 
+    fun calculateIncrements(frequencies: List<Double>): DoubleArray {
+        val twoPi = 2 * Math.PI
+        val result = DoubleArray(frequencies.size)
+        for (i in frequencies.indices) {
+            result[i] = twoPi / sampleRate * frequencies[i]
+        }
+        return result
+    }
+
+    fun calculateSineWave(phases: DoubleArray, increments: DoubleArray) {
+        for (i in 0 until numSamples) {
+            var sum = 0.0
+            for (j in increments.indices) {
+                sum += Math.sin(phases[j])
+                phases[j] += increments[j]
+                if (phases[j] >= 2 * Math.PI) {
+                    phases[j] -= 2 * Math.PI
+                }
+            }
+            samples[i] = sum / phases.size
+        }
     }
 }

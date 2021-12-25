@@ -5,6 +5,7 @@ import com.alaeri.log.android.ui.focus.LogFocusViewModel
 import com.alaeri.log.android.ui.list.LogAdapter
 import com.alaeri.log.android.ui.list.LogListFragment
 import com.alaeri.log.android.ui.list.LogListViewModel
+import com.alaeri.log.android.ui.option.LogOptionViewModel
 import com.alaeri.log.repository.LogRepository
 import org.koin.android.viewmodel.dsl.viewModel
 import org.koin.dsl.module
@@ -20,5 +21,6 @@ object LogAndroidUiModule{
         viewModel<LogFocusViewModel>{
             LogFocusViewModel(get())
         }
+        viewModel { LogOptionViewModel(get()) }
     }
 }
