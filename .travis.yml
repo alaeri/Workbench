@@ -37,11 +37,6 @@ android:
     - 'android-sdk-preview-license-.+'
     - 'android-sdk-license-.+'
     - 'google-gdk-license-.+'
-    - 'build-tools'
-    - 'platforms'
-    - 'android-31'
-    - 'platforms;android-31'
-    - 'build-tools;30.0.2'
 
 ## Emulator Management: Create, Start and Wait
 #install:
@@ -72,6 +67,18 @@ script:
 #FOSSA license check
 before_script:
   - "curl -H 'Cache-Control: no-cache' https://raw.githubusercontent.com/fossas/fossa-cli/master/install.sh | sudo bash"
+
+before_install:
+  - touch $HOME/.android/repositories.cfg
+  # Android API Level 30
+  - yes | sdkmanager "platforms;android-30"
+  - yes | sdkmanager "build-tools;30.0.2"
+  # Android API Level 31
+  - yes | sdkmanager "platforms;android-31"
+  - yes | sdkmanager "build-tools;31.0.0"
+  # Android API Level 32
+  - yes | sdkmanager "platforms;android-32"
+  - yes | sdkmanager "build-tools;32.0.0"
 
 before_cache:
   - rm -f $HOME/.gradle/caches/modules-2/modules-2.lock
