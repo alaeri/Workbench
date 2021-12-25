@@ -40,6 +40,8 @@ android:
     - 'build-tools'
     - 'platforms'
     - 'android-31'
+    - 'platforms;android-31'
+    - 'build-tools;30.0.2'
 
 ## Emulator Management: Create, Start and Wait
 #install:
