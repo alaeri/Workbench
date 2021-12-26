@@ -2,6 +2,7 @@ package com.alaeri.log.extra.serializer.mapping
 
 import com.alaeri.log.core.context.EmptyTag
 import com.alaeri.log.core.context.ListTag
+import com.alaeri.log.extra.identity.IdentityRepresentation
 import com.alaeri.log.serialize.serialize.Identity
 import com.alaeri.log.serialize.serialize.SerializedTag
 import com.alaeri.log.serialize.serialize.mapping.TypedTransformer
@@ -15,11 +16,11 @@ import org.junit.Test
  */
 class TypedTransformerTest {
 
-    private val typedTransformer = object : TypedTransformer<EmptyTag, SerializedTag<EmptyTag, Identity>>(EmptyTag::class){
+    private val typedTransformer = object : TypedTransformer<EmptyTag, SerializedTag>(EmptyTag::class){
 
-        override fun transform(logData: EmptyTag): SerializedTag<EmptyTag, Identity> {
-            return object : SerializedTag<EmptyTag, Identity>{
-                override val identity = object : Identity{}
+        override fun transform(logData: EmptyTag): SerializedTag {
+            return object : SerializedTag{
+                override val identity =  IdentityRepresentation(1, "1")
             }
         }
     }

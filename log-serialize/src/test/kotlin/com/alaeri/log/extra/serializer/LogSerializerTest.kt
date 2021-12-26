@@ -3,6 +3,7 @@ package com.alaeri.log.extra.serializer
 import com.alaeri.log.core.Log.Message
 import com.alaeri.log.core.Log.Tag
 import com.alaeri.log.core.Log
+import com.alaeri.log.extra.identity.IdentityRepresentation
 import com.alaeri.log.serialize.serialize.*
 import com.alaeri.log.serialize.serialize.mapping.EntityTransformer
 import com.alaeri.log.serialize.serialize.mapping.TagTypedSerializer
@@ -18,11 +19,13 @@ import java.lang.RuntimeException
  */
 class LogSerializerTest {
 
-    val logTypedTransformer: TagTypedSerializer<Identity, Tag, SerializedTag<Tag, Identity>> = mock {}
+    val logTypedTransformer: TagTypedSerializer< Tag, SerializedTag> = mock {}
     val entityTransformer: EntityTransformer<Any, EntityRepresentation<Any>> = mock {}
-    val identityTransformer: IIdentityTransformer<Identity> = mock{}
+    val identityTransformer: IIdentityTransformer<IdentityRepresentation> = mock{
+        onBlocking { transform(any()) }.doReturn(IdentityRepresentation(1, "1"))
+    }
 
-    val logSerializer = LogSerializer<Identity>(logTypedTransformer, entityTransformer, identityTransformer)
+    val logSerializer = LogSerializer(logTypedTransformer, entityTransformer, identityTransformer)
 
     @Test
     fun `test serialization works as expected when for starting`(){

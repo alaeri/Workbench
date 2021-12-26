@@ -16,7 +16,6 @@ import com.alaeri.recyclerview.extras.toLifecycleAdapter
 import org.koin.androidx.scope.ScopeFragment
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.component.KoinComponent
-import org.koin.core.component.get
 import org.koin.core.component.inject
 import org.koin.core.parameter.parametersOf
 
@@ -25,7 +24,7 @@ class CatsFragment : KoinComponent, ScopeFragment(), LogOwner {
 
     private val catsFragment : Fragment by inject { parametersOf(this) }
     private val catsViewModel: CatsViewModel by viewModel()
-    private val catsAdapter by lazy { get<CatsAdapter>() }
+    private val catsAdapter by inject<CatsAdapter>()
 
     private lateinit var binding: CatsFragmentBinding
 

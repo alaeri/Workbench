@@ -13,6 +13,7 @@ import com.alaeri.recyclerview.extras.viewholder.ViewHolderProvider
 import com.alaeri.recyclerview.extras.viewholder.factory.IViewHolderFactory
 import com.alaeri.recyclerview.extras.viewholder.factory.ViewHolderFactory
 import org.koin.androidx.viewmodel.dsl.viewModel
+import org.koin.core.qualifier.Qualifier
 import org.koin.dsl.module
 
 /**
@@ -29,19 +30,18 @@ val catsFragmentModule = module {
         factory<Factory> {
             object: Factory{
                 override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                    return CatItemViewModel(get<FlowImageLoader>()) as T
+                    return CatItemViewModel(get()) as T
                 }
             }
         }
         factory<IViewHolderFactory<Cat, CatItemVH> > {
-            ViewHolderFactory.newInstance<Cat, CatItemVH, CatItemBinding>(CatItemBinding::inflate){
+            ViewHolderFactory.newInstance(CatItemBinding::inflate){
                     binding, _ -> CatItemVH.CatVH(binding, get(), get(), get())
             }
         }
-        factory<ViewHolderProvider<Cat, CatItemVH>> {
-
+        factory {
             val viewHolderFactories = getAll<IViewHolderFactory<Cat, CatItemVH>>()
-            ViewHolderProvider<Cat, CatItemVH>(
+            ViewHolderProvider(
                 viewHolderFactories
             )
 
@@ -57,7 +57,7 @@ val catsFragmentModule = module {
 //            val asyncDifferConfig: AsyncDifferConfig<Cat> = AsyncDifferConfig.Builder<Cat>(diffCallback).build()
 //            PagedListAdapterWithVHProvider<Cat, CatItemVH>(get(), asyncDifferConfig)
 //        }
-        factory<CatsAdapter> {
+        scoped {
             val diffCallback = CatDiffCallback()
             val asyncDifferConfig: AsyncDifferConfig<Cat> = AsyncDifferConfig.Builder<Cat>(diffCallback).build()
             Log.d("COMMAND","CREATING CATS ADAPTER")
