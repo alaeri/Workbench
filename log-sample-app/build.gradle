@@ -44,3 +44,5 @@ dependencies {
     //TODO find why this is needed and remove the dependency
     implementation group: 'org.slf4j', name: 'slf4j-nop', version: '2.0.0-alpha1'
 }
+sourceCompatibility = "1.8"
+targetCompatibility = "1.8"

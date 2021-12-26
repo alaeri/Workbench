@@ -13,7 +13,7 @@ import android.webkit.WebViewClient
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.MutableLiveData
 import com.alaeri.log.android.ui.databinding.GraphFragmentBinding
-import org.koin.core.KoinComponent
+import org.koin.core.component.KoinComponent
 
 
 /**

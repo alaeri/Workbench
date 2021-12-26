@@ -10,14 +10,14 @@ import com.bumptech.glide.load.model.GlideUrl
 import com.bumptech.glide.module.AppGlideModule
 import okhttp3.HttpUrl
 import okhttp3.OkHttpClient
-import org.koin.core.KoinComponent
+import org.koin.core.component.KoinComponent
 import java.io.InputStream
 
 /**
  * Created by Emmanuel Requier on 25/04/2020.
  */
 @GlideModule
-class AppGlideModule : AppGlideModule(), KoinComponent{
+class AppGlideModule : AppGlideModule(), KoinComponent {
 
     override fun registerComponents(context : Context, glide: Glide, registry: Registry) {
         val flowImageLoader : FlowImageLoader = getKoin().get()

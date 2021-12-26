@@ -10,8 +10,11 @@ import androidx.lifecycle.Observer
 import com.alaeri.cats.app.R
 import com.alaeri.cats.app.databinding.ViewpagerFragmentBinding
 import com.google.android.material.tabs.TabLayoutMediator
-import org.koin.android.scope.lifecycleScope
-import org.koin.core.KoinComponent
+import org.koin.androidx.scope.ScopeFragment
+import org.koin.androidx.viewmodel.ext.android.viewModel
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.get
+import org.koin.core.component.inject
 import org.koin.core.parameter.parametersOf
 import java.util.Collections.max
 import java.util.Collections.min
@@ -25,7 +28,7 @@ enum class PageId{
 }
 data class Page(val id: PageId)
 
-class ViewPagerFragment : Fragment(), KoinComponent{
+class ViewPagerFragment : ScopeFragment(), KoinComponent {
 
     private var binding: ViewpagerFragmentBinding? = null
     private val fragmentsAdapter by lazy { FragmentsAdapter(this) }
@@ -50,8 +53,8 @@ class ViewPagerFragment : Fragment(), KoinComponent{
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        val fragment: Fragment by lifecycleScope.inject<ViewPagerFragment>{ parametersOf(this) }
-        val viewPagerModel = lifecycleScope.get<ViewPagerViewModel>()
+        val fragment: Fragment by inject<ViewPagerFragment>{ parametersOf(this) }
+        val viewPagerModel by viewModel<ViewPagerViewModel>()
         viewPagerModel.pages.observe(viewLifecycleOwner, Observer {
             fragmentsAdapter.updatePages(it)
             tabLayoutMediator = TabLayoutMediator(binding!!.tabs, binding!!.pager) { tab, position ->

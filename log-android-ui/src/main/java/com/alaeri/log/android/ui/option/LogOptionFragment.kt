@@ -20,8 +20,7 @@ import com.alaeri.log.synth.Player
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.flow.map
-import org.koin.android.ext.android.bind
-import org.koin.android.viewmodel.ext.android.viewModel
+import org.koin.androidx.viewmodel.ext.android.viewModel
 import java.util.concurrent.Executors
 
 /**

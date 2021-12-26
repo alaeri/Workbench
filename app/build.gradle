@@ -82,11 +82,10 @@ dependencies {
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.2'
     testImplementation 'org.jetbrains.kotlinx:kotlinx-coroutines-test:1.5.0'
     //Koin
-    def koin_version = "2.1.5"
-    implementation "org.koin:koin-core:$koin_version"
-    implementation "org.koin:koin-android:$koin_version"
-    implementation "org.koin:koin-android-viewmodel:$koin_version"
-    testImplementation "org.koin:koin-test:$koin_version"
+    def koin_version = "3.1.4"
+    implementation "io.insert-koin:koin-core:$koin_version"
+    implementation "io.insert-koin:koin-android:$koin_version"
+    testImplementation "io.insert-koin:koin-test:$koin_version"
     //Room
     def room_version = "2.4.0"
     implementation "androidx.room:room-runtime:$room_version"
@@ -125,7 +124,8 @@ dependencies {
     //AspectRatioImageView
     implementation 'com.github.santalu:aspect-ratio-imageview:1.0.9'
     //RandomColor
-    implementation 'com.github.lzyzsd.randomcolor:library:1.0.0'
+    implementation 'com.github.lzyzsd:AndroidRandomColor:7c958dc7dc'
+    //implementation 'com.github.lzyzsd:AndroidRandomColor:1.0.0'
     //TabLayoutMediator
     implementation 'com.google.android.material:material:1.6.0-alpha01'
 

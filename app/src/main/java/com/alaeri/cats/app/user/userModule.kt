@@ -5,7 +5,7 @@ import com.alaeri.cats.app.db.AppDatabase
 import com.alaeri.cats.app.ui.login.LoginViewModel
 import com.alaeri.cats.app.user.net.UserApi
 import kotlinx.coroutines.Dispatchers
-import org.koin.android.viewmodel.dsl.viewModel
+import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.core.module.Module
 import org.koin.dsl.module
 import retrofit2.Retrofit

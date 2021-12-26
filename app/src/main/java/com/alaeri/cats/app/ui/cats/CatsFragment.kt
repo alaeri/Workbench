@@ -10,21 +10,22 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.alaeri.cats.app.LogOwner
-import com.alaeri.recyclerview.extras.toLifecycleAdapter
 import com.alaeri.cats.app.databinding.CatsFragmentBinding
-import com.alaeri.cats.app.log
 import com.alaeri.cats.app.logBlocking
-import org.koin.android.scope.lifecycleScope
-import org.koin.android.viewmodel.scope.viewModel
-import org.koin.core.KoinComponent
+import com.alaeri.recyclerview.extras.toLifecycleAdapter
+import org.koin.androidx.scope.ScopeFragment
+import org.koin.androidx.viewmodel.ext.android.viewModel
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.get
+import org.koin.core.component.inject
 import org.koin.core.parameter.parametersOf
 
 
-class CatsFragment : KoinComponent, Fragment(), LogOwner {
+class CatsFragment : KoinComponent, ScopeFragment(), LogOwner {
 
-    private val catsFragment : Fragment by lifecycleScope.inject { parametersOf(this) }
-    private val catsViewModel: CatsViewModel by lifecycleScope.viewModel(this)
-    private val catsAdapter by lazy { lifecycleScope.get<CatsAdapter>() }
+    private val catsFragment : Fragment by inject { parametersOf(this) }
+    private val catsViewModel: CatsViewModel by viewModel()
+    private val catsAdapter by lazy { get<CatsAdapter>() }
 
     private lateinit var binding: CatsFragmentBinding
 

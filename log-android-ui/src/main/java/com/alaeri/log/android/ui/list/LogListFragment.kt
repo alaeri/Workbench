@@ -9,9 +9,8 @@ import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.alaeri.log.android.ui.databinding.LogListFragmentBinding
 import com.alaeri.log.android.ui.focus.LogFocusViewModel
-import org.koin.android.scope.lifecycleScope
-import org.koin.core.KoinComponent
-import org.koin.core.inject
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 import org.koin.core.parameter.parametersOf
 
 /**

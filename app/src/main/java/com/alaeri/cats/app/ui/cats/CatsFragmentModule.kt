@@ -12,8 +12,7 @@ import com.alaeri.log.glide.FlowImageLoader
 import com.alaeri.recyclerview.extras.viewholder.ViewHolderProvider
 import com.alaeri.recyclerview.extras.viewholder.factory.IViewHolderFactory
 import com.alaeri.recyclerview.extras.viewholder.factory.ViewHolderFactory
-import org.koin.android.viewmodel.dsl.viewModel
-import org.koin.core.module.Module
+import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.dsl.module
 
 /**

@@ -3,8 +3,8 @@ package com.alaeri.cats.app.ui.viewpager
 
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
-import org.koin.android.viewmodel.dsl.viewModel
-import org.koin.core.module.Module
+import org.koin.androidx.viewmodel.dsl.viewModel
+
 import org.koin.dsl.module
 
 /**

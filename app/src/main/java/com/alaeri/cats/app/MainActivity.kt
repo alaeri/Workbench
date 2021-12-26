@@ -12,7 +12,7 @@ import com.alaeri.cats.app.ui.login.LoginViewModel
 import com.alaeri.log.core.LogConfig
 import com.alaeri.log.core.child.ChildLogEnvironmentFactory
 import com.alaeri.log.core.context.EmptyTag
-import org.koin.android.viewmodel.ext.android.viewModel
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class MainActivity : AppCompatActivity() {
 
