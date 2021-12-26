@@ -60,21 +60,21 @@ class LogOptionViewModel(logRepo: LogRepository): ViewModel(){
     )
     val l = combine(logRepo.listAsFlow, countFlow){a, c -> TimeAndKey(c, a[a.size-1]) }.scan(Acc(
         listOf(), mutableListOf(), 0, null)){acc, tak ->  if(acc.index == tak.s){
-            acc.current.add(tak.key)
-            acc.lastScannedLog = tak.key
-            acc
+        acc.current.add(tak.key)
+        acc.lastScannedLog = tak.key
+        acc
+    }else{
+        if(acc.lastScannedLog == tak.key){
+            acc.copy(completed = acc.current, current = mutableListOf(), index = tak.s)
         }else{
-            if(acc.lastScannedLog == tak.key){
-                acc.copy(completed = acc.current, current = mutableListOf(), index = tak.s)
-            }else{
-                acc.copy(completed = acc.current, current = mutableListOf(tak.key), index = tak.s)
-            }
-
+            acc.copy(completed = acc.current, current = mutableListOf(tak.key), index = tak.s)
         }
+
+    }
     }.map { it.index to it.completed }.distinctUntilChanged().map { it.second }
 
 
-//    val logBatches = logRepo.mapAsFlow.map { it.filterValues { it.isActive }.keys }.
+    //    val logBatches = logRepo.mapAsFlow.map { it.filterValues { it.isActive }.keys }.
 //        .sample(1000).onEach { delay(1000) }
     val logBatches = l
 
@@ -102,28 +102,26 @@ class LogOptionFragment : Fragment(){
                 job = null
             }else{
                 job = lifecycleScope.launchWhenCreated {
-                    withContext(Executors.newSingleThreadExecutor().asCoroutineDispatcher()){
-                        Log.d("Player","collecting log batches: $it")
-                        logOptionViewModel.logBatches.onEach { delay(100) }.collect{
 
-                            val notes = it.map { it.tag.identity.index.toDouble()}.toSet().map {  it % 1000 }
-                            val success = it.firstOrNull()?.message as? SerializedLogMessage.Success
-                            val ent = success?.entityRepresentation as? DefaultSerializedEntity
-                            val notes2 = it.map { it.tag as ListRepresentation }.map { it.representations.filterIsInstance<ReceiverRepresentation>().firstOrNull() }.map {
-                                it?.type?.clazz?.simpleName
-                            }.filterNotNull().toSet().map { when(it){
-                                "CatItemViewModel" -> 440
-                                "FlowImageLoader" -> 600
-                                else -> it.hashCode() % 1000
-                            }.toDouble() }
+                    Log.d("Player","collecting log batches: $it")
+                    logOptionViewModel.logBatches.flowOn( Executors.newSingleThreadExecutor().asCoroutineDispatcher()).onEach { delay(100) }.collect{
 
-                            Log.d("Player","playing: ${it.size} notes: $notes message: ${notes2}")
-                            player.play(notes2)
-                        }
+                        val notes = it.map { it.tag.identity.index.toDouble()}.toSet().map {  it % 1000 }
+                        val success = it.firstOrNull()?.message as? SerializedLogMessage.Success
+                        val ent = success?.entityRepresentation as? DefaultSerializedEntity
+                        val notes2 = it.map { it.tag as ListRepresentation }.map { it.representations.filterIsInstance<ReceiverRepresentation>().firstOrNull() }.map {
+                            it?.type?.clazz?.simpleName
+                        }.filterNotNull().toSet().map { className -> when(className){
+                            "CatItemViewModel" -> 440
+                            "FlowImageLoader" -> 600
+                            else -> (className.hashCode() % 1000).also { Log.d("Player", "className: $className") }
+                        }.toDouble() }
+
+                        Log.d("Player","playing: ${it.size} notes: $notes message: ${notes2}")
+                        player.play(notes2)
                     }
                 }
             }
-
             //player.play(listOf(440.0))
         }
         return binding.root

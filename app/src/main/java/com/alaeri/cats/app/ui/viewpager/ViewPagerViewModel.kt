@@ -6,6 +6,7 @@ import com.alaeri.log.android.ui.focus.FocusLogRepository
 import com.alaeri.log.android.ui.focus.FocusedAndZoomLogHistory
 import com.alaeri.log.extra.identity.IdentityRepresentation
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
@@ -35,15 +36,16 @@ class ViewPagerViewModel(
             Page(id = PageId.LogsWebview)
         ))
     val pages : LiveData<List<Page>> = mutablePages
-    val focused : LiveData<FocusViewState> = focusLogRepository.state.map {
-        it.history
-    }.filterNotNull().map {
-        it.toFocusViewState {
-            viewModelScope.launch {
-                focusLogRepository.setFocus(null)
-            }
-        }
-    }.asLiveData(viewModelScope.coroutineContext)
+    val focused : LiveData<FocusViewState> =//focusLogRepository.state.map {
+//        it.history
+//    }.filterNotNull().map {
+//        it.toFocusViewState {
+//            viewModelScope.launch {
+//                focusLogRepository.setFocus(null)
+//            }
+//        }
+//    }.
+    MutableStateFlow(FocusViewState(0f,0f,1f,1f, null){}).asLiveData(viewModelScope.coroutineContext)
 
 }
 //

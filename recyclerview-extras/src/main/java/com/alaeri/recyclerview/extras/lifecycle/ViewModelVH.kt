@@ -7,8 +7,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelStore
 
 abstract class ViewModelVH(itemView: View,
-                           parentLifecycle: Lifecycle,
-                           private val viewModelStore : ViewModelStore = ViewModelStore())
+                           parentLifecycle: Lifecycle)
     : LifecycleVH(itemView = itemView, parentLifecycle = parentLifecycle){
 
 //    protected fun viewModelProvider(factory: ViewModelProvider.Factory): ViewModelProvider{

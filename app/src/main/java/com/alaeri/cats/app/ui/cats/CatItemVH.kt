@@ -17,13 +17,13 @@ import com.alaeri.recyclerview.extras.viewholder.Bindable
  *
  *
  */
-sealed class CatItemVH(view: View, parentLifecycle: Lifecycle, vmStore: ViewModelStore): ViewModelVH(view, parentLifecycle, vmStore),
+sealed class CatItemVH(view: View, parentLifecycle: Lifecycle): ViewModelVH(view, parentLifecycle),
     Bindable<Cat> {
 
 
     class CatVH(private val viewBinding: CatItemBinding,
                 private val vmFactory: ViewModelProvider.Factory,
-                parentLifecycle: Lifecycle, vmStore: ViewModelStore) : CatItemVH(viewBinding.root, parentLifecycle, vmStore){
+                parentLifecycle: Lifecycle) : CatItemVH(viewBinding.root, parentLifecycle){
 
         private lateinit var cat: Cat
         private lateinit var catItemViewModel : CatItemViewModel

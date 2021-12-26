@@ -7,30 +7,31 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.alaeri.cats.app.LogOwner
 import com.alaeri.cats.app.databinding.CatsFragmentBinding
 import com.alaeri.cats.app.logBlocking
 import com.alaeri.recyclerview.extras.toLifecycleAdapter
+import org.koin.android.ext.android.inject
 import org.koin.androidx.scope.ScopeFragment
 import org.koin.androidx.viewmodel.ext.android.viewModel
-import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
 import org.koin.core.parameter.parametersOf
 
 
-class CatsFragment : KoinComponent, ScopeFragment(), LogOwner {
+class CatsFragment : ScopeFragment(), LogOwner {
 
-    private val catsFragment : Fragment by inject { parametersOf(this) }
+//    private val catsFragment : Fragment by inject { parametersOf(this) }
+    private val injectedLifecycle : Lifecycle by inject<Lifecycle> { parametersOf(this.lifecycle) }
     private val catsViewModel: CatsViewModel by viewModel()
-    private val catsAdapter by inject<CatsAdapter>()
+    private val catsAdapter: CatsAdapter by inject()
 
     private lateinit var binding: CatsFragmentBinding
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View {
-        assert(catsFragment != null)
+        assert(injectedLifecycle != null)
         return logBlocking("inflate view"){
             binding = CatsFragmentBinding.inflate(inflater, container, false)
             binding.root
