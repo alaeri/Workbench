@@ -6,7 +6,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharedFlow
 
 interface ITerminalScreen{
-    val keyFlow: SharedFlow<KeyStroke>
+    val keyFlow: Flow<KeyStroke>
     val sizeFlow: Flow<TerminalSize>
 
 }

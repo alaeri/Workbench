@@ -14,5 +14,5 @@ class QueryRepository{
     }
     val queryFlow: SharedFlow<String> = mutableQuery
     val queryFlowCommand: Flow<String>
-        get() = logBlockingFlow(name = "query flow") { queryFlow }
+        get() = queryFlow.log("query flow") //logBlockingFlow(name = "query flow") {  }
 }

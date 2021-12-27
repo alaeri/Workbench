@@ -33,13 +33,15 @@ class PresentationUsecase(
                         pathRepository.pathFlow.log("path"),
                         onSelectionFetchPreviewUC.selectionPreview.log("selection")
                     ) { loadingStatus, internalLink, query, path, previewStatus ->
-                        //println("combine.....")
-                        PresentationState.Presentation(
-                            InputState(query, path),
-                            loadingStatus,
-                            previewStatus,
-                            internalLink
-                        )
+                        log("combine"){
+                            println("combine: $query")
+                            PresentationState.Presentation(
+                                InputState(query, path),
+                                loadingStatus,
+                                previewStatus,
+                                internalLink
+                            )
+                        }
                     }
                 }
                 .log("combine")

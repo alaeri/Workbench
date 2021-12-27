@@ -25,7 +25,6 @@ object LogConfig{
                                collector: LogCollector? = null,
                                vararg params: Any? = arrayOf(),
                                crossinline body :suspend ()->T) : T {
-        delay(100)
         return logEnvironmentFactory.inlineSuspendLog(tag, collector, *params) {
             body.invoke()
         }

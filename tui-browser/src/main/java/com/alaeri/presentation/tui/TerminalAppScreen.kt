@@ -151,7 +151,9 @@ class TerminalAppScreen(private val terminal: Terminal,
         withContext(readKeyCoroutineContext) {
             var keyStroke = screen.readInput()
             while (true) {
+                println("KeyStroke: $keyStroke")
                 withContext(emissionContext) {
+                    println("emitKeyStroke: $keyStroke $emissionContext")
                     emit(keyStroke)
                 }
                 keyStroke = screen.readInput()
@@ -236,11 +238,14 @@ class TerminalAppScreen(private val terminal: Terminal,
                     )
                     val screenStateFlow = viewModel.screenState
                     instantiationScope.launch {
-                        viewModel.startProcessingKeyStrokes()
+                        withContext(Dispatchers.IO){
+                            viewModel.startProcessingKeyStrokes()
+                        }
                     }
                     screenStateFlow.flowOn(drawCoroutineContext).collect {
                         when(it){
                             is PresentationState.Presentation -> this@TerminalAppScreen.updateScreen(it)
+                            is PresentationState.Loading -> {}
                             else -> executionJob?.cancelAndJoin()
                         }
                     }

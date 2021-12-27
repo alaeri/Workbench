@@ -10,6 +10,6 @@ class PathRepository(){
     suspend fun select(link: String?) = log(name = "set path"){
         mutablePath.value = link
     }
-    val pathFlow: Flow<String?> = logBlockingFlow("pathFlow"){ mutablePath }
+    val pathFlow: Flow<String?> = mutablePath.log("pathFlow")
 
 }

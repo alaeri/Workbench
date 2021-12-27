@@ -156,24 +156,34 @@ fun <T> Flow<T>.log(name: String,
             ThreadTag() +
             NamedTag(name)
     val originalFlow = this
-    return flow<T> {
-        val originalContext = currentCoroutineContext()
-        val childLogEnvironment = ChildLogEnvironmentFactory.suspendingLogEnvironment(logSiteContext, null)
-        val childCoroutineContext = CoroutineLogEnvironment(childLogEnvironment)
-        childLogEnvironment.logSuspending {
-            originalFlow
-//            .onStart { log("onStart"){} }
-//                .onEach { log("onEach", it){} }
-//            .onCompletion { log("onCompletion"){} }
-                .flowOn(childCoroutineContext).collect {
-                    withContext(originalContext){
-                        emit(it)
-                    }
-                }
+
+    var childCoroutineContext : CoroutineLogEnvironment? = null
+    suspend fun buildChildCoroutineContext(currentCoroutineContext: CoroutineContext): CoroutineLogEnvironment{
+        val childLogEnvironment = ChildLogEnvironmentFactory.suspendingLogEnvironment(logSiteContext, NoopCollector)
+        return CoroutineLogEnvironment(childLogEnvironment)
+    }
+    suspend fun ensureChildCoroutineContext(currentCoroutineContext: CoroutineContext): CoroutineLogEnvironment{
+        val existingChildCoroutineContext = childCoroutineContext
+        return if(existingChildCoroutineContext != null){
+            existingChildCoroutineContext
+        }else{
+            val aChildCoroutineContext = buildChildCoroutineContext(currentCoroutineContext)
+            childCoroutineContext = aChildCoroutineContext
+            aChildCoroutineContext
+        }
+    }
+
+    return originalFlow
+        .onStart {
+           // ensureChildCoroutineContext(currentCoroutineContext()).log("onStart"){}
+         }
+        .onEach {
+           // ensureChildCoroutineContext(currentCoroutineContext()).log("onEach"){it}
+         }
+        .onCompletion {
+           // ensureChildCoroutineContext(currentCoroutineContext()).log("onCompletion"){}
         }
 
-
-    }
 }
 
 internal inline fun <reified T> Any.logBlocking(name: String,

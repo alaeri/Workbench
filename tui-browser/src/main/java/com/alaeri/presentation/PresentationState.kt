@@ -10,6 +10,7 @@ sealed class PresentationState{
                             val previewStatus: LoadingStatus,
                             val selectedWikiText: SelectionRepository.Selection?) : PresentationState()
     data class Exit(val logs: List<String>): PresentationState()
+    object Loading: PresentationState()
 
 }
 
