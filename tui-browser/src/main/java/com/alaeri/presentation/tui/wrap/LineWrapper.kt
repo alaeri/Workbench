@@ -90,6 +90,7 @@ class LineWrapper{
 //                acc.lastPosition
 //            }
             val chunks = wrap(acc.lastPosition, wikiText, maxColumns)
+//            println(acc.lastPosition)
             acc.copy(
                 lastPosition = TerminalPosition(
                     chunks.last().end.column,
@@ -101,6 +102,54 @@ class LineWrapper{
     }
 
     data class AccChunks(val lastPosition: TerminalPosition, val chunks: List<ChunkedTextLine>)
+    data class RowAndRest(val row: String, val rest: String?)
+    private fun getRowAndRest(text: String, maxColumns: Int): RowAndRest{
+        if(maxColumns <= 0){
+            return RowAndRest(text, null)
+        }
+        return if(text.length <= maxColumns){
+            RowAndRest(text, null)
+        }else{
+            val lastWhiteSpaceIndex = text.substring(0, minOf(maxColumns, text.length)).indexOfLast { it.isWhitespace() }
+            if(lastWhiteSpaceIndex >= 0){
+                RowAndRest(text.substring(0, lastWhiteSpaceIndex), text.substring(lastWhiteSpaceIndex))
+            }else{
+                RowAndRest(text.substring(0, maxColumns-1) + "-", "-"+ text.substring(maxColumns -1))
+            }
+        }
+    }
+
+    private fun String.chunkWithWordBreaks(maxColumns: Int, padLength: Int): List<String>{
+
+        //println("Entering chunk padLength: $padLength maxCol: $maxColumns with: $this")
+        var currentLineProcess =if(padLength < maxColumns){
+            getRowAndRest(this.substring(padLength), maxColumns - padLength)
+        }else if(padLength == maxColumns){
+            getRowAndRest(this.substring(padLength), maxColumns)
+        }else{
+            val remainingPadLength = padLength % maxColumns
+            getRowAndRest(this.substring(padLength), remainingPadLength)
+
+        }
+
+        currentLineProcess = currentLineProcess.copy(row= "".padStart(padLength, '-')+ currentLineProcess.row)
+        val mutableRows = mutableListOf<String>(currentLineProcess.row)
+//        println("clp: $currentLineProcess")
+        while (currentLineProcess.rest != null){
+           val nLineProcess = getRowAndRest(currentLineProcess.rest ?: "", maxColumns)
+            if(nLineProcess.rest != currentLineProcess.rest){
+                currentLineProcess = nLineProcess
+                mutableRows.add(nLineProcess.row)
+//                println(currentLineProcess)
+            }else{
+//                println(nLineProcess)
+                println("ERROR HERE")
+                break
+            }
+        }
+        return mutableRows.toList()
+//            .also{ it.map { r -> println("row: $r") }}
+    }
 
     private fun wrap(
         textStartPos: TerminalPosition,
@@ -109,8 +158,7 @@ class LineWrapper{
     ): List<ChunkedTextLine> {
         val padLength = textStartPos.column
         val paddedText = "".padStart(padLength, '-') + wikiText.text
-        //println(paddedText)
-        return paddedText.chunked(maxColumns).mapIndexed { index, chunk ->
+        return paddedText.chunkWithWordBreaks(maxColumns, padLength).mapIndexed { index, chunk ->
             val startCol = if (index == 0) {
                 textStartPos.column
             } else {

@@ -40,9 +40,15 @@ dependencies {
     implementation "com.github.kittinunf.fuel:fuel-coroutines:$fuel_version"
 //    //Klaxon
     implementation 'com.beust:klaxon:5.5'
+    implementation 'org.commonmark:commonmark:0.18.2'
 //    implementation 'com.github.cbeust:klaxon:5.5'
     //Wikitext Parser
-    implementation group: 'org.sweble.wikitext', name: 'swc-parser-lazy', version: '3.1.9'
+//    implementation group: 'org.sweble.wikitext', name: 'swc-parser-lazy', version: '3.1.9'
+//    implementation 'org.wikiclean:wikiclean:1.2'
+
+    implementation 'com.github.sebkur:wikiclean:a94d6c5ab5'
+    implementation 'de.tudarmstadt.ukp.wikipedia:de.tudarmstadt.ukp.wikipedia:1.1.0'
+
 
     implementation project(path: ':log-serialize')
     implementation project(path: ':log-extras')
@@ -50,6 +56,8 @@ dependencies {
     implementation project(path: ':log-sample-lib')
     implementation project(path: ':log-server')
     implementation project(path: ':log-repository')
+
+
     //Needed to remove KTOR warnings
     implementation "org.slf4j:slf4j-nop:1.6.1"
 }

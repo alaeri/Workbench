@@ -1,11 +1,11 @@
 package com.alaeri.presentation.wiki
 
+import com.alaeri.domain.wiki.WikiArticle
 import com.alaeri.domain.wiki.WikiRepository
 import com.alaeri.log
-import com.alaeri.logBlocking
-import com.alaeri.logBlockingFlow
-import com.alaeri.presentation.InputState
 import com.alaeri.presentation.PresentationState
+import com.alaeri.presentation.tui.wrap.LineWrapper
+import com.googlecode.lanterna.TerminalSize
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
@@ -15,10 +15,12 @@ import kotlinx.coroutines.plus
 /**
  * Created by Emmanuel Requier on 30/11/2020.
  */
+data class PanelSizes(val left: TerminalSize, val right: TerminalSize)
 class BrowsingService(
     wikiRepository: WikiRepository,
     sharedCoroutineScope: CoroutineScope,
-    combineScope: CoroutineScope
+    combineScope: CoroutineScope,
+    val sizesFlow: Flow<PanelSizes>
 ) {
 
     private val innerScope = sharedCoroutineScope.plus(SupervisorJob())
@@ -28,7 +30,9 @@ class BrowsingService(
     val queryRepository = QueryRepository()
     private val selectionRepository = SelectionRepository()
 
-    private val loadWikiOnPathUseCase = LoadWikiOnPathUseCase(pathRepository, innerScope, wikiRepository)
+    val cache = mutableMapOf<String, WikiArticle>()
+
+    private val loadWikiOnPathUseCase = LoadWikiOnPathUseCase(pathRepository, innerScope, wikiRepository, cache)
     private val selectablesUseCase =  SelectablesUseCase(loadWikiOnPathUseCase, innerScope)
     private val resetSelectionOnNewNavigationUseCase = ResetSelectionOnNewNavigationUseCase(
         innerScope,
@@ -37,14 +41,16 @@ class BrowsingService(
     private val selectUseCase = SelectUseCase(selectablesUseCase, selectionRepository)
     private val navigateToQueryUseCase = NavigateToQueryUseCase(queryRepository, pathRepository)
     private val navigateToSelectionUseCase = NavigateToSelectionUseCase(selectionRepository, pathRepository)
-    private val onSelectionFetchPreviewUC = OnSelectionFetchPreviewUC(selectionRepository, wikiRepository)
+    private val onSelectionFetchPreviewUC = OnSelectionFetchPreviewUC(selectionRepository, wikiRepository, cache)
+    private val reflowLeftPanelUC = ReflowUC(sizeFlow = sizesFlow.map { it.left }, loadWikiOnPathUseCase.loadingStatus, LineWrapper())
+    private val reflowRightPanelUC = ReflowUC(sizeFlow = sizesFlow.map { it.right }, onSelectionFetchPreviewUC.selectionPreview, LineWrapper())
     private val presentationUsecase = PresentationUsecase(combineScope,
         shouldExitMutableStateFlow,
-        loadWikiOnPathUseCase,
+        reflowLeftPanelUC,
         selectionRepository,
         queryRepository,
         pathRepository,
-        onSelectionFetchPreviewUC
+        reflowRightPanelUC
     )
     private val editUseCase = EditUseCase(queryRepository)
     private val clearSelectionUseCase = object  {
@@ -76,5 +82,7 @@ class BrowsingService(
             combineScope,
             SharingStarted.Lazily,
             PresentationState.Loading).log(name = "presentation state flow")
+
+
 
 }

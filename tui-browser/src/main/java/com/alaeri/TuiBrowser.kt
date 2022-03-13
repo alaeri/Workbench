@@ -51,6 +51,7 @@ object TuiBrowser {
                log(name = "launch command server") {
                     launch {
                         withContext(Dispatchers.IO){
+                            println("server started")
                             SampleLogServer.start()
                         }
                     }

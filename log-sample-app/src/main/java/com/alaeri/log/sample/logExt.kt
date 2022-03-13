@@ -76,10 +76,10 @@ val graphRepository = GraphRepository(logRepository)
 
 object SampleLogServer {
     fun quit() {
-        logServer.stop()
+        //logServer.stop()
     }
     fun start(): Unit {
-        logServer.start()
+        //logServer.start()
     }
     private val logServer =  LogServer(graphRepository, logRepository)
 }

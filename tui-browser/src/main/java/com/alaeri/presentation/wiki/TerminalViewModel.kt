@@ -18,7 +18,7 @@ class TerminalViewModel(
     combineScope: CoroutineScope
 ): ITerminalViewModel {
 
-    private val browsingService = BrowsingService(wikiRepository, initializationScope, combineScope)
+    private val browsingService = BrowsingService(wikiRepository, initializationScope, combineScope, terminalScreen.sizeFlow)
     override suspend fun startProcessingKeyStrokes() = log("start processing key strokes"){
         keyStrokeToIntentUseCase.start()
     }

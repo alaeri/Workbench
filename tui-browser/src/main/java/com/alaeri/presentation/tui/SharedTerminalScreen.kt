@@ -1,5 +1,6 @@
 package com.alaeri.presentation.tui
 
+import com.alaeri.presentation.wiki.PanelSizes
 import com.googlecode.lanterna.TerminalSize
 import com.googlecode.lanterna.input.KeyStroke
 import kotlinx.coroutines.CoroutineScope
@@ -11,7 +12,7 @@ import java.util.concurrent.Executors
 import kotlin.coroutines.CoroutineContext
 
 class SharedTerminalScreen(_keyFlow: Flow<KeyStroke>,
-                           _sizeFlow: Flow<TerminalSize>,
+                           _sizeFlow: Flow<PanelSizes>,
                            private val instantiationScope: CoroutineScope,
                            private val processKeyStrokeCoroutineContext: CoroutineContext = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
 ): ITerminalScreen {
@@ -26,8 +27,9 @@ class SharedTerminalScreen(_keyFlow: Flow<KeyStroke>,
         ).onEach { println("sharedKeyFlow: $it") }.buffer(10)
     //}
 
-    override val sizeFlow: Flow<TerminalSize> = _sizeFlow.shareIn(shareScope,
-        SharingStarted.Lazily
+    override val sizeFlow: Flow<PanelSizes> = _sizeFlow.shareIn(shareScope,
+        SharingStarted.Eagerly,
+        1
     )
 
 }

@@ -63,7 +63,7 @@ internal suspend fun <T> Any.logFlow(name: String,
             CallSiteTag() +
             ThreadTag() +
             NamedTag(name)
-    return LogConfig.log(logContext, null, *params){
+    return LogConfig.log(logContext, NoopCollector, *params){
         val floww = body.invoke()
         floww.log(name, params)
     }
@@ -79,7 +79,7 @@ fun <T> Flow<T>.log(name: String,
     val originalFlow = this
     return flow<T> {
         val originalContext = currentCoroutineContext()
-        val childLogEnvironment = ChildLogEnvironmentFactory.suspendingLogEnvironment(logSiteContext, null)
+        val childLogEnvironment = ChildLogEnvironmentFactory.suspendingLogEnvironment(logSiteContext, NoopCollector)
         val childCoroutineContext = CoroutineLogEnvironment(childLogEnvironment)
         childLogEnvironment.logSuspending("test") {
             originalFlow
@@ -104,7 +104,7 @@ internal fun <T> Any.logBlockingFlow(name: String,
             ThreadTag() +
             NamedTag(name)
     return LogConfig.logBlocking(logContext, null, *params){
-        val childLogEnvironment = ChildLogEnvironmentFactory.blockingLogEnvironment(logContext,null)
+        val childLogEnvironment = ChildLogEnvironmentFactory.blockingLogEnvironment(logContext,NoopCollector)
         val floww = body.invoke()
         val logEnvContext = CoroutineLogEnvironment(childLogEnvironment)
         suspend fun startFlowLogging(){
