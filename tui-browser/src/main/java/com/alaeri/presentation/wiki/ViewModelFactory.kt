@@ -6,9 +6,7 @@ import com.alaeri.log
 import com.alaeri.presentation.tui.ITerminalScreen
 import com.alaeri.presentation.tui.ITerminalViewModel
 import com.alaeri.presentation.tui.IViewModelFactory
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.*
 import java.util.concurrent.Executors
 
 @ExperimentalCoroutinesApi
@@ -21,8 +19,13 @@ class ViewModelFactory(private val wikiRepository: WikiRepository,
         initializationScope: CoroutineScope,
     ): ITerminalViewModel  = log("provide view model"){
         val dispatcher = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
-        val scope = CoroutineScope(dispatcher)
-        TerminalViewModel(initializationScope, terminalScreen, wikiRepository, scope)
+        log("provideViewModel"){
+            val scope2 = initializationScope + dispatcher
+            TerminalViewModel(initializationScope, terminalScreen, wikiRepository, scope2).also {
+                println("ok2")
+            }
+
+        }
     }
 
 }

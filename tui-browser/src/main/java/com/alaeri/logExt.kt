@@ -150,41 +150,31 @@ internal suspend fun <T> Any.logFlow(name: String,
 fun <T> Flow<T>.log(name: String,
                     vararg params: Any? = arrayOf()): Flow<T>{
     val logSiteContext =
-            ReceiverTag(this) +
-            //CoroutineContextTag(currentCoroutineContext) +
-            CallSiteTag() +
-            ThreadTag() +
-            NamedTag(name)
+        ReceiverTag(this) +
+                //CoroutineContextTag(currentCoroutineContext) +
+                CallSiteTag() +
+                ThreadTag() +
+                NamedTag(name)
     val originalFlow = this
-
-    var childCoroutineContext : CoroutineLogEnvironment? = null
-    suspend fun buildChildCoroutineContext(currentCoroutineContext: CoroutineContext): CoroutineLogEnvironment{
-        val childLogEnvironment = ChildLogEnvironmentFactory.suspendingLogEnvironment(logSiteContext, NoopCollector)
-        return CoroutineLogEnvironment(childLogEnvironment)
-    }
-    suspend fun ensureChildCoroutineContext(currentCoroutineContext: CoroutineContext): CoroutineLogEnvironment{
-        val existingChildCoroutineContext = childCoroutineContext
-        return if(existingChildCoroutineContext != null){
-            existingChildCoroutineContext
-        }else{
-            val aChildCoroutineContext = buildChildCoroutineContext(currentCoroutineContext)
-            childCoroutineContext = aChildCoroutineContext
-            aChildCoroutineContext
-        }
-    }
-
-    return originalFlow
-        .onStart {
-           // ensureChildCoroutineContext(currentCoroutineContext()).log("onStart"){}
-         }
-        .onEach {
-           // ensureChildCoroutineContext(currentCoroutineContext()).log("onEach"){it}
-         }
-        .onCompletion {
-           // ensureChildCoroutineContext(currentCoroutineContext()).log("onCompletion"){}
+    return flow<T> {
+        val originalContext = currentCoroutineContext()
+        val childLogEnvironment = ChildLogEnvironmentFactory.suspendingLogEnvironment(logSiteContext, null)
+        val childCoroutineContext = CoroutineLogEnvironment(childLogEnvironment)
+        childLogEnvironment.logSuspending("test") {
+            originalFlow
+//                .onStart { log("onStart"){} }
+//                .onEach { log("onEach", it){} }
+//                .onCompletion { log("onCompletion"){} }
+                .flowOn(childCoroutineContext).collect {
+                    withContext(originalContext){
+                        emit(it)
+                    }
+                }
         }
 
+    }
 }
+
 
 internal inline fun <reified T> Any.logBlocking(name: String,
                                                 vararg params: Any? = arrayOf(),
