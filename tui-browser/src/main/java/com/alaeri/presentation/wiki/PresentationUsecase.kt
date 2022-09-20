@@ -69,11 +69,11 @@ class PresentationUsecase(
                     flowOf(PresentationState.Exit(listOf()))
                 } else {
                    combine(
-                        reflowedMainPanelContent.reflowedFlow.log("loadWiki"),
-                        selectionRepository.selectionFlowCommand.log("selection"),
-                        queryRepository.queryFlowCommand.log("query"),
-                        pathRepository.pathFlow.log("path"),
-                        onSelectionFetchPreviewUC.reflowedFlow.log("selection")
+                        reflowedMainPanelContent.reflowedFlow.log("leftPanelFlow"),
+                        selectionRepository.selectionFlowCommand.log("selectionFlow"),
+                        queryRepository.queryFlowCommand.log("queryFlow"),
+                        pathRepository.pathFlow.log("pathFlow"),
+                        onSelectionFetchPreviewUC.reflowedFlow.log("rightPanelFlow")
                     ) { loadingStatus, internalLink, query, path, previewStatus ->
                         log("combine"){
                             println("combine: $query")

@@ -174,7 +174,13 @@ fun <T> Flow<T>.log(name: String,
 
     }
 }
+fun <T> Flow<T>.logAndShareIn(): SharedFlow<T>{
+    TODO()
+}
 
+fun <T> Flow<T>.logAndStateIn(): StateFlow<T>{
+    TODO()
+}
 
 internal inline fun <reified T> Any.logBlocking(name: String,
                                                 vararg params: Any? = arrayOf(),

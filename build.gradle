@@ -7,7 +7,7 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:7.2.0-beta04'
+        classpath 'com.android.tools.build:gradle:7.2.2'
         classpath 'com.vanniktech:gradle-android-junit-jacoco-plugin:0.16.0'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
         def nav_version = '2.4.1'
@@ -19,7 +19,6 @@ buildscript {
 
     }
 }
-
 apply plugin: 'com.vanniktech.android.junit.jacoco'
 apply plugin: "io.gitlab.arturbosch.detekt"
 apply plugin: 'kotlinx-serialization'
@@ -33,8 +32,7 @@ allprojects {
 
     }
 }
-
-task clean(type: Delete) {
+task clean2(type: Delete) {
     delete rootProject.buildDir
 }
 tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {

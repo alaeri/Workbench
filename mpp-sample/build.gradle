@@ -1,0 +1,96 @@
+plugins {
+//    id "kotlin-platform-jvm"
+    id 'org.jetbrains.kotlin.multiplatform'
+    id 'com.github.johnrengelman.shadow' version '7.1.2'
+    id 'application'
+}
+
+ext.jvmMainClassName = 'com.alaeri.JvmMain'
+mainClassName = jvmMainClassName
+application{
+    mainClassName = jvmMainClassName
+}
+shadowJar {
+    manifest {
+        attributes 'Main-Class': jvmMainClassName
+    }
+}
+//shadowJar{
+//    manifest {
+//        attributes 'Main-Class': jvmMainClassName
+//    }
+//}
+//tasks.withType(com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar) {
+//    manifest {
+//        attributes("Main-Class" : "com.alaeri.JvmMainKt")
+//    }
+//    archiveClassifier.set("all")
+//}
+
+
+kotlin {
+    jvm {
+        jvmJar {
+            manifest {
+                attributes 'Main-Class': jvmMainClassName
+            }
+            from { configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) } }
+        }
+    }
+    macosArm64{
+        binaries {
+            executable {
+                entryPoint = "com.alaeri.main"
+                runTask?.args()
+            }
+        }
+    }
+//    js{
+//        browser {
+//
+////            useCommonJs {}
+////            binaries.executable {}
+//        }
+//    }
+
+    sourceSets{
+        commonMain{
+            dependencies {
+                implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+                implementation project(path: ':log-sample-lib')
+                //Flow
+                implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.0-native-mt'
+
+            }
+        }
+        macosArm64{
+            dependencies {
+                implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core-macosarm64:1.6.0-native-mt"
+            }
+        }
+    }
+
+}
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+//task shadowJar2(type: ShadowJar) {
+//    def target = kotlin.targets.jvm
+//    from target.compilations.main.output
+//    def runtimeClasspath = target.compilations.main.runtimeDependencyFiles
+//    manifest {
+//        attributes 'Main-Class': mainClassName
+//    }
+//    configurations = [runtimeClasspath]
+//}
+
+//task shadowJar2(type: ShadowJar, dependsOn: [jvmJar]) {
+//    from jvmJar.archiveFile
+//    configurations = [project.configurations.jvmRuntimeClasspath]
+//    manifest {
+//        attributes 'Main-Class': jvmMainClassName
+//    }
+//}
+//configure([jvmJar]) {
+//    manifest{
+//        attributes 'Main-Class':jvmMainClassName
+//    }
+//}
