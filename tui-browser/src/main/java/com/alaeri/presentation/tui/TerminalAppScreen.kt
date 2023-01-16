@@ -7,6 +7,13 @@ import com.alaeri.presentation.PresentationState
 import com.alaeri.presentation.tui.wrap.LineWrapper
 import com.alaeri.presentation.wiki.PanelSizes
 import com.alaeri.presentation.wiki.SelectionRepository
+import com.github.ajalt.mordant.rendering.*
+import com.github.ajalt.mordant.rendering.BorderType.Companion.SQUARE_DOUBLE_SECTION_SEPARATOR
+import com.github.ajalt.mordant.table.Borders
+import com.github.ajalt.mordant.table.table
+import com.github.ajalt.mordant.terminal.Terminal
+import com.github.ajalt.mordant.widgets.Panel
+import com.github.ajalt.mordant.widgets.Text
 import com.googlecode.lanterna.SGR
 import com.googlecode.lanterna.TerminalSize
 import com.googlecode.lanterna.gui2.*
@@ -20,211 +27,168 @@ import java.util.concurrent.Executors
 import kotlin.coroutines.CoroutineContext
 
 class TerminalAppScreen(private val terminal: Terminal,
-                        private val screen: Screen,
                         private val viewModelFactory: IViewModelFactory,
                         private val drawCoroutineContext : CoroutineContext = Executors.newSingleThreadExecutor().asCoroutineDispatcher(),
                         private val readKeyCoroutineContext : CoroutineContext = Executors.newSingleThreadExecutor().asCoroutineDispatcher()) {
 
     private var mainContentPanel: Panel
     private var lastRowPanel: Panel
-    private var rootWindow: MultiWindowTextGUI
-    private val textBox: TextBox
     private val mainContentPanelLeft: Panel
     private val previewPanel: Panel
     private val lineWrapper = LineWrapper()
 
     init {
-        screen.startScreen()
-        rootWindow = MultiWindowTextGUI(screen).apply {
-
-        }
-        val browseWindow = BasicWindow("Browse").apply {
-            setHints(listOf(Window.Hint.FULL_SCREEN,
-                Window.Hint.NO_DECORATIONS,
-                Window.Hint.FIT_TERMINAL_WINDOW))
-            rootWindow.addWindow(this)
-
-        }
-
-        //browseWindow.textGUI = rootWindow
-        val linearLayout = LinearLayout()
-        val windowPanel = Panel(linearLayout).apply {
-            preferredSize = screen.terminalSize
-
-        }
-        browseWindow.component = windowPanel
-        val gridLayout = GridLayout(2).apply {
-        }
-        mainContentPanel = Panel(gridLayout).apply {
-            addTo(windowPanel)
-            preferredSize = parent.preferredSize.withRelativeRows(-1)
-        }
-        mainContentPanelLeft = Panel(AbsoluteLayout()).apply {
-            addTo(mainContentPanel)
-            preferredSize = parent.preferredSize.withColumns(parent.preferredSize.columns / 2)
-        }
-        previewPanel = Panel(AbsoluteLayout()).apply {
-            addTo(mainContentPanel)
-            preferredSize = parent.preferredSize.withColumns(parent.preferredSize.columns / 2)
-        }
-//        mainContentPanel.addComponent(Label("TEST2").apply {
-//            addTo(mainContentPanel)
-//            preferredSize = parent.preferredSize.withColumns(parent.preferredSize.columns / 2)
-//        })
-        val lastRowLayout = LinearLayout(Direction.HORIZONTAL)
-        lastRowPanel = Panel(lastRowLayout).apply {
-            addTo(windowPanel)
-            preferredSize = parent.preferredSize.withRows(1)
-        }
-        windowPanel.addComponent(
-            lastRowPanel,
-            LinearLayout.createLayoutData(LinearLayout.Alignment.End)
-        )
-        lastRowPanel.addComponent(Label("search"))
-        textBox = TextBox().apply {
-            setTextChangeListener { newText, changedByUserInteraction ->
-
+        val previewText = Text("PreviewText")
+        previewPanel = Panel(previewText)
+        val contentText = Text("ContentText")
+        mainContentPanelLeft = Panel(content = contentText)
+        mainContentPanel = Panel(content = table {
+            body {
+                com.github.ajalt.mordant.table.column { mainContentPanelLeft }
+                com.github.ajalt.mordant.table.column { previewPanel }
             }
-        }
-        lastRowPanel.addComponent(textBox)
-        rootWindow.updateScreen()
+        } )
+        lastRowPanel = Panel(Text("LastRowPanel"))
+        terminal.print(mainContentPanel)
     }
 
     suspend fun updateScreen(combined: PresentationState.Presentation) = log("update screen"){
-        val terminalSize = screen.doResizeIfNecessary()
-        if(terminalSize != null){
-            rootWindow.activeWindow.component.apply {
-                preferredSize = screen.terminalSize
-            }
-            mainContentPanel.apply {
-                preferredSize = parent.preferredSize.withRelativeRows(-1)
-            }
-            mainContentPanelLeft.apply {
-                preferredSize =
-                    parent.preferredSize.withColumns(parent.preferredSize.columns / 2)
-            }
-            previewPanel.apply {
-                preferredSize =
-                    parent.preferredSize.withColumns(parent.preferredSize.columns / 2)
-            }
-            lastRowPanel.apply {
-                preferredSize = parent.preferredSize.withRows(1)
-            }
-            textBox.apply {
-
-            }
-        }
-
-        println("updating screen: hasResize: $terminalSize")
-        val inputState = combined.inputState
-        val contentStatus = combined.contentStatus
-        val selectedWikiText = combined.selectedWikiText
-        val previewStatus = combined.previewStatus
-        textBox.text = inputState.text
-        println("updating screen1")
-        printPage(mainContentPanelLeft, contentStatus, selectedWikiText)
-//        when (contentStatus) {
-//            is LoadingStatus.Done -> {
-//                //data class CursorPosStart(val x: Int, val y: Int)
-//                //contentStatus.result.lines.forEach { logger?.println(it) }
-//                //val textGraphics = screen.newTextGraphics()
+        val terminalSize = terminal.info.updateTerminalSize()
+//        if(terminalSize != null){
+//            rootWindow.activeWindow.component.apply {
+//                preferredSize = screen.terminalSize
+//            }
+//            mainContentPanel.apply {
+//                preferredSize = parent.preferredSize.withRelativeRows(-1)
+//            }
+//            mainContentPanelLeft.apply {
+//                preferredSize =
+//                    parent.preferredSize.withColumns(parent.preferredSize.columns / 2)
+//            }
+//            previewPanel.apply {
+//                preferredSize =
+//                    parent.preferredSize.withColumns(parent.preferredSize.columns / 2)
+//            }
+//            lastRowPanel.apply {
+//                preferredSize = parent.preferredSize.withRows(1)
+//            }
+//            textBox.apply {
 //
-//            }
-//            is LoadingStatus.Empty -> {
-//                val message = when(contentStatus.emptyStatusReason){
-//                    EmptyStatusReason.NotInitialized -> {
-//                        WikiArticle(
-//                            "",
-//                            "",
-//                            mutableListOf(
-//                                mutableListOf<WikiText>(
-//                                    WikiText.NormalText(
-//                                        "Select something to see it appear here"
-//                                    )
-//                                )
-//                            )
-//                        )
-//                    }
-//                }
-//                printPage(mainContentPanelLeft, LoadingStatus.Done(message))
-//            }
-//            else -> {
-//                val fakePage = WikiArticle(
-//                    "",
-//                    "",
-//                    mutableListOf(
-//                        mutableListOf<WikiText>(
-//                            WikiText.NormalText(
-//                                contentStatus.toString()
-//                            )
-//                        )
-//                    )
-//                )
-//                printPage(mainContentPanelLeft, LoadingStatus.Done(fakePage))
 //            }
 //        }
-        println("updating screen2")
-        printPage(previewPanel, previewStatus, selectedWikiText)
-//        when (previewStatus) {
-//            is LoadingStatus.Done -> {
-//                //data class CursorPosStart(val x: Int, val y: Int)
-//                //previewStatus.result.lines.forEach { logger?.println(it) }
-//                //val textGraphics = screen.newTextGraphics()
 //
-//            }
-//            is LoadingStatus.Empty -> {
-//                val message = when(previewStatus.emptyStatusReason){
-//                    EmptyStatusReason.NotInitialized -> {
-//                        WikiArticle(
-//                            "",
-//                            "",
-//                            mutableListOf(
-//                                mutableListOf<WikiText>(
-//                                    WikiText.NormalText(
-//                                        "Select something to see it appear here"
-//                                    )
-//                                )
-//                            )
-//                        )
+//        println("updating screen: hasResize: $terminalSize")
+//        val inputState = combined.inputState
+//        val contentStatus = combined.contentStatus
+//        val selectedWikiText = combined.selectedWikiText
+//        val previewStatus = combined.previewStatus
+//        textBox.text = inputState.text
+//        println("updating screen1")
+//        printPage(mainContentPanelLeft, contentStatus, selectedWikiText)
+////        when (contentStatus) {
+////            is LoadingStatus.Done -> {
+////                //data class CursorPosStart(val x: Int, val y: Int)
+////                //contentStatus.result.lines.forEach { logger?.println(it) }
+////                //val textGraphics = screen.newTextGraphics()
+////
+////            }
+////            is LoadingStatus.Empty -> {
+////                val message = when(contentStatus.emptyStatusReason){
+////                    EmptyStatusReason.NotInitialized -> {
+////                        WikiArticle(
+////                            "",
+////                            "",
+////                            mutableListOf(
+////                                mutableListOf<WikiText>(
+////                                    WikiText.NormalText(
+////                                        "Select something to see it appear here"
+////                                    )
+////                                )
+////                            )
+////                        )
+////                    }
+////                }
+////                printPage(mainContentPanelLeft, LoadingStatus.Done(message))
+////            }
+////            else -> {
+////                val fakePage = WikiArticle(
+////                    "",
+////                    "",
+////                    mutableListOf(
+////                        mutableListOf<WikiText>(
+////                            WikiText.NormalText(
+////                                contentStatus.toString()
+////                            )
+////                        )
+////                    )
+////                )
+////                printPage(mainContentPanelLeft, LoadingStatus.Done(fakePage))
+////            }
+////        }
+//        println("updating screen2")
+//        printPage(previewPanel, previewStatus, selectedWikiText)
+////        when (previewStatus) {
+////            is LoadingStatus.Done -> {
+////                //data class CursorPosStart(val x: Int, val y: Int)
+////                //previewStatus.result.lines.forEach { logger?.println(it) }
+////                //val textGraphics = screen.newTextGraphics()
+////
+////            }
+////            is LoadingStatus.Empty -> {
+////                val message = when(previewStatus.emptyStatusReason){
+////                    EmptyStatusReason.NotInitialized -> {
+////                        WikiArticle(
+////                            "",
+////                            "",
+////                            mutableListOf(
+////                                mutableListOf<WikiText>(
+////                                    WikiText.NormalText(
+////                                        "Select something to see it appear here"
+////                                    )
+////                                )
+////                            )
+////                        )
+////
+////                    }
+////                }
+////                printPage(previewPanel, LoadingStatus.Done(message))
+////            }
+////            else -> {
+////                val fakePage = WikiArticle(
+////                    "",
+////                    "",
+////                    mutableListOf(
+////                        mutableListOf<WikiText>(
+////                            WikiText.NormalText(
+////                                previewStatus.toString()
+////                            )
+////                        )
+////                    )
+////                )
+////                printPage(previewPanel, LoadingStatus.Done(fakePage))
+////            }
+////        }
+//        println("updating screen2bis")
 //
-//                    }
-//                }
-//                printPage(previewPanel, LoadingStatus.Done(message))
-//            }
-//            else -> {
-//                val fakePage = WikiArticle(
-//                    "",
-//                    "",
-//                    mutableListOf(
-//                        mutableListOf<WikiText>(
-//                            WikiText.NormalText(
-//                                previewStatus.toString()
-//                            )
-//                        )
-//                    )
-//                )
-//                printPage(previewPanel, LoadingStatus.Done(fakePage))
-//            }
+//        println("updating screen3")
+//        try {
+//            rootWindow.updateScreen()
+//        }catch (e: Throwable){
+//            println("error updating: $e")
 //        }
-        println("updating screen2bis")
-
-        println("updating screen3")
-        try {
-            rootWindow.updateScreen()
-        }catch (e: Throwable){
-            println("error updating: $e")
-        }
-
-        println("screen updated")
+//
+//        println("screen updated")
 
 
 
     }
+
+
 
     private val keyFlow: Flow<KeyStroke> = flow<KeyStroke> {
         val emissionContext = currentCoroutineContext()
         withContext(readKeyCoroutineContext) {
-            var keyStroke = screen.readInput()
+            var keyStroke = terminal.readLineOrNull()
             while (true) {
                 println("KeyStroke: $keyStroke")
                 withContext(emissionContext) {
@@ -332,7 +296,7 @@ class TerminalAppScreen(private val terminal: Terminal,
                 println("screen will stop after this")
             }
             finally {
-                screen.stopScreen()
+                //screen.stopScreen()
             }
         }
     }
