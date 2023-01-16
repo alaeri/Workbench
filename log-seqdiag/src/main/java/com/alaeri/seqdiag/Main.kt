@@ -1,8 +1,13 @@
 package com.alaeri.seqdiag
 
 import androidx.compose.desktop.ui.tooling.preview.Preview
-import androidx.compose.foundation.*
+import androidx.compose.foundation.border
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Text
 import androidx.compose.material.TextField
 import androidx.compose.runtime.Composable
@@ -10,7 +15,6 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
@@ -24,10 +28,11 @@ import com.alaeri.log.sample.graphRepository
 import com.alaeri.log.sample.lib.wiki.wiki.WikiRepositoryImpl
 import com.alaeri.log.sample.log
 import com.alaeri.log.sample.logBlocking
-import com.zachklipp.seqdiag.*
+import com.alaeri.log.sample.logRepository
+import com.zachklipp.seqdiag.Note
+import com.zachklipp.seqdiag.SequenceDiagram
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.flow.*
 
 object DI{
@@ -49,12 +54,27 @@ fun RowWithWikiAppAndDebugScreen(){
     Row(modifier = Modifier.fillMaxSize()){
         WikiApp()
         debugScreen()
+        debugScreen2()
+    }
+}
+@Composable
+@Preview
+fun debugScreen2(){
+    val wikiText: State<List<String>> = logRepository.listAsFlow.map { l -> l.map { it.toString() }  }.collectAsState(
+        emptyList()
+    )
+    LazyColumn(Modifier.fillMaxHeight().fillMaxWidth(1f)) {
+        items(items = wikiText.value, itemContent = { t : String->
+            Text(modifier = Modifier.padding(10.dp), text = t)
+        })
     }
 }
 class MainViewModel(val sharingScope: CoroutineScope) {
     val entry : MutableStateFlow<String> = MutableStateFlow("initial")
     fun setValue(value: String){
-        entry.value = value
+        logBlocking("updateInput"){
+            entry.value = value
+        }
     }
 
     val text = entry
@@ -62,7 +82,7 @@ class MainViewModel(val sharingScope: CoroutineScope) {
         .flatMapLatest {
         println("loading")
         DI.wikiRepository.loadWikiArticle(it)
-//            .log("magic load")
+            .log("magic load")
             .onEach {
             println("loading: $it")
         }
@@ -73,14 +93,17 @@ class MainViewModel(val sharingScope: CoroutineScope) {
 @Preview
 fun WikiApp(){
 
-    val wikiText: State<LoadingStatus> = DI.vm.text.collectAsState(LoadingStatus.Loading(""))
-    val inputText: State<String> = DI.vm.entry.collectAsState("")
+    Any().logBlocking("update screen"){
+        val wikiText: State<LoadingStatus> = DI.vm.text.collectAsState(LoadingStatus.Loading(""))
+        val inputText: State<String> = DI.vm.entry.collectAsState("")
 
 
-    Column(){
-        Text(wikiText.value.let { it.toString() })
-        TextField(inputText.value, onValueChange = DI.vm::setValue)
+        Column(modifier = Modifier.fillMaxWidth(0.4f)){
+            Text(modifier = Modifier.weight(1f, true), text = wikiText.value.let { it.toString() })
+            TextField(modifier = Modifier, value = inputText.value, onValueChange = DI.vm::setValue)
+        }
     }
+
 }
 @Composable
 @Preview
@@ -112,10 +135,13 @@ fun scrollBox(){
     val box = Box(modifier =
     Modifier
         .border(3.dp, Color.Green)
+        .fillMaxHeight()
+        .fillMaxWidth(0.5f)
         .verticalScroll(rememberScrollState())
         .horizontalScroll(rememberScrollState())
         .padding(10.dp)
-        .background(Color.Blue), propagateMinConstraints = true){
+//        .background(Color.Blue)
+        , propagateMinConstraints = true){
         sizeBox()
     }
 }
@@ -123,11 +149,13 @@ fun scrollBox(){
 @Composable
 fun sizeBox(){
     val box = Box(modifier =
-    Modifier.requiredSize(Dp(1000.0f), Dp(1000.0f))
+    Modifier.requiredSize(2000.dp, 1000.dp)
         .border(3.dp, Color.Green)
 
         .padding(10.dp)
-        .background(Color.Yellow), propagateMinConstraints = true){
+        //.background(Color.Yellow)
+        ,
+        propagateMinConstraints = true){
         seqDiag()
     }
 }
@@ -148,6 +176,7 @@ fun seqDiag(){
                 graphNode: GraphNode ->  graphNode.label
                 createParticipant(topLabel = {Note(graphNode.label)}, bottomLabel = {})
             }
+
 
         }
 //
@@ -176,13 +205,14 @@ fun seqDiag(){
 //            .label { Label("Hello back!") }
     }
 }
-fun main() = logBlocking() {
+fun main() = Any().logBlocking("app") {
     application {
         DI.scope = CoroutineScope(GlobalScope.coroutineContext)
-        DI.vm = MainViewModel(DI.scope)
-        Window(onCloseRequest = ::exitApplication, title = "SeqDiag Compose test") {
-
-            App()
+        logBlocking("build VM"){
+            DI.vm = MainViewModel(DI.scope)
+            Window(onCloseRequest = ::exitApplication, title = "SeqDiag Compose test") {
+                App()
+            }
         }
     }
 }
