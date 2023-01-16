@@ -49,7 +49,7 @@ class WikiRepositoryImpl : WikiRepository {
                     }
                     emit(LoadingStatus.Filtering("ok"))
                     val result = withContext(Dispatchers.Default) {
-                       val wikiArticle = WikiArticle(null, null, mutableListOf(mutableListOf(WikiText.NormalText("dsfsdf"))))
+                       val wikiArticle = WikiArticle(null, null, mutableListOf(mutableListOf(WikiText.NormalText("$searchTerm dsfsdf"))))
 
                         wikiArticle.copy(lines = wikiArticle.lines.filter { it.isNotEmpty() }
                             .toMutableList())
