@@ -44,8 +44,8 @@ import kotlin.coroutines.CoroutineContext
  *
  * Created by Emmanuel Requier on 20/12/2020.
  */
-val idBank = IdBank<IdentityRepresentation>(null){ prev ->
-    IdentityRepresentation(prev?.index ?: 0, UUID.randomUUID().toString())
+val idBank = IdBank<IdentityRepresentation>(IdentityRepresentation(0, "0")){ prev ->
+    IdentityRepresentation(if(prev != null){ prev.index + 1 } else 0, UUID.randomUUID().toString())
 }
 val identityTranformer = IdentityTransformer(idBank)
 val callSiteTransformer = CallSiteTransformer(identityTranformer)
@@ -160,7 +160,7 @@ fun <T> Flow<T>.log(name: String,
         val originalContext = currentCoroutineContext()
         val childLogEnvironment = ChildLogEnvironmentFactory.suspendingLogEnvironment(logSiteContext, null)
         val childCoroutineContext = CoroutineLogEnvironment(childLogEnvironment)
-        childLogEnvironment.logSuspending("test") {
+        childLogEnvironment.logInlineSuspending2("test") {
             originalFlow
 //                .onStart { log("onStart"){} }
 //                .onEach { log("onEach", it){} }

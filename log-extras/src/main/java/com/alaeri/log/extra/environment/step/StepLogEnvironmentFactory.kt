@@ -5,6 +5,7 @@ import com.alaeri.log.core.LogEnvironmentFactory
 import com.alaeri.log.core.collector.LogCollector
 import com.alaeri.log.core.collector.NoopCollector
 import com.alaeri.log.core.Log.Tag
+import com.alaeri.log.core.LogScope
 
 /**
  * Created by Emmanuel Requier on 15/12/2020.
@@ -45,4 +46,19 @@ class StepLogEnvironmentFactory : LogEnvironmentFactory() {
         return StepLogEnvironment(tag, collector ?: NoopCollector , WaitingThread())
     }
 
+    override suspend fun suspendingLogEnvironment(
+        tag: Tag,
+        collector: LogCollector?,
+        scope: LogScope
+    ): LogEnvironment {
+        return StepLogEnvironment(tag, collector ?: NoopCollector , WaitingThread())
+    }
+
+    override fun blockingLogEnvironment(
+        tag: Tag,
+        collector: LogCollector?,
+        logScope: LogScope
+    ): LogEnvironment {
+        return StepLogEnvironment(tag, collector ?: NoopCollector , WaitingThread())
+    }
 }

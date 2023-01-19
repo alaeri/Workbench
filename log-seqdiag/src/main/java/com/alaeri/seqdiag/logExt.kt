@@ -2,6 +2,9 @@ package com.alaeri.log.sample
 
 import com.alaeri.log.server.LogServer
 import com.alaeri.log.core.LogConfig
+import com.alaeri.log.core.LogConfig.log
+import com.alaeri.log.core.LogConfig.logBlocking
+import com.alaeri.log.core.LogScope
 import com.alaeri.log.core.child.*
 import com.alaeri.log.core.collector.LogCollector
 import com.alaeri.log.core.collector.NoopCollector
@@ -41,7 +44,7 @@ import java.util.*
  * Created by Emmanuel Requier on 20/12/2020.
  */
 val idBank = IdBank<IdentityRepresentation>(null){ prev ->
-    IdentityRepresentation(prev?.index ?: 0, UUID.randomUUID().toString())
+    IdentityRepresentation(if(prev != null) prev.index + 1 else  0, UUID.randomUUID().toString())
 }
 val identityTranformer = IdentityTransformer(idBank)
 val callSiteTransformer = CallSiteTransformer(identityTranformer)
@@ -75,52 +78,84 @@ val collector : LogCollector = logRepository
 val graphRepository = GraphRepository(logRepository)
 
 
-internal suspend inline fun <reified T> Any.log(name: String,
+internal suspend inline fun <reified T> log(name: String,
+                                            receiverTag: ReceiverTag,
                                                 vararg params: Any? = arrayOf(),
-                                                crossinline body :suspend ()->T) : T {
+                                                crossinline body :suspend LogScope.()->T) : T {
     val currentCoroutineContext = currentCoroutineContext()
-    val logContext = ReceiverTag(
-        this) +
+    val logContext = receiverTag +
             CoroutineContextTag(currentCoroutineContext) +
             CallSiteTag() +
             ThreadTag() +
             NamedTag(name)
     return LogConfig.log(logContext, collector, *params){
-        body.invoke()
+        body.invoke(this)
+    }
+}
+internal suspend inline fun <reified T> LogScope.log(name: String,
+                                                     receiverTag: ReceiverTag,
+                                                vararg params: Any? = arrayOf(),
+                                                crossinline body :suspend LogScope.()->T) : T {
+    val currentCoroutineContext = currentCoroutineContext()
+    val logContext =
+            receiverTag +
+            CoroutineContextTag(currentCoroutineContext) +
+            CallSiteTag() +
+            ThreadTag() +
+            NamedTag(name)
+    val logScope = this
+    return logScope.log(tag = logContext, collector = collector, params = *params){
+        body.invoke(this)
     }
 }
 
-internal inline fun <reified T> Any.logBlocking(name: String,
+internal inline fun <reified T> logBlocking(name: String,
+                                            receiverTag: ReceiverTag,
                                                 vararg params: Any? = arrayOf(),
-                                                body :()->T): T {
-    val logContext =  ReceiverTag(this) +
+                                                body : LogScope.()->T): T {
+    val logContext =  receiverTag +
             CallSiteTag() +
             ThreadTag() +
             NamedTag(name)
     return LogConfig.logBlocking(logContext, collector, *params){
-        body.invoke()
+        body.invoke(this)
     }
 }
-internal suspend fun <T> Any.logFlow(name: String,
-                                     vararg params: Any? = arrayOf(),
-                                     body :suspend ()->Flow<T>) : Flow<T> {
-    val receiver = this
-    val currentCoroutineContext = currentCoroutineContext()
-    val logContext = ReceiverTag(
-        this) +
-            CoroutineContextTag(currentCoroutineContext) +
+
+internal inline fun <reified T> LogScope.logBlocking(name: String,
+                                                     receiverTag: ReceiverTag,
+                                                     vararg params: Any? = arrayOf(),
+                                                     body : LogScope.()->T): T {
+    val logContext =  receiverTag +
             CallSiteTag() +
             ThreadTag() +
             NamedTag(name)
-    return LogConfig.log(logContext, collector, *params){
-        val floww = body.invoke()
-        floww.log(name, params)
+    val logScope: LogScope = this
+    return logScope.logBlocking(logContext, collector, *params){
+        body.invoke(this)
     }
 }
+//internal suspend fun <T> Any.logFlow(name: String,
+//                                     vararg params: Any? = arrayOf(),
+//                                     body :suspend ()->Flow<T>) : Flow<T> {
+//    val receiver = this
+//    val currentCoroutineContext = currentCoroutineContext()
+//    val logContext = ReceiverTag(
+//        this) +
+//            CoroutineContextTag(currentCoroutineContext) +
+//            CallSiteTag() +
+//            ThreadTag() +
+//            NamedTag(name)
+//    return LogConfig.log(logContext, collector, *params){
+//        val floww = body.invoke()
+//        floww.log(name, params)
+//    }
+//}
 fun <T> Flow<T>.log(name: String,
+                    receiverTag: ReceiverTag,
                     vararg params: Any? = arrayOf()): Flow<T>{
     val logSiteContext =
-        ReceiverTag(this) +
+       receiverTag +
                 //CoroutineContextTag(currentCoroutineContext()) +
                 CallSiteTag() +
                 ThreadTag() +
@@ -131,12 +166,12 @@ fun <T> Flow<T>.log(name: String,
         val originalContext = currentCoroutineContext()
         val childLogEnvironment = ChildLogEnvironmentFactory.suspendingLogEnvironment(logSiteContext, collector)
         val childCoroutineContext = CoroutineLogEnvironment(childLogEnvironment)
-        childLogEnvironment.logSuspending("test") {
+        childLogEnvironment.logInlineSuspending2("test") {
             originalFlow
                 .flowOn(childCoroutineContext)
-                .onStart { log("onStart"){} }
-                .onEach { log("onEach", it){} }
-                .onCompletion { log("onCompletion"){} }
+//                .onStart { receiverTag.receiver.log("onStart"){} }
+//                .onEach { receiverTag.receiver.log("onEach", it){} }
+//                .onCompletion { receiverTag.receiver.log("onCompletion"){} }
 
 //            .flowOn(originalContext)
                 .collectLatest{

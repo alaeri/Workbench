@@ -1,3 +1,13 @@
 package com.alaeri.log.repository
 
-data class GraphRepresentation(val levels: List<List<GraphNode>>)
+import com.alaeri.log.extra.identity.IdentityRepresentation
+
+sealed class HistoryItem{
+    data class Actor(val id: IdentityRepresentation, val name: String) : HistoryItem()
+
+    data class Line(val from: IdentityRepresentation, val to: IdentityRepresentation, val name: String): HistoryItem()
+}
+
+
+
+data class GraphRepresentation(val items: List<HistoryItem>)

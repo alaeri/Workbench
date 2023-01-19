@@ -81,7 +81,7 @@ fun <T> Flow<T>.log(name: String,
         val originalContext = currentCoroutineContext()
         val childLogEnvironment = ChildLogEnvironmentFactory.suspendingLogEnvironment(logSiteContext, NoopCollector)
         val childCoroutineContext = CoroutineLogEnvironment(childLogEnvironment)
-        childLogEnvironment.logSuspending("test") {
+        childLogEnvironment.logInlineSuspending2("test") {
             originalFlow
 //                .onStart { log("onStart"){} }
                 .onEach { log("onEach", it){} }

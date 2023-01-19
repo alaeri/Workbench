@@ -2,6 +2,7 @@ package com.alaeri.seqdiag
 
 import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.border
+import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -10,11 +11,15 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Text
 import androidx.compose.material.TextField
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.State
-import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
@@ -22,32 +27,78 @@ import com.alaeri.domain.wiki.LoadingStatus
 import com.alaeri.log.core.LogConfig
 import com.alaeri.log.core.LogConfig.logBlocking
 import com.alaeri.log.core.child.ChildLogEnvironmentFactory
+import com.alaeri.log.extra.identity.IdentityRepresentation
+import com.alaeri.log.extra.tag.receiver.ReceiverTag
 import com.alaeri.log.repository.GraphNode
 import com.alaeri.log.repository.GraphRepresentation
+import com.alaeri.log.repository.HistoryItem
 import com.alaeri.log.sample.graphRepository
 import com.alaeri.log.sample.lib.wiki.wiki.WikiRepositoryImpl
 import com.alaeri.log.sample.log
 import com.alaeri.log.sample.logBlocking
 import com.alaeri.log.sample.logRepository
+import com.zachklipp.seqdiag.LineStyle
 import com.zachklipp.seqdiag.Note
+import com.zachklipp.seqdiag.Participant
 import com.zachklipp.seqdiag.SequenceDiagram
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.*
 
 object DI{
+    val app = Any()
     init {
         LogConfig.logEnvironmentFactory = ChildLogEnvironmentFactory
-        logBlocking("init"){
-            println("ok")
-        }
     }
-
 
     lateinit var scope : CoroutineScope
     var wikiRepository  = WikiRepositoryImpl()
     lateinit var vm: MainViewModel
 }
+//https://stackoverflow.com/questions/66005066/android-jetpack-compose-how-to-zoom-a-image-in-a-box
+@Composable
+fun ZoomableBox(
+    modifier: Modifier = Modifier,
+    minScale: Float = 0.1f,
+    maxScale: Float = 5f,
+    content: @Composable ZoomableBoxScope.() -> Unit
+) {
+    var scale by remember { mutableStateOf(1f) }
+    var offsetX by remember { mutableStateOf(0f) }
+    var offsetY by remember { mutableStateOf(0f) }
+    var size by remember { mutableStateOf(IntSize.Zero) }
+    Box(
+        modifier = modifier
+            .clip(RectangleShape)
+            .onSizeChanged { size = it }
+            .pointerInput(Unit) {
+                detectTransformGestures { _, pan, zoom, _ ->
+                    scale = maxOf(minScale, minOf(scale * zoom, maxScale))
+                    val maxX = (size.width * (scale - 1)) / 2
+                    val minX = -maxX
+                    offsetX = maxOf(minX, minOf(maxX, offsetX + pan.x))
+                    val maxY = (size.height * (scale - 1)) / 2
+                    val minY = -maxY
+                    offsetY = maxOf(minY, minOf(maxY, offsetY + pan.y))
+                }
+            }
+    ) {
+        val scope = ZoomableBoxScopeImpl(scale, offsetX, offsetY)
+        scope.content()
+    }
+}
+
+interface ZoomableBoxScope {
+    val scale: Float
+    val offsetX: Float
+    val offsetY: Float
+}
+
+private data class ZoomableBoxScopeImpl(
+    override val scale: Float,
+    override val offsetX: Float,
+    override val offsetY: Float
+) : ZoomableBoxScope
 @Composable
 @Preview
 fun RowWithWikiAppAndDebugScreen(){
@@ -70,19 +121,20 @@ fun debugScreen2(){
     }
 }
 class MainViewModel(val sharingScope: CoroutineScope) {
+    val receiverTag = ReceiverTag(this)
     val entry : MutableStateFlow<String> = MutableStateFlow("initial")
     fun setValue(value: String){
-        logBlocking("updateInput"){
+        logBlocking("updateInput2", receiverTag){
             entry.value = value
         }
     }
 
     val text = entry
-        .log("entry")
+        .log("entry", receiverTag)
         .flatMapLatest {
         println("loading")
         DI.wikiRepository.loadWikiArticle(it)
-            .log("magic load")
+            .log("magic load", ReceiverTag(this))
             .onEach {
             println("loading: $it")
         }
@@ -92,15 +144,18 @@ class MainViewModel(val sharingScope: CoroutineScope) {
 @Composable
 @Preview
 fun WikiApp(){
-
-    Any().logBlocking("update screen"){
-        val wikiText: State<LoadingStatus> = DI.vm.text.collectAsState(LoadingStatus.Loading(""))
-        val inputText: State<String> = DI.vm.entry.collectAsState("")
-
+    val receiverTag = ReceiverTag(DI.app)
+    logBlocking("update screen", receiverTag){
+        val wikiText: State<LoadingStatus> = DI.vm.text.log("updateText", ReceiverTag(DI.app)).collectAsState(LoadingStatus.Loading(""))
+        val inputText: State<String> = DI.vm.entry.log("updateText", ReceiverTag(DI.app)).collectAsState("")
 
         Column(modifier = Modifier.fillMaxWidth(0.4f)){
             Text(modifier = Modifier.weight(1f, true), text = wikiText.value.let { it.toString() })
-            TextField(modifier = Modifier, value = inputText.value, onValueChange = DI.vm::setValue)
+            TextField(modifier = Modifier, value = inputText.value, onValueChange = {
+                logBlocking("updateInput", receiverTag){
+                    DI.vm.setValue(it)
+                }
+            })
         }
     }
 
@@ -148,16 +203,24 @@ fun scrollBox(){
 @Preview
 @Composable
 fun sizeBox(){
-    val box = Box(modifier =
-    Modifier.requiredSize(2000.dp, 1000.dp)
+//    ZoomableBox {
+         Box(modifier =
+    Modifier
+        .requiredSize(800.dp, 10000.dp)
         .border(3.dp, Color.Green)
-
         .padding(10.dp)
+//        .graphicsLayer(
+//            scaleX = scale,
+//            scaleY = scale,
+//            translationX = offsetX,
+//            translationY = offsetY
+//        )
         //.background(Color.Yellow)
         ,
-        propagateMinConstraints = true){
-        seqDiag()
-    }
+        propagateMinConstraints = true) {
+             seqDiag()
+         }
+//    }
 }
 @Preview
 @Composable
@@ -167,17 +230,28 @@ fun seqDiag(){
     )
     val graphRepresentation = state.value
 
-    SequenceDiagram(modifier = Modifier
-        .border(2.dp, Color.Green)
+    SequenceDiagram(
+        modifier = Modifier
+
+            .border(2.dp, Color.Green)
         //.background(Color.Green)
     ) {
-        graphRepresentation.levels.forEach { aLevel ->
-            aLevel.forEach {
-                graphNode: GraphNode ->  graphNode.label
-                createParticipant(topLabel = {Note(graphNode.label)}, bottomLabel = {})
+
+        val participantsMap = mutableMapOf<IdentityRepresentation, Participant>()
+        graphRepresentation.items.forEach { item ->
+            when (item) {
+                is HistoryItem.Actor -> participantsMap[item.id] =
+                    createParticipant(topLabel = { Note(item.name) }, bottomLabel = {})
+                is HistoryItem.Line -> {
+                    val from = participantsMap[item.from]
+                    val to = participantsMap[item.to]
+                    if (from != null && to != null) {
+                        from.lineTo(to).label { Note(item.name) }.style(LineStyle())
+                    } else {
+                        println("missing from: $from or to: $to in log")
+                    }
+                }
             }
-
-
         }
 //
 //        val alice = createParticipant(topLabel = { Note("Alice") }, bottomLabel = {})
@@ -203,15 +277,22 @@ fun seqDiag(){
 //        // Lines can span multiple participants.
 //        carlos.lineTo(alice)
 //            .label { Label("Hello back!") }
+
     }
 }
-fun main() = Any().logBlocking("app") {
-    application {
-        DI.scope = CoroutineScope(GlobalScope.coroutineContext)
-        logBlocking("build VM"){
-            DI.vm = MainViewModel(DI.scope)
-            Window(onCloseRequest = ::exitApplication, title = "SeqDiag Compose test") {
-                App()
+fun main() {
+    val receiverTag = ReceiverTag(DI.app)
+    logBlocking("main", receiverTag) {
+        val logScope = this
+        application {
+            DI.scope = CoroutineScope(GlobalScope.coroutineContext)
+            logBlocking("build VM", receiverTag) {
+                DI.vm = MainViewModel(DI.scope)
+                Window(onCloseRequest = ::exitApplication, title = "SeqDiag Compose test") {
+                    logBlocking("app", receiverTag){
+                        App()
+                    }
+                }
             }
         }
     }

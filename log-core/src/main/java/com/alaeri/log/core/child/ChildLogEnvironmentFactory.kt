@@ -9,17 +9,58 @@ import kotlinx.coroutines.currentCoroutineContext
 object ChildLogEnvironmentFactory : LogEnvironmentFactory() {
 
     //internal
-    val threadLocal =  ThreadLocal<LogEnvironment>()
+    val threadLocal =  ThreadLocal<LogEnvironment>().also {
+        println("threadLocalInitialized.....")
+    }
 
     override suspend fun suspendingLogEnvironment(
         tag: Tag,
-        collector: LogCollector?
+        collector: LogCollector?,
+        scope: LogScope
+    ): LogEnvironment {
+            val scopeLogEnvironment = scope.logEnvironment
+            val childLogData = ChildTag(scopeLogEnvironment.tag) + tag
+            //If there is a parentCoroutineLogDataAndCollector use this collector + the local one
+            val localCollector = scopeLogEnvironment.collector + collector
+            return ChildLogEnvironment(childLogData,
+                localCollector,
+                {},
+                {}
+            )
+        }
+
+    override fun blockingLogEnvironment(
+        tag: Tag,
+        collector: LogCollector?,
+        logScope: LogScope
+    ): LogEnvironment {
+        val scopeLogEnvironment : LogEnvironment? = logScope.logEnvironment
+        val logData = if (scopeLogEnvironment != null) {
+            ChildTag(scopeLogEnvironment.tag) + tag
+        } else {
+            tag
+        }
+        val logCollector = if (scopeLogEnvironment != null) {
+            scopeLogEnvironment.collector + collector
+        } else {
+            collector
+        } ?: throw MissingCollectorException(logData)
+        return ChildLogEnvironment(logData,
+            logCollector,
+            {},
+            {})
+    }
+
+    override suspend fun suspendingLogEnvironment(
+        tag: Tag,
+        collector: LogCollector?,
     ): LogEnvironment {
         val currentCoroutineContext = currentCoroutineContext()
         val parentCoroutineLogEnvironment: CoroutineLogEnvironment? =
             currentCoroutineContext[CoroutineLogKey]
         val parentLogEnvironment = parentCoroutineLogEnvironment?.logEnvironment
         val threadLogEnvironment = threadLocal.get()
+        println("threadLocal: $threadLocal get: $threadLogEnvironment in suspendingLogEnvironment +${Thread.currentThread().name}")
         val childLogData = if (parentLogEnvironment != null) {
             ChildTag(parentLogEnvironment.tag) + tag
         } else {
@@ -42,8 +83,12 @@ object ChildLogEnvironmentFactory : LogEnvironmentFactory() {
         } ?: throw MissingCollectorException(childLogData)
         return ChildLogEnvironment(childLogData,
             localCollector,
-            { threadLocal.set(this) },
-            { threadLocal.set(threadLogEnvironment) })
+            { threadLocal.set(this@ChildLogEnvironment)
+                println("threadLocal: $threadLocal with: ${this@ChildLogEnvironment}")
+            },
+            { threadLocal.set(threadLogEnvironment)
+                println("threadLocal: $threadLocal with: $threadLogEnvironment")
+            })
     }
 
     override fun blockingLogEnvironment(
@@ -51,6 +96,7 @@ object ChildLogEnvironmentFactory : LogEnvironmentFactory() {
         collector: LogCollector?
     ): LogEnvironment {
         val threadLogEnvironment : LogEnvironment? = threadLocal.get()
+        println("threadLocal: $threadLocal get: $threadLogEnvironment in blockingLogEnvironnment +${Thread.currentThread().name}")
         val logData = if (threadLogEnvironment != null) {
             ChildTag(threadLogEnvironment.tag) + tag
         } else {
@@ -63,7 +109,11 @@ object ChildLogEnvironmentFactory : LogEnvironmentFactory() {
         } ?: throw MissingCollectorException(logData)
         return ChildLogEnvironment(logData,
             logCollector,
-            { threadLocal.set(this) },
-            { threadLocal.set(threadLogEnvironment) })
+            { threadLocal.set(this)
+                println("threadLocal: $threadLocal set to: ${this@ChildLogEnvironment}")
+            },
+            { threadLocal.set(threadLogEnvironment)
+                println("threadLocal: $threadLocal unset to: $threadLogEnvironment")
+            })
     }
 }

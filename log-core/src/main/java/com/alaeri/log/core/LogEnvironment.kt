@@ -21,6 +21,24 @@ abstract class LogEnvironment{
 
     inline fun <T> logBlocking(
         params: Array<out Any?>,
+        body: LogScope.() -> T,
+        logScope: LogScope
+    ): T {
+        collector.emit(Log(tag, Log.Message.Starting(params.toList())))
+        val result = runCatching {
+            body.invoke(logScope)
+        }
+        val message = if (result.isSuccess) {
+            Log.Message.Done(result.getOrNull())
+        } else {
+            Log.Message.Failed(result.exceptionOrNull())
+        }
+        collector.emit(Log(tag, message))
+        return result.getOrThrow()
+    }
+
+    inline fun <T> logBlocking(
+        params: Array<out Any?>,
         body: () -> T
     ): T {
         collector.emit(Log(tag, Log.Message.Starting(params.toList())))
@@ -36,12 +54,12 @@ abstract class LogEnvironment{
         return result.getOrThrow()
     }
 
-    suspend fun <T> logSuspending(
+    suspend inline fun <reified T> logInlineSuspending2(
         vararg params: Any? = arrayOf(),
-        body : suspend ()->T): T {
+        crossinline body : suspend ()->T): T {
         val coroutineLogEnvironment = CoroutineLogEnvironment(this)
         return withContext(currentCoroutineContext() + coroutineLogEnvironment + SupervisorJob()){
-            collector.emit(Log(tag, Log.Message.Starting(params?.toList() ?: emptyList())))
+            collector.emit(Log(tag, Log.Message.Starting(params.toList())))
             val result =
                 supervisorScope {
                     runCatching {
@@ -59,17 +77,18 @@ abstract class LogEnvironment{
         }
     }
 
-    @Deprecated(level = DeprecationLevel.WARNING, message = "@see InlineSuspendErrorRepro.kt", replaceWith = ReplaceWith("suspendLog"))
     suspend inline fun <reified T> logInlineSuspending(
         vararg params: Any? = arrayOf(),
-        crossinline body : suspend ()->T): T {
+        logScope: LogScope,
+        crossinline body : suspend LogScope.()->T,
+    ): T {
         val coroutineLogEnvironment = CoroutineLogEnvironment(this)
         return withContext(currentCoroutineContext() + coroutineLogEnvironment + SupervisorJob()){
             collector.emit(Log(tag, Log.Message.Starting(params.toList())))
             val result =
                 supervisorScope {
                     runCatching {
-                        body.invoke()
+                        body.invoke(logScope)
                     }
                 }
 

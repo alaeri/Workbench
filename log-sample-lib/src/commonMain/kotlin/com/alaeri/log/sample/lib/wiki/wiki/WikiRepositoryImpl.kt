@@ -2,12 +2,9 @@ package com.alaeri.log.sample.lib.wiki.wiki
 
 
 import com.alaeri.domain.wiki.*
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.supervisorScope
-import kotlinx.coroutines.withContext
 
 /**
  * TODO find why IDE displays warnings about "wtParsedWikitextPage.propertyIterator()"
@@ -36,13 +33,15 @@ class WikiRepositoryImpl : WikiRepository {
 
                                 }
                             }
+                            delay(2000)
                             result001
+
                     }
                     val responseBody = result1.getOrThrow()
                     emit(LoadingStatus.Parsing(responseBody.length.toLong()))
 
                     val apiWikiArticle = withContext(Dispatchers.Default) {
-
+                        delay(2000)
                         async {
                           ApiWikiArticle("")
                         }.await()
