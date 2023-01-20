@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import com.alaeri.domain.wiki.LoadingStatus
+import com.alaeri.domain.wiki.WikiText
 import com.alaeri.log.core.LogConfig
 import com.alaeri.log.core.child.ChildLogEnvironmentFactory
 import com.alaeri.log.extra.tag.receiver.ReceiverTag
@@ -32,8 +33,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.flow.*
 
-object DI{
-    val app = Any()
+object App{
+    val app = this
     init {
         LogConfig.logEnvironmentFactory = ChildLogEnvironmentFactory
     }
@@ -118,34 +119,40 @@ class MainViewModel(val sharingScope: CoroutineScope) {
         }
     }
 
-    val text = entry
-        .log("flowChild", receiverTag)
-        .log("flowParent", receiverTag)
+
+    private val text = entry
+        .log("flowInput", receiverTag)
         .flatMapLatest {
-            println("flatmap ${currentCoroutineContext()}")
-            DI.wikiRepository.loadWikiArticle(it)
+            log("load wiki article", receiverTag){
+                App.wikiRepository.loadWikiArticle(it)
+            }
         }
-        .log("flowGrandParent", receiverTag)
+        .log("flowWikiLoad", receiverTag)
         .flowOn(Dispatchers.IO)
-        .stateIn(sharingScope, SharingStarted.Eagerly, LoadingStatus.Loading(""))
+        .distinctUntilChanged()
+
+    data class State(val input: String, val text: LoadingStatus)
+    val state = combine(entry, text){ e, t -> State( e, t )}
+        .shareIn(sharingScope, SharingStarted.Eagerly, 1)
+        .log("flowState", receiverTag)
 }
 @Composable
 @Preview
 fun WikiApp(){
-    val receiverTag = ReceiverTag(DI.app)
+    val receiverTag = ReceiverTag(App.app)
     logBlocking("update screen", receiverTag){
-        //val wikiText: State<LoadingStatus> = DI.vm.text.log("appWikiTextFlow", ReceiverTag(DI.app)).collectAsState(LoadingStatus.Loading(""))
-        //val inputText: State<String> = DI.vm.entry.log("appInputTextFlow", ReceiverTag(DI.app)).collectAsState("")
+        val state: State<MainViewModel.State> = App.vm.state.log("appState", ReceiverTag(App)).collectAsState(MainViewModel.State("initial", LoadingStatus.Loading("")))
         Column(modifier = Modifier.fillMaxWidth(0.4f)){
             Text(modifier = Modifier.weight(1f, true),
-                text = "ok",
-                //wikiText.value.let { it.toString() }
+                text =
+                //"ok",
+                state.value.let { it.text.toString() }
             )
             TextField(modifier = Modifier,
-                value = "input",//inputText.value,
+                value = state.value.input,
                 onValueChange = {
                 logBlocking("onInputUpdated", receiverTag){
-                    DI.vm.setValue(it)
+                    App.vm.setValue(it)
                 }
             })
         }
@@ -252,8 +259,13 @@ fun seqDiag(){
                                 brush = SolidColor(Color.LightGray))
                             HistoryItem.LineType.FromParentStart -> LineStyle()
                             HistoryItem.LineType.ToParentEnd -> LineStyle()
+                            HistoryItem.LineType.OnEach -> LineStyle(
+                                width = 3.dp,
+                                brush = Brush.horizontalGradient(listOf( Color.Green, Color.Red))
+                            )
                         }
                         when(item.lineType){
+                            HistoryItem.LineType.OnEach,
                             HistoryItem.LineType.ToParentEnd -> to.lineTo(from).label { Text(item.name.take(10)) }.style(lineStyle)
                             else -> from.lineTo(to).label { Text(item.name.take(10)) }.style(lineStyle)
                         }
@@ -292,21 +304,17 @@ fun seqDiag(){
     }
 }
 fun main() {
-    val receiverTag = ReceiverTag(DI.app)
-    logBlocking("start application", receiverTag) {
+    val receiverTag = ReceiverTag(App)
+    logBlocking("main", receiverTag) {
         val a = this
         application {
             val appCoroutineScope = rememberCoroutineScope()
-            DI.scope = appCoroutineScope
-            logBlocking("build VM", receiverTag) {
-                DI.vm = MainViewModel(DI.scope)
-            }
-            logBlocking("open window", receiverTag) {
-                Window(onCloseRequest = ::exitApplication, title = "SeqDiag Compose test") {
-                    logBlocking("build app content", receiverTag){
-                        println(Thread.currentThread().name)
-                        App()
-                    }
+            App.scope = appCoroutineScope
+            App.vm = MainViewModel(App.scope)
+            Window(onCloseRequest = ::exitApplication, title = "SeqDiag Compose test") {
+                logBlocking("populate and run app window", receiverTag){
+                    println(Thread.currentThread().name)
+                    App()
                 }
             }
         }

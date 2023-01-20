@@ -15,7 +15,8 @@ sealed class HistoryItem{
     enum class LineType{
         FromReceiver,
         FromParentStart,
-        ToParentEnd
+        ToParentEnd,
+        OnEach
     }
 
 

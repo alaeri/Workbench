@@ -32,6 +32,7 @@ class LogSerializer(
                     }
                 })
                 is Message.Failed -> SerializedLogMessage.Error(state.exception?.let{ entityTransformer.transform(it) })
+                is Message.OnEach -> SerializedLogMessage.OnEach(state.it?.let{ entityTransformer.transform(it) })
             }
         )
     }

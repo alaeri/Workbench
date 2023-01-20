@@ -62,6 +62,7 @@ object GroupedLogsGraphMapper {
                 is SerializedLogMessage.Error -> HistoryItem.LineType.ToParentEnd
                 is SerializedLogMessage.Start -> HistoryItem.LineType.FromParentStart
                 is SerializedLogMessage.Success ->HistoryItem.LineType.ToParentEnd
+                is SerializedLogMessage.OnEach -> HistoryItem.LineType.OnEach
             }
 
 

@@ -172,9 +172,10 @@ fun <T> Flow<T>.log(name: String,
         println("$name flow coroutine context: $originalContext")
         val logEnvironment = LogConfig.logEnvironmentFactory.suspendingLogEnvironment(logSiteContext, collector)
         //val childLogEnvironment = ChildLogEnvironmentFactory.suspendingLogEnvironment(logSiteContext, collector)
-        //val childCoroutineContext = CoroutineLogEnvironment(childLogEnvironment)
-        val cf = log(name, receiverTag, collector){
-            val zig = currentCoroutineContext()
+        val childCoroutineContext = CoroutineLogEnvironment(logEnvironment)
+        val cf = //log(name, receiverTag, collector)
+                run {
+            val zig = childCoroutineContext
             val zigMinJob = zig.minusKey(Job)
             println("$name zigMinJob: $zigMinJob")
             channelFlow {
@@ -193,7 +194,6 @@ fun <T> Flow<T>.log(name: String,
                         }
 
                     }
-//                .flowOn(childCoroutineContext)
                     .flowOn(zigMinJob)
                     .collectLatest{ item ->
                         trySend(item)
