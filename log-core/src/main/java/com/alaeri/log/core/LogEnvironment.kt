@@ -102,6 +102,10 @@ abstract class LogEnvironment{
         }
     }
 
+    suspend inline fun logFlowEvent(message: Log.Message){
+        collector.emit(Log(tag, message))
+    }
+
     abstract fun prepare()
     abstract fun dispose()
 }

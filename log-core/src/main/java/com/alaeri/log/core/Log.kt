@@ -8,6 +8,7 @@ data class Log(val tag: Tag, val message: Message){
         data class Starting(val params: List<Any?>): Message()
         data class Done<T>(val result: T): Message()
         data class Failed(val exception: Throwable?): Message()
+        data class OnEach(val it: Any?): Message()
     }
 
     /**

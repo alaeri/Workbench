@@ -1,22 +1,17 @@
 package com.alaeri.seqdiag
 
 import androidx.compose.desktop.ui.tooling.preview.Preview
-import androidx.compose.foundation.border
+import androidx.compose.foundation.*
 import androidx.compose.foundation.gestures.detectTransformGestures
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Text
 import androidx.compose.material.TextField
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.RectangleShape
-import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.*
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.IntSize
@@ -25,24 +20,16 @@ import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import com.alaeri.domain.wiki.LoadingStatus
 import com.alaeri.log.core.LogConfig
-import com.alaeri.log.core.LogConfig.logBlocking
 import com.alaeri.log.core.child.ChildLogEnvironmentFactory
-import com.alaeri.log.extra.identity.IdentityRepresentation
 import com.alaeri.log.extra.tag.receiver.ReceiverTag
-import com.alaeri.log.repository.GraphNode
 import com.alaeri.log.repository.GraphRepresentation
+import com.alaeri.log.repository.GroupedLogsGraphMapper
 import com.alaeri.log.repository.HistoryItem
-import com.alaeri.log.sample.graphRepository
 import com.alaeri.log.sample.lib.wiki.wiki.WikiRepositoryImpl
-import com.alaeri.log.sample.log
-import com.alaeri.log.sample.logBlocking
-import com.alaeri.log.sample.logRepository
-import com.zachklipp.seqdiag.LineStyle
-import com.zachklipp.seqdiag.Note
-import com.zachklipp.seqdiag.Participant
-import com.zachklipp.seqdiag.SequenceDiagram
+import com.zachklipp.seqdiag.*
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.flow.*
 
 object DI{
@@ -105,13 +92,15 @@ fun RowWithWikiAppAndDebugScreen(){
     Row(modifier = Modifier.fillMaxSize()){
         WikiApp()
         debugScreen()
-        debugScreen2()
+//        debugScreen2()
     }
 }
 @Composable
 @Preview
 fun debugScreen2(){
-    val wikiText: State<List<String>> = logRepository.listAsFlow.map { l -> l.map { it.toString() }  }.collectAsState(
+    val wikiText: State<List<String>> = //logRepository.listAsFlow.map { l -> l.map { it.toString() }  }
+        graphRepository.graph.map { it.items.map { it.toString() } }
+        .collectAsState(
         emptyList()
     )
     LazyColumn(Modifier.fillMaxHeight().fillMaxWidth(1f)) {
@@ -124,35 +113,38 @@ class MainViewModel(val sharingScope: CoroutineScope) {
     val receiverTag = ReceiverTag(this)
     val entry : MutableStateFlow<String> = MutableStateFlow("initial")
     fun setValue(value: String){
-        logBlocking("updateInput2", receiverTag){
+        logBlocking("setInputValue", receiverTag){
             entry.value = value
         }
     }
 
     val text = entry
-        .log("entry", receiverTag)
+        .log("flowChild", receiverTag)
+        .log("flowParent", receiverTag)
         .flatMapLatest {
-        println("loading")
-        DI.wikiRepository.loadWikiArticle(it)
-            .log("magic load", ReceiverTag(this))
-            .onEach {
-            println("loading: $it")
+            println("flatmap ${currentCoroutineContext()}")
+            DI.wikiRepository.loadWikiArticle(it)
         }
-
-    }.stateIn(sharingScope, SharingStarted.Eagerly, LoadingStatus.Loading(""))
+        .log("flowGrandParent", receiverTag)
+        .flowOn(Dispatchers.IO)
+        .stateIn(sharingScope, SharingStarted.Eagerly, LoadingStatus.Loading(""))
 }
 @Composable
 @Preview
 fun WikiApp(){
     val receiverTag = ReceiverTag(DI.app)
     logBlocking("update screen", receiverTag){
-        val wikiText: State<LoadingStatus> = DI.vm.text.log("updateText", ReceiverTag(DI.app)).collectAsState(LoadingStatus.Loading(""))
-        val inputText: State<String> = DI.vm.entry.log("updateText", ReceiverTag(DI.app)).collectAsState("")
-
+        //val wikiText: State<LoadingStatus> = DI.vm.text.log("appWikiTextFlow", ReceiverTag(DI.app)).collectAsState(LoadingStatus.Loading(""))
+        //val inputText: State<String> = DI.vm.entry.log("appInputTextFlow", ReceiverTag(DI.app)).collectAsState("")
         Column(modifier = Modifier.fillMaxWidth(0.4f)){
-            Text(modifier = Modifier.weight(1f, true), text = wikiText.value.let { it.toString() })
-            TextField(modifier = Modifier, value = inputText.value, onValueChange = {
-                logBlocking("updateInput", receiverTag){
+            Text(modifier = Modifier.weight(1f, true),
+                text = "ok",
+                //wikiText.value.let { it.toString() }
+            )
+            TextField(modifier = Modifier,
+                value = "input",//inputText.value,
+                onValueChange = {
+                logBlocking("onInputUpdated", receiverTag){
                     DI.vm.setValue(it)
                 }
             })
@@ -191,7 +183,7 @@ fun scrollBox(){
     Modifier
         .border(3.dp, Color.Green)
         .fillMaxHeight()
-        .fillMaxWidth(0.5f)
+        .fillMaxWidth(1f)
         .verticalScroll(rememberScrollState())
         .horizontalScroll(rememberScrollState())
         .padding(10.dp)
@@ -206,7 +198,8 @@ fun sizeBox(){
 //    ZoomableBox {
          Box(modifier =
     Modifier
-        .requiredSize(800.dp, 10000.dp)
+        //.requiredSize(800.dp, 800.dp)
+        .fillMaxSize()
         .border(3.dp, Color.Green)
         .padding(10.dp)
 //        .graphicsLayer(
@@ -237,16 +230,34 @@ fun seqDiag(){
         //.background(Color.Green)
     ) {
 
-        val participantsMap = mutableMapOf<IdentityRepresentation, Participant>()
+        val participantsMap = mutableMapOf<GroupedLogsGraphMapper.GroupKey, Participant>()
         graphRepresentation.items.forEach { item ->
             when (item) {
-                is HistoryItem.Actor -> participantsMap[item.id] =
-                    createParticipant(topLabel = { Note(item.name) }, bottomLabel = {})
+                is HistoryItem.Actor -> {
+                    val modifier = when(item.actorType){
+                        HistoryItem.ActorType.Receiver -> Modifier.background(Color.LightGray).padding(10.dp)
+                        HistoryItem.ActorType.Log -> Modifier.background(Color(0xFFBBBBEE)).padding(10.dp)
+                    }
+                    participantsMap[item.id] =
+                        createParticipant(topLabel = { Text(item.name, modifier) }, bottomLabel = {})
+                }
                 is HistoryItem.Line -> {
                     val from = participantsMap[item.from]
                     val to = participantsMap[item.to]
                     if (from != null && to != null) {
-                        from.lineTo(to).label { Note(item.name) }.style(LineStyle())
+                        val lineStyle = when(item.lineType){
+                            HistoryItem.LineType.FromReceiver -> LineStyle(
+                                arrowHeadType = null,
+                                dashIntervals = 2.dp to 5.dp,
+                                brush = SolidColor(Color.LightGray))
+                            HistoryItem.LineType.FromParentStart -> LineStyle()
+                            HistoryItem.LineType.ToParentEnd -> LineStyle()
+                        }
+                        when(item.lineType){
+                            HistoryItem.LineType.ToParentEnd -> to.lineTo(from).label { Text(item.name.take(10)) }.style(lineStyle)
+                            else -> from.lineTo(to).label { Text(item.name.take(10)) }.style(lineStyle)
+                        }
+
                     } else {
                         println("missing from: $from or to: $to in log")
                     }
@@ -282,14 +293,18 @@ fun seqDiag(){
 }
 fun main() {
     val receiverTag = ReceiverTag(DI.app)
-    logBlocking("main", receiverTag) {
-        val logScope = this
+    logBlocking("start application", receiverTag) {
+        val a = this
         application {
-            DI.scope = CoroutineScope(GlobalScope.coroutineContext)
+            val appCoroutineScope = rememberCoroutineScope()
+            DI.scope = appCoroutineScope
             logBlocking("build VM", receiverTag) {
                 DI.vm = MainViewModel(DI.scope)
+            }
+            logBlocking("open window", receiverTag) {
                 Window(onCloseRequest = ::exitApplication, title = "SeqDiag Compose test") {
-                    logBlocking("app", receiverTag){
+                    logBlocking("build app content", receiverTag){
+                        println(Thread.currentThread().name)
                         App()
                     }
                 }

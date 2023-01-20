@@ -1,13 +1,13 @@
-package com.alaeri.log.sample
+package com.alaeri.seqdiag
 
-import com.alaeri.log.server.LogServer
+import com.alaeri.log.core.Log
 import com.alaeri.log.core.LogConfig
 import com.alaeri.log.core.LogConfig.log
 import com.alaeri.log.core.LogConfig.logBlocking
+import com.alaeri.log.core.LogEnvironmentFactory
 import com.alaeri.log.core.LogScope
 import com.alaeri.log.core.child.*
 import com.alaeri.log.core.collector.LogCollector
-import com.alaeri.log.core.collector.NoopCollector
 import com.alaeri.log.extra.identity.IdentityRepresentation
 import com.alaeri.log.extra.identity.IdentityTransformer
 import com.alaeri.log.extra.identity.utils.IdBank
@@ -29,9 +29,10 @@ import com.alaeri.log.serialize.serialize.mapping.CombinedTagTransformer
 import com.alaeri.log.serialize.serialize.mapping.EntityTransformer
 import com.alaeri.log.serialize.serialize.mapping.TagTypedSerializer
 import com.alaeri.log.serialize.serialize.representation.EntityRepresentation
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.withContext
 import java.util.*
 
@@ -61,7 +62,9 @@ val namedTransformer =object : TagTypedSerializer<NamedTag, NameRepresentation>(
 val combinedLogDataTransformer = CombinedTagTransformer(listOf(
     receiverTransformer, threadTransformer,
     namedTransformer, callSiteTransformer,
-    coroutineContextSerializer), identityTranformer)
+    coroutineContextSerializer
+), identityTranformer
+)
 
 val logSerializer = LogSerializer(
     combinedLogDataTransformer,
@@ -71,7 +74,8 @@ val logSerializer = LogSerializer(
         }
 
     },
-    identityTranformer)
+    identityTranformer
+)
 val logRepository = LogRepository(logSerializer)
 val collector : LogCollector = logRepository
 
@@ -111,8 +115,8 @@ internal suspend inline fun <reified T> LogScope.log(name: String,
 
 internal inline fun <reified T> logBlocking(name: String,
                                             receiverTag: ReceiverTag,
-                                                vararg params: Any? = arrayOf(),
-                                                body : LogScope.()->T): T {
+                                            vararg params: Any? = arrayOf(),
+                                            body : LogScope.()->T): T {
     val logContext =  receiverTag +
             CallSiteTag() +
             ThreadTag() +
@@ -157,28 +161,52 @@ fun <T> Flow<T>.log(name: String,
     val logSiteContext =
        receiverTag +
                 //CoroutineContextTag(currentCoroutineContext()) +
-                CallSiteTag() +
-                ThreadTag() +
+                //CallSiteTag() +
+                //ThreadTag() +
                 NamedTag(name)
     val originalFlow = this
-    return channelFlow<T> {->
-        val childFlowCollector = this@channelFlow
+    return flow {
+        delay(100)
+        val childFlowCollector = this@flow
         val originalContext = currentCoroutineContext()
-        val childLogEnvironment = ChildLogEnvironmentFactory.suspendingLogEnvironment(logSiteContext, collector)
-        val childCoroutineContext = CoroutineLogEnvironment(childLogEnvironment)
-        childLogEnvironment.logInlineSuspending2("test") {
-            originalFlow
-                .flowOn(childCoroutineContext)
-//                .onStart { receiverTag.receiver.log("onStart"){} }
-//                .onEach { receiverTag.receiver.log("onEach", it){} }
-//                .onCompletion { receiverTag.receiver.log("onCompletion"){} }
+        println("$name flow coroutine context: $originalContext")
+        val logEnvironment = LogConfig.logEnvironmentFactory.suspendingLogEnvironment(logSiteContext, collector)
+        //val childLogEnvironment = ChildLogEnvironmentFactory.suspendingLogEnvironment(logSiteContext, collector)
+        //val childCoroutineContext = CoroutineLogEnvironment(childLogEnvironment)
+        val cf = log(name, receiverTag, collector){
+            val zig = currentCoroutineContext()
+            val zigMinJob = zig.minusKey(Job)
+            println("$name zigMinJob: $zigMinJob")
+            channelFlow {
+                originalFlow
+                    .onStart {
+                        logEnvironment.logFlowEvent(Log.Message.Starting(listOf()))
+                    }
+                    .onEach {
+                        logEnvironment.logFlowEvent(Log.Message.OnEach(it))
+                    }
+                    .onCompletion {
+                        if(it != null){
+                            logEnvironment.logFlowEvent(Log.Message.Failed(it))
+                        }else{
+                            logEnvironment.logFlowEvent(Log.Message.Done<Unit>(Unit))
+                        }
 
-//            .flowOn(originalContext)
-                .collectLatest{
-                    childFlowCollector.trySend(it)
-                }
+                    }
+//                .flowOn(childCoroutineContext)
+                    .flowOn(zigMinJob)
+                    .collectLatest{ item ->
+                        trySend(item)
+                        println("sent cf")
+                    }
+            }
         }
+        cf.collect {
+            emit(it)
+            println("emitted f")
+        }
+        //childLogEnvironment.logInlineSuspending2("test") {
 
-
+        //}
     }
 }

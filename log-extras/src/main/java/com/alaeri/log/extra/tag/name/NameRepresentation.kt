@@ -7,4 +7,5 @@ import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class NameRepresentation(@Contextual override val identity: IdentityRepresentation, val name: String): SerializedTag
+data class NameRepresentation(@Contextual override val identity: IdentityRepresentation,
+                              val name: String): SerializedTag

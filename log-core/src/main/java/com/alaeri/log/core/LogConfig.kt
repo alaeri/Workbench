@@ -74,7 +74,7 @@ object LogConfig{
         return logEnvironmentFactory.logBlockingWithScope(
             tag = tag, collector = collector,
             params = *params, logScope = logScope){
-            body.invoke(logScope)
+            body.invoke(this)
         }
     }
 }

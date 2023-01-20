@@ -1,8 +1,11 @@
 package com.alaeri.log.repository
 
 import com.alaeri.log.extra.identity.IdentityRepresentation
+import com.alaeri.log.extra.tag.callsite.CallSiteRepresentation
 import com.alaeri.log.extra.tag.name.NameRepresentation
 import com.alaeri.log.extra.tag.receiver.ReceiverRepresentation
+import com.alaeri.log.extra.type.TypeRepresentation
+import com.alaeri.log.serialize.serialize.Identity
 import com.alaeri.log.serialize.serialize.Representation
 import com.alaeri.log.serialize.serialize.SerializedLog
 import com.alaeri.log.serialize.serialize.SerializedLogMessage
@@ -14,37 +17,63 @@ import com.alaeri.log.serialize.serialize.representation.ListRepresentation
  */
 object GroupedLogsGraphMapper {
 
+    enum class GroupField{
+        Identity,
+        Type,
+        Name,
+        CallSite
+    }
+
+    data class GroupKey(
+        val type: Class<*>,
+        val name: String?,
+    )
+
+
     fun mapToGraph(list: List<SerializedLog<IdentityRepresentation>>): GraphRepresentation {
-        val knownParticipants = mutableMapOf<IdentityRepresentation, Representation<*>>()
+        val knownParticipants = mutableMapOf<GroupKey, Representation<*>>()
         val items : List<HistoryItem> = list.flatMap { log ->
            val listTag = log.tag as ListRepresentation
             val message = log.message as SerializedLogMessage
             val name = listTag.representations.filterIsInstance<NameRepresentation>().first()
-           val receiver = listTag.representations.filterIsInstance<ReceiverRepresentation>().first()
-            val receivers = if(knownParticipants[receiver.identity] == null){
-                knownParticipants[receiver.identity] = receiver
-                listOf(HistoryItem.Actor(receiver.identity, receiver.type.clazz.simpleName))
-            }else{
-                emptyList()
-            }
-            val nameActorAndLines = if(knownParticipants[name.identity] == null){
-                knownParticipants[name.identity] = name
+            val receiver = listTag.representations.filterIsInstance<ReceiverRepresentation>().first()
+            val groupKey = GroupKey(receiver.type.clazz, name.name)
+            val receiverKey = GroupKey(receiver.type.clazz, null)
+            val receivers = if(knownParticipants[receiverKey] == null){
+                knownParticipants[receiverKey] = receiver
                 listOf(
-                    HistoryItem.Actor(name.identity, name.name),
-                    HistoryItem.Line(from = receiver.identity, to = name.identity, name = message.toString()))
+                    HistoryItem.Actor(receiverKey, receiver.type.clazz.simpleName, HistoryItem.ActorType.Receiver))
             }else{
                 emptyList()
             }
-            knownParticipants[receiver.identity] = receiver
+            val nameActorAndLines = if(knownParticipants[groupKey] == null){
+                knownParticipants[groupKey] = name
+                listOf(
+                    HistoryItem.Actor(groupKey, name.name, HistoryItem.ActorType.Log),
+                    HistoryItem.Line(from = receiverKey,
+                        to = groupKey,
+                        name = ".....",
+                        HistoryItem.LineType.FromReceiver)
+                )
+            }else{
+                emptyList()
+            }
+            val lineType = when(message){
+                is SerializedLogMessage.Error -> HistoryItem.LineType.ToParentEnd
+                is SerializedLogMessage.Start -> HistoryItem.LineType.FromParentStart
+                is SerializedLogMessage.Success ->HistoryItem.LineType.ToParentEnd
+            }
+
+
             val parents = listTag.representations.filterIsInstance<FiliationRepresentation>()
             val parentLines = parents.map { filiationRepresentation ->
                 val parentListRep = filiationRepresentation.parentRepresentation as ListRepresentation
                 val parentReceiver = parentListRep.representations.filterIsInstance<ReceiverRepresentation>().first()
-                println(parentReceiver)
                 val parentName = parentListRep.representations.filterIsInstance<NameRepresentation>().first()
-                HistoryItem.Line(from = parentName.identity, to = name.identity, name= "...")
+                val parentGroupKey = GroupKey(parentReceiver.type.clazz, parentName.name)
+                HistoryItem.Line(from = parentGroupKey, to = groupKey, name= message.toString(), lineType = lineType)
             }
-           receivers + nameActorAndLines + parentLines
+            receivers + nameActorAndLines  +  parentLines
 
        }
 
@@ -118,7 +147,7 @@ object GroupedLogsGraphMapper {
 //                )
 //            }
 //        })
-        return GraphRepresentation(items.take(40))
+        return GraphRepresentation(items)
     }
 
 }
