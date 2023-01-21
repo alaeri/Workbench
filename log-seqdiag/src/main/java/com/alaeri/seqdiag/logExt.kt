@@ -1,9 +1,14 @@
 package com.alaeri.seqdiag
 
-import com.alaeri.log.core.*
+import com.alaeri.log.core.Log
+import com.alaeri.log.core.LogConfig
 import com.alaeri.log.core.LogConfig.log
 import com.alaeri.log.core.LogConfig.logBlocking
-import com.alaeri.log.core.child.*
+import com.alaeri.log.core.LogEnvironment
+import com.alaeri.log.core.LogScope
+import com.alaeri.log.core.child.ChildLogEnvironmentFactory
+import com.alaeri.log.core.child.CoroutineLogEnvironment
+import com.alaeri.log.core.child.ParentTag
 import com.alaeri.log.core.collector.LogCollector
 import com.alaeri.log.extra.identity.IdentityRepresentation
 import com.alaeri.log.extra.identity.IdentityTransformer
@@ -29,7 +34,6 @@ import com.alaeri.log.serialize.serialize.representation.EntityRepresentation
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import java.util.*
-import kotlin.coroutines.CoroutineContext
 
 /**
  * To use the logger copy this class in your project and extend modify as needed
@@ -139,23 +143,13 @@ internal inline fun <reified T> LogScope.logBlocking(name: String,
         body.invoke(this)
     }
 }
-//internal suspend fun <T> Any.logFlow(name: String,
-//                                     vararg params: Any? = arrayOf(),
-//                                     body :suspend ()->Flow<T>) : Flow<T> {
-//    val receiver = this
-//    val currentCoroutineContext = currentCoroutineContext()
-//    val logContext = ReceiverTag(
-//        this) +
-//            CoroutineContextTag(currentCoroutineContext) +
-//            CallSiteTag() +
-//            ThreadTag() +
-//            NamedTag(name)
-//    return LogConfig.log(logContext, collector, *params){
-//        val floww = body.invoke()
-//        floww.log(name, params)
-//    }
-//}
-fun <T> Flow<T>.log(name: String,
+
+
+/**
+ * This function is experimental
+ * It allows structured logging across Flow events
+ */
+internal fun <T> Flow<T>.log(name: String,
                     receiverTag: ReceiverTag,
                     vararg params: Any? = arrayOf()): Flow<T>{
     val logSiteContext =
@@ -207,7 +201,11 @@ fun <T> Flow<T>.log(name: String,
         }
     }
 }
-fun <T> Flow<T>.logShareIn(name: String,
+/**
+ * This function is experimental.
+ * It allows structured logging across SharedFlow events
+ */
+internal fun <T> Flow<T>.logShareIn(name: String,
                     receiverTag: ReceiverTag,
                     vararg params: Any? = arrayOf(),
                     coroutineScope: CoroutineScope,
