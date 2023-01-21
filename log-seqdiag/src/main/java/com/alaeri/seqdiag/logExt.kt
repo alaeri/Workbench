@@ -1,11 +1,8 @@
 package com.alaeri.seqdiag
 
-import com.alaeri.log.core.Log
-import com.alaeri.log.core.LogConfig
+import com.alaeri.log.core.*
 import com.alaeri.log.core.LogConfig.log
 import com.alaeri.log.core.LogConfig.logBlocking
-import com.alaeri.log.core.LogEnvironmentFactory
-import com.alaeri.log.core.LogScope
 import com.alaeri.log.core.child.*
 import com.alaeri.log.core.collector.LogCollector
 import com.alaeri.log.extra.identity.IdentityRepresentation
@@ -29,12 +26,10 @@ import com.alaeri.log.serialize.serialize.mapping.CombinedTagTransformer
 import com.alaeri.log.serialize.serialize.mapping.EntityTransformer
 import com.alaeri.log.serialize.serialize.mapping.TagTypedSerializer
 import com.alaeri.log.serialize.serialize.representation.EntityRepresentation
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.currentCoroutineContext
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.withContext
 import java.util.*
+import kotlin.coroutines.CoroutineContext
 
 /**
  * To use the logger copy this class in your project and extend modify as needed
@@ -70,7 +65,12 @@ val logSerializer = LogSerializer(
     combinedLogDataTransformer,
     object : EntityTransformer<Any, EntityRepresentation<Any>>(Any::class){
         override fun transform(logData: Any): EntityRepresentation<Any> {
-            return object : EntityRepresentation<Any>{}
+
+            return object : EntityRepresentation<Any>{
+                override fun toString(): String {
+                    return logData.toString()
+                }
+            }
         }
 
     },
@@ -205,8 +205,65 @@ fun <T> Flow<T>.log(name: String,
             emit(it)
             println("emitted f")
         }
-        //childLogEnvironment.logInlineSuspending2("test") {
-
-        //}
     }
+}
+fun <T> Flow<T>.logShareIn(name: String,
+                    receiverTag: ReceiverTag,
+                    vararg params: Any? = arrayOf(),
+                    coroutineScope: CoroutineScope,
+                    sharingStarted: SharingStarted,
+                    replayCount: Int
+): SharedFlow<T>{
+    class LogSharedFlow<T>(originalFlow: Flow<T>): SharedFlow<T>{
+
+        val innerLogEnv = LogConfig.logEnvironmentFactory.blockingLogEnvironment(NamedTag("$name-inner")+receiverTag, collector)
+        val innerLogCoroutineContext : CoroutineLogEnvironment = CoroutineLogEnvironment(innerLogEnv)
+        val innerSharedFlow: SharedFlow<T> = originalFlow
+            .flowOn(innerLogCoroutineContext)
+            .onStart {
+                innerLogEnv.logFlowEvent(Log.Message.Starting(listOf()))
+            }
+            .onEach {
+                innerLogEnv.logFlowEvent(Log.Message.OnEach(it))
+            }
+            .onCompletion {
+                if(it != null){
+                    innerLogEnv.logFlowEvent(Log.Message.Failed(it))
+                }else{
+                    innerLogEnv.logFlowEvent(Log.Message.Done<Unit>(Unit))
+                }
+            }
+            .flowOn(innerLogCoroutineContext)
+            .shareIn(coroutineScope, sharingStarted, replayCount)
+        val logCollector = collector
+
+        override val replayCache: List<T>
+            get() = innerSharedFlow.replayCache
+
+        override suspend fun collect(collector: FlowCollector<T>): Nothing {
+           val outerLogEnvironment : LogEnvironment = ChildLogEnvironmentFactory.suspendingLogEnvironmentWithP(
+               NamedTag("$name-outer")+receiverTag,
+               logCollector,
+               ParentTag(innerLogEnv.tag),
+           )
+            val outerLogCoroutineContext = CoroutineLogEnvironment(outerLogEnvironment)
+            innerSharedFlow
+                .onStart {
+                    outerLogEnvironment.logFlowEvent(Log.Message.Starting(listOf()))
+                }
+                .onEach {
+                    outerLogEnvironment.logFlowEvent(Log.Message.OnEach(it))
+                }
+                .onCompletion {
+                    if(it != null){
+                        outerLogEnvironment.logFlowEvent(Log.Message.Failed(it))
+                    }else{
+                        outerLogEnvironment.logFlowEvent(Log.Message.Done<Unit>(Unit))
+                    }
+                }
+                .flowOn(outerLogCoroutineContext).collect(collector)
+            throw CancellationException()
+        }
+    }
+    return LogSharedFlow(this)
 }

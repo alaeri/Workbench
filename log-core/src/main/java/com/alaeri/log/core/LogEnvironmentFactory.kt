@@ -9,7 +9,6 @@ class LogScope(val logEnvironment: LogEnvironment)
  * Created by Emmanuel Requier on 15/12/2020.
  */
 abstract class LogEnvironmentFactory {
-
     abstract suspend fun suspendingLogEnvironment(
         tag: Tag,
         collector: LogCollector?,

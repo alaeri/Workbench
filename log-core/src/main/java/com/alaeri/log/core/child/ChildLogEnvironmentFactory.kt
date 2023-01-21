@@ -10,7 +10,10 @@ object ChildLogEnvironmentFactory : LogEnvironmentFactory() {
 
     //internal
     val threadLocal =  ThreadLocal<LogEnvironment>()
-//        .also { println("threadLocalInitialized.....") }
+
+
+
+    //        .also { println("threadLocalInitialized.....") }
 
     override suspend fun suspendingLogEnvironment(
         tag: Tag,
@@ -124,6 +127,49 @@ object ChildLogEnvironmentFactory : LogEnvironmentFactory() {
             },
             { threadLocal.set(threadLogEnvironment)
                 //println("threadLocal: $threadLocal unset to: $threadLogEnvironment")
+            })
+    }
+
+    suspend fun suspendingLogEnvironmentWithP(
+        tag: Tag,
+        collector: LogCollector?,
+        parentTag: ParentTag,
+    ): LogEnvironment {
+        val currentCoroutineContext = currentCoroutineContext()
+        val parentCoroutineLogEnvironment: CoroutineLogEnvironment? =
+            currentCoroutineContext[CoroutineLogKey]
+        val parentLogEnvironment = parentCoroutineLogEnvironment?.logEnvironment
+        val threadLogEnvironment = threadLocal.get()
+        println("parentLogEnv $parentLogEnvironment in suspendingLogEnvironment")
+        //println("threadLocal: $threadLocal get: $threadLogEnvironment in suspendingLogEnvironment +${Thread.currentThread().name}")
+        val childLogData = if (parentLogEnvironment != null) {
+            ChildTag(parentLogEnvironment.tag) + tag + parentTag
+        } else {
+            if (threadLogEnvironment != null) {
+                ChildTag(threadLogEnvironment.tag) + tag + parentTag
+            } else {
+                tag + parentTag
+            }
+        }
+        println("childLogData $childLogData in suspendingLogEnvironment")
+        //If there is a parentCoroutineLogDataAndCollector use this collector + the local one
+        val localCollector = if (parentLogEnvironment != null) {
+            parentLogEnvironment.collector + collector
+            //Otherwise use the one from the thread + the local one
+        } else if (threadLogEnvironment != null) {
+            threadLogEnvironment.collector + collector
+            //Otherwise the local one
+        } else {
+            collector
+            //If no collector throw
+        } ?: throw MissingCollectorException(childLogData)
+        return ChildLogEnvironment(childLogData,
+            localCollector,
+            { threadLocal.set(this@ChildLogEnvironment)
+                //println("threadLocal: $threadLocal with: ${this@ChildLogEnvironment}")
+            },
+            { threadLocal.set(threadLogEnvironment)
+                //println("threadLocal: $threadLocal with: $threadLogEnvironment")
             })
     }
 }

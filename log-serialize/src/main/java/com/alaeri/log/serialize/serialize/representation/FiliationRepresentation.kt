@@ -9,3 +9,8 @@ data class FiliationRepresentation(
     val parentRepresentation: SerializedTag,
     override val identity: IdentityRepresentation
 ) : SerializedTag
+
+data class ParentRepresentation(
+    val childRep: SerializedTag,
+    override val identity: IdentityRepresentation
+) : SerializedTag

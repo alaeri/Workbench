@@ -120,8 +120,9 @@ class MainViewModel(val sharingScope: CoroutineScope) {
     }
 
 
-    private val text = entry
-        .log("flowInput", receiverTag)
+    private val inputFlow = entry.log("inputFlow", receiverTag)
+
+    private val text = inputFlow
         .flatMapLatest {
             log("load wiki article", receiverTag){
                 App.wikiRepository.loadWikiArticle(it)
@@ -132,10 +133,16 @@ class MainViewModel(val sharingScope: CoroutineScope) {
         .distinctUntilChanged()
 
     data class State(val input: String, val text: LoadingStatus)
-    val state = combine(entry, text){ e, t -> State( e, t )}
-        .shareIn(sharingScope, SharingStarted.Eagerly, 1)
-        .log("flowState", receiverTag)
+    val state = combine(inputFlow, text){ e, t -> State( e, t )}
+        .logShareIn(
+            name = "sharedState",
+            receiverTag = receiverTag,
+            coroutineScope = sharingScope,
+            sharingStarted = SharingStarted.Eagerly,
+            replayCount = 1
+        )
 }
+
 @Composable
 @Preview
 fun WikiApp(){
@@ -251,7 +258,7 @@ fun seqDiag(){
                 is HistoryItem.Line -> {
                     val from = participantsMap[item.from]
                     val to = participantsMap[item.to]
-                    if (from != null && to != null) {
+                    if (from != null && to != null && item.lineType == HistoryItem.LineType.OnEach) {
                         val lineStyle = when(item.lineType){
                             HistoryItem.LineType.FromReceiver -> LineStyle(
                                 arrowHeadType = null,
@@ -266,12 +273,12 @@ fun seqDiag(){
                         }
                         when(item.lineType){
                             HistoryItem.LineType.OnEach,
-                            HistoryItem.LineType.ToParentEnd -> to.lineTo(from).label { Text(item.name.take(10)) }.style(lineStyle)
-                            else -> from.lineTo(to).label { Text(item.name.take(10)) }.style(lineStyle)
+                            HistoryItem.LineType.ToParentEnd -> to.lineTo(from).label { Text(item.name.take(40)) }.style(lineStyle)
+                            else -> from.lineTo(to).label { Text(item.name.take(40)) }.style(lineStyle)
                         }
 
                     } else {
-                        println("missing from: $from or to: $to in log")
+                        println("missing from: ${item.from} = $from or to: ${item.to} = $to in log")
                     }
                 }
             }

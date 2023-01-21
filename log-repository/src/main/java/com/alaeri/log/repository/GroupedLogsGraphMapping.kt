@@ -11,6 +11,7 @@ import com.alaeri.log.serialize.serialize.SerializedLog
 import com.alaeri.log.serialize.serialize.SerializedLogMessage
 import com.alaeri.log.serialize.serialize.representation.FiliationRepresentation
 import com.alaeri.log.serialize.serialize.representation.ListRepresentation
+import com.alaeri.log.serialize.serialize.representation.ParentRepresentation
 
 /**
  * Created by Emmanuel Requier on 30/12/2020.
@@ -29,6 +30,14 @@ object GroupedLogsGraphMapper {
         val name: String?,
     )
 
+    fun SerializedLogMessage.toSpecificString(): String{
+        return when(val message = this){
+            is SerializedLogMessage.OnEach -> message.item?.toString()
+            is SerializedLogMessage.Start -> message.parameters?.toString()
+            is SerializedLogMessage.Success -> message.entityRepresentation?.toString()
+            is SerializedLogMessage.Error -> message.throwableRepresentation?.toString()
+        } ?: ""
+    }
 
     fun mapToGraph(list: List<SerializedLog<IdentityRepresentation>>): GraphRepresentation {
         val knownParticipants = mutableMapOf<GroupKey, Representation<*>>()
@@ -65,18 +74,49 @@ object GroupedLogsGraphMapper {
                 is SerializedLogMessage.OnEach -> HistoryItem.LineType.OnEach
             }
 
-
+            println("parentsAndChildren for $groupKey")
             val parents = listTag.representations.filterIsInstance<FiliationRepresentation>()
-            val parentLines = parents.map { filiationRepresentation ->
+            val parentLines = parents.flatMap { filiationRepresentation ->
                 val parentListRep = filiationRepresentation.parentRepresentation as ListRepresentation
                 val parentReceiver = parentListRep.representations.filterIsInstance<ReceiverRepresentation>().first()
                 val parentName = parentListRep.representations.filterIsInstance<NameRepresentation>().first()
                 val parentGroupKey = GroupKey(parentReceiver.type.clazz, parentName.name)
-                HistoryItem.Line(from = parentGroupKey, to = groupKey, name= message.toString(), lineType = lineType)
+                println("parentGroupKey : $parentGroupKey groupKey: $groupKey")
+                val actor = if(knownParticipants[parentGroupKey] == null){
+                    knownParticipants[parentGroupKey] = parentName
+                    HistoryItem.Actor(parentGroupKey, name.name, actorType = HistoryItem.ActorType.Log)
+                }else{
+                    null
+                }
+                listOfNotNull(
+                    actor,
+                    HistoryItem.Line(from = parentGroupKey, to = groupKey, name= message.toSpecificString(), lineType = lineType)
+                )
             }
-            receivers + nameActorAndLines  +  parentLines
+
+
+            val children = listTag.representations.filterIsInstance<ParentRepresentation>()
+            val childrenLines = children.flatMap { parentRep ->
+                val childListRep = parentRep.childRep as ListRepresentation
+                val childReceiver = childListRep.representations.filterIsInstance<ReceiverRepresentation>().first()
+                val childName = childListRep.representations.filterIsInstance<NameRepresentation>().first()
+                val childGroupKey = GroupKey(childReceiver.type.clazz, childName.name)
+                println("childGroupKey : $childGroupKey groupKey: $groupKey")
+                val actor = if(knownParticipants[childGroupKey] == null){
+                    knownParticipants[childGroupKey] = childName
+                    HistoryItem.Actor(childGroupKey, name.name, actorType = HistoryItem.ActorType.Log)
+                }else{
+                    null
+                }
+                listOfNotNull(
+                    actor,
+                    HistoryItem.Line(from = groupKey, to = childGroupKey, name= message.toSpecificString(), lineType = lineType),
+                )
+            }
+            receivers + nameActorAndLines  + childrenLines + parentLines
 
        }
+
 
 //        val entries: List<Pair<LogGroupId, CommandInvokation>> =
 //            list.map { log ->
