@@ -91,6 +91,8 @@ class LogRepository(private val logSerializer: LogSerializer,
             listAsFlow.value = newList
         }
     }
+
+
 //
 //
 //    sealed class ILog(open val tag: SerializedTag<*>){

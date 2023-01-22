@@ -9,16 +9,21 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.unit.dp
 import com.alaeri.log.repository.GraphRepresentation
-import com.alaeri.log.repository.GroupedLogsGraphMapper
+import com.alaeri.log.repository.GroupKey
 import com.alaeri.log.repository.HistoryItem
 import com.zachklipp.seqdiag.LineStyle
+import com.zachklipp.seqdiag.Note
 import com.zachklipp.seqdiag.Participant
 import com.zachklipp.seqdiag.SequenceDiagram
+import kotlin.math.pow
+
+fun fadedColor(lastElementIndex: Int, overallLastIndex: Int, baseColor: Color): Color{
+    return baseColor.copy( alpha = 0.99f.pow(overallLastIndex - lastElementIndex).coerceAtLeast(0.1f))
+}
 
 @Preview
 @Composable
@@ -28,14 +33,23 @@ fun seqDiag(){
     )
     val graphRepresentation = state.value
 
+//    val robot = Robot()
+//
+//
+//    val img = robot.createScreenCapture(0.window.bounds)
+//    //val subImg = img.getSubimage(0, 0, xEnd, yEnd) // <- take a sub image from the main one
+//    val outputfile = File("screenshot-compose.png")
+//    ImageIO.write(img, "png", outputfile)
+
+
     SequenceDiagram(
         modifier = Modifier
 
-            .border(2.dp, Color.Green)
+//            .border(2.dp, Color.Green)
         //.background(Color.Green)
     ) {
 
-        val participantsMap = mutableMapOf<GroupedLogsGraphMapper.GroupKey, Participant>()
+        val participantsMap = mutableMapOf<GroupKey, Participant>()
         graphRepresentation.items.forEach { item ->
             when (item) {
                 is HistoryItem.Actor -> {
@@ -50,21 +64,43 @@ fun seqDiag(){
                             topLabel = { Text(item.name, modifier) },
                             bottomLabel = {})
                 }
+                is HistoryItem.Receiver -> {
+                    noteOver(item.contained.mapNotNull { participantsMap[it] }){
+                        Note(item.name)
+                    }
+                }
                 is HistoryItem.Line -> {
                     val from = participantsMap[item.from]
                     val to = participantsMap[item.to]
-                    if (from != null && to != null && item.lineType == HistoryItem.LineType.OnEach) {
+                    if (from != null && to != null) {
                         val lineStyle = when (item.lineType) {
                             HistoryItem.LineType.FromReceiver -> LineStyle(
                                 arrowHeadType = null,
                                 dashIntervals = 2.dp to 5.dp,
                                 brush = SolidColor(Color.LightGray)
                             )
-                            HistoryItem.LineType.FromParentStart -> LineStyle()
-                            HistoryItem.LineType.ToParentEnd -> LineStyle()
+                            HistoryItem.LineType.FromParentStart -> LineStyle(
+                                brush = SolidColor(fadedColor(
+                                    item.index,
+                                    graphRepresentation.lastIndex,
+                                    if(item.isActive) { Color.Red }else{Color.DarkGray}
+                                ))
+                            )
+                            HistoryItem.LineType.ToParentEnd -> LineStyle(
+                                brush = SolidColor(fadedColor(
+                                    item.index,
+                                    graphRepresentation.lastIndex,
+                                    if(item.isActive) { Color.Red }else{Color.DarkGray}
+                                ))
+                            )
                             HistoryItem.LineType.OnEach -> LineStyle(
-                                width = 3.dp,
-                                brush = Brush.horizontalGradient(listOf(Color.Green, Color.Red))
+                                width = 5.dp,
+                                dashIntervals = 2.dp to 5.dp,
+                                brush = SolidColor(fadedColor(
+                                    item.index,
+                                    graphRepresentation.lastIndex,
+                                    if(item.isActive) { Color.Red }else{Color.DarkGray}
+                                ))
                             )
                         }
                         when (item.lineType) {
@@ -81,6 +117,8 @@ fun seqDiag(){
                 }
             }
         }
+
+
 //
 //        val alice = createParticipant(topLabel = { Note("Alice") }, bottomLabel = {})
 //        val bob = createParticipant(topLabel = { Note("Bob") }, bottomLabel = {})

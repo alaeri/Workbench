@@ -20,7 +20,7 @@ import com.mikepenz.markdown.Markdown
 fun WikiScreen(){
 
     val receiverTag = ReceiverTag(App)
-    logBlocking("update screen", receiverTag) {
+    logBlocking("createWikiScreen", receiverTag) {
         val state: State<WikiViewModel.State> = App.vm.state.log("appState", ReceiverTag(
             App
         ))
@@ -28,15 +28,16 @@ fun WikiScreen(){
         Column(modifier = Modifier.fillMaxWidth()) {
             val uriHandler = object : UriHandler {
                 override fun openUri(uri: String) {
-                    App.vm.updateUri(uri)
+                    logBlocking("openUri", receiverTag) {
+                        App.vm.updateUri(uri)
+                    }
                 }
             }
             CompositionLocalProvider(LocalUriHandler.provides(uriHandler)){
-                Markdown(state.value.markdown, modifier =Modifier.weight(1f, true))
+                logBlocking("updateWikiScreen", receiverTag) {
+                    Markdown(state.value.markdown, modifier =Modifier.weight(1f, true))
+                }
             }
-
-
-
             TextField(modifier = Modifier.fillMaxWidth(),
                 value = state.value.input,
                 onValueChange = {

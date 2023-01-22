@@ -7,6 +7,7 @@ import io.ktor.client.call.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.serialization.Serializable
@@ -28,33 +29,42 @@ sealed class LoadingStatus{
     data class Success(val input: String, val markdown: String): LoadingStatus()
 }
 class WikiRepository {
+
+    private val receiverTag =  ReceiverTag(this)
     val client = HttpClient(CIO)
     fun loadWikiArticle(searchTerm: String) : Flow<LoadingStatus> = flow{
         var currentStep = LoadingStep.Fetching
         try{
             emit(LoadingStatus.Loading(searchTerm, currentStep))
-            val jsonString = fetchPage(searchTerm)
+            val jsonString = log("fetchPage", receiverTag){
+                fetchPage(searchTerm)
+            }
             currentStep = LoadingStep.Parsing
             emit(LoadingStatus.Loading(searchTerm, currentStep))
-            val markupString = extractWikiTextFromJsonString(jsonString)
+            val markupString = log("parse", receiverTag){
+                extractWikiTextFromJsonString(jsonString)
+            }
             currentStep = LoadingStep.ConvertingToMarkdown
             emit(LoadingStatus.Loading(searchTerm, currentStep))
-            val markdown = convertToMarkdown(markupString)
+            val markdown = log("convert", receiverTag){
+                convertToMarkdown(markupString)
+            }
             emit(LoadingStatus.Success(searchTerm, markdown))
         }catch (e: Exception){
             emit(LoadingStatus.Error(searchTerm, currentStep, e))
         }
 
-    }.log("loadWikiArticle", ReceiverTag(this))
+    }.log("loadWikiArticle", receiverTag)
 
     @Serializable
     data class WikiJson(val parse: Parse)
     @Serializable
     data class Parse(val wikitext: String)
 
-    private fun extractWikiTextFromJsonString(jsonString: String): String{
+    private suspend fun extractWikiTextFromJsonString(jsonString: String): String{
         val json = Json { ignoreUnknownKeys = true }
         val wikiJson = json.decodeFromString<WikiJson>(jsonString)
+        delay(1000)
         return wikiJson.parse.wikitext
     }
 
@@ -67,6 +77,7 @@ class WikiRepository {
             // Configure request parameters exposed by HttpRequestBuilder
         }
         val string = response.body<String>()
+        delay(1000)
         return string
 
 
@@ -94,6 +105,7 @@ class WikiRepository {
         while (reader.readLine().also { line = it } != null) {
             result += "$line "
         }
+        delay(1000)
         return result.trim()
     }
 }

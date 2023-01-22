@@ -20,11 +20,11 @@ fun scrollBox(){
     val box = Box(
         modifier =
         Modifier
-            .border(3.dp, Color.Green)
+//            .border(3.dp, Color.Green)
             .fillMaxHeight()
             .fillMaxWidth(1f)
-            .verticalScroll(rememberScrollState())
-            .horizontalScroll(rememberScrollState())
+//            .verticalScroll(rememberScrollState())
+//            .horizontalScroll(rememberScrollState())
             .padding(10.dp)
 //        .background(Color.Blue)
         , propagateMinConstraints = true

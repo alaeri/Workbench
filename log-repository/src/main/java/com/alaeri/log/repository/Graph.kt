@@ -8,6 +8,6 @@ import kotlinx.coroutines.flow.map
  */
 class GraphRepository(private val logRepository: LogRepository) {
     val graph: Flow<GraphRepresentation> = logRepository.listAsFlow.map {
-        GroupedLogsGraphMapper.mapToGraph(it)
+        StableGraphMapper.mapToGraph(it)
     }
 }

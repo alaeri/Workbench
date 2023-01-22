@@ -19,8 +19,8 @@ fun sizeBox(){
         Modifier
             //.requiredSize(800.dp, 800.dp)
             .fillMaxSize()
-            .border(3.dp, Color.Green)
-            .padding(10.dp)
+//            .border(3.dp, Color.Green)
+//            .padding(10.dp)
 //        .graphicsLayer(
 //            scaleX = scale,
 //            scaleY = scale,

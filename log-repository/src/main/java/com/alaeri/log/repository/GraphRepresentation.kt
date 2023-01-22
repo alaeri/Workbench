@@ -1,14 +1,12 @@
 package com.alaeri.log.repository
 
-import com.alaeri.log.extra.identity.IdentityRepresentation
-
 sealed class HistoryItem{
 
     enum class ActorType{
         Receiver,
         Log
     }
-    data class Actor(val id: GroupedLogsGraphMapper.GroupKey,
+    data class Actor(val id: GroupKey,
                      val name: String,
                      val actorType: ActorType) : HistoryItem()
 
@@ -20,14 +18,20 @@ sealed class HistoryItem{
     }
 
 
-    data class Line(val from: GroupedLogsGraphMapper.GroupKey,
-                    val to: GroupedLogsGraphMapper.GroupKey,
+    data class Line(val from: GroupKey,
+                    val to: GroupKey,
                     val name: String,
                     val lineType: LineType,
-
+                    val index: Int = 1,
+                    val isActive: Boolean = false
                     ): HistoryItem()
+
+    data class Receiver(
+        val name: String,
+        val contained: List<GroupKey>
+    ): HistoryItem()
 }
 
 
 
-data class GraphRepresentation(val items: List<HistoryItem>)
+data class GraphRepresentation(val items: List<HistoryItem>, val lastIndex: Int = 1)
