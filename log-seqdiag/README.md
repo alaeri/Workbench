@@ -3,7 +3,7 @@
 ## First window: Demo
 
 The demo is a jvm wikipedia browser in compose
-You can use it to browse wikipedia and view the wiki page rendered in markdown in compose
+You can use it to browse wikipedia and view the wiki page rendered in markdown
 
 ## Second Window: Log
 
