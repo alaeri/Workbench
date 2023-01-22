@@ -5,9 +5,11 @@
 The demo is a jvm wikipedia browser in compose
 You can use it to browse wikipedia and view the wiki page rendered in markdown.
 
-* [WikiViewModel](/)
-* [WikiRepository](/)
-* [WikiScreen](/)
+You can view uses of the logging api in these files:
+
+* [WikiViewModel](https://github.com/alaeri/Workbench/blob/master/log-seqdiag/src/main/java/com/alaeri/seqdiag/wiki/WikiViewModel.kt)
+* [WikiRepository](https://github.com/alaeri/Workbench/blob/master/log-seqdiag/src/main/java/com/alaeri/seqdiag/wiki/WikiScreen.kt)
+* [WikiScreen](https://github.com/alaeri/Workbench/blob/master/log-seqdiag/src/main/java/com/alaeri/seqdiag/wiki/data/WikiRepository.kt)
 
 ## Second Window: Log
 
